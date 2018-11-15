@@ -4,7 +4,7 @@
 Python3 asyncio package to talk to Buderus KM200
 
 example :
-
+```python
 import asyncio 
 import aiohttp
 
@@ -21,3 +21,5 @@ async def main():
             print (sensor.name, sensor.value)
 
 asyncio.get_event_loop().run_until_complete(main())
+```
+
