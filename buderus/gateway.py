@@ -5,8 +5,9 @@ from io import StringIO
 
 from aiohttp import client_exceptions
 
-from .encryption import Encryption
-
+from .encryption import Encryption  
+from .gateway_info import Gateway_Info
+from .sensors import Sensors
 
 class Gateway(object):
     _magic = bytearray.fromhex("867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4")
@@ -20,6 +21,9 @@ class Gateway(object):
     encryption = None
     
     websession = None
+    info = None
+    sensors = None
+
 
     def __init__(self, websession, host, access_key, password, ):
         """
@@ -41,6 +45,18 @@ class Gateway(object):
     def decrypt(self, data):
         return self.encryption.decrypt(data)
 
+
+    async def initialize(self):
+        self.info = Gateway_Info(self.get)
+        await self.info.update()
+
+        self.sensors = Sensors(self.get)
+        self.sensors.registerSensor('outdoor Temp', '/system/sensors/temperatures/outdoor_t1')
+        self.sensors.registerSensor('supply Temp Setpoint', '/system/sensors/temperatures/supply_t1_setpoint')
+        self.sensors.registerSensor('supply Temp', '/system/sensors/temperatures/supply_t1')
+        self.sensors.registerSensor('return Temp', '/system/sensors/temperatures/return')
+        await self.sensors.update()
+
 #    async def initialize(self):
 #        result = await self.request('get', '/')
      #   decrypted_result = decrypt(resutl)
@@ -51,7 +67,6 @@ class Gateway(object):
 #        self.lights = Lights(result['lights'], self.request)
 #        self.scenes = Scenes(result['scenes'], self.request)
 #        self.sensors = Sensors(result['sensors'], self.request)
-
 
     async def request(self, path):
 
@@ -87,20 +102,12 @@ class Gateway(object):
             raise RequestError(
                 'Error putting data to {}: {}'.format(self.host, err)
             ) from None
-        #    if not req.status == 204:
-         #       self.logger.debug(req.read())
-
-
 
 
     async def get(self, path):
         encrypted = await self.request(path) 
         result = self.encryption.decrypt(encrypted)
-        return result
-
-    async def get_json(self,path):
-        data = await self.get(path)
-        jsondata =  json.loads(data)
+        jsondata =  json.loads(result)
         return jsondata
 
     async def set_value(self, path, value):
