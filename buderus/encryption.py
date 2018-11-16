@@ -4,15 +4,14 @@ import logging
 
 from pyaes import AESModeOfOperationECB, Encrypter, Decrypter, PADDING_NONE
 
-_LOGGER = logging.getLogger(__name__)
-version = __version__ = '0.0.1'
-
 class Encryption(object):
    
-    def __init__(self, magic, access_key, password):
+    _magic = bytearray.fromhex("867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4")
+
+    def __init__(self, access_key, password):
         self.bs = 16
-        self.key = hashlib.md5(bytearray(access_key, "utf8") + magic).digest() + \
-                   hashlib.md5(magic + bytearray(password, "utf8")).digest()
+        self.key = hashlib.md5(bytearray(access_key, "utf8") + self._magic).digest() + \
+                   hashlib.md5(self._magic + bytearray(password, "utf8")).digest()
 
     def encrypt(self, raw):
         if len(raw) % self.bs != 0:

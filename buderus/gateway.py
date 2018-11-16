@@ -9,9 +9,34 @@ from .encryption import Encryption
 from .gateway_info import Gateway_Info
 from .sensors import Sensors
 
-class Gateway(object):
-    _magic = bytearray.fromhex("867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4")
+from .heating_circuits import HeatingCircuits
 
+SENSORS = [
+    '/system/sensors/temperatures/outdoor_t1', # outdoor temp
+    '/system/sensors/temperatures/supply_t1_setpoint', # current target supply temp
+    '/system/sensors/temperatures/supply_t1',# cuurent Supply temp
+    '/system/sensors/temperatures/return' # return temp
+]
+
+GATEWAY_INFO = [
+    '/gateway/uuid', # unique identifier also as login
+    '/gateway/versionFirmware', # gateway firmware version
+    '/gateway/versionHardware' # gateway software version
+]
+
+HEATING_CIRCUITS = '/heatingCircuits' # get all heating Circuits
+HEATING_CIRCUIT = [
+    '/heatingCircuits/{}/currentRoomSetpoint', # current Selected Temp
+    '/heatingCircuits/{}/manualRoomSetpoint', # set target Temp in manual mode
+    '/heatingCircuits/{}/operationMode', # get/set actual mode + get allowed modes (manual, auto)
+    '/heatingCircuits/{}/temperatureRoomSetpoint' # set target temp in auto mode
+    '/heatingCircuits/{}/roomtemperature' # room current temperature
+]
+
+
+
+class Gateway(object):
+ 
     host = None
 
     serial_number = None
@@ -23,6 +48,8 @@ class Gateway(object):
     websession = None
     info = None
     sensors = None
+
+    heatingcirctuits = None
 
 
     def __init__(self, websession, host, access_key, password, ):
@@ -37,7 +64,9 @@ class Gateway(object):
         self.host = host
         self.websession = websession
 
-        self.encryption = Encryption(self._magic, access_key, password)
+
+        self.encryption = Encryption(access_key, password)
+
   
     def encrypt(self, data):
         return self.encryption.encrypt(data)
@@ -56,6 +85,11 @@ class Gateway(object):
         self.sensors.registerSensor('supply Temp', '/system/sensors/temperatures/supply_t1')
         self.sensors.registerSensor('return Temp', '/system/sensors/temperatures/return')
         await self.sensors.update()
+
+
+        self.heatingcirctuits = HeatingCircuits(self.get)
+        await self.heatingcirctuits.initialize()
+        await self.heatingcirctuits.update()
 
 #    async def initialize(self):
 #        result = await self.request('get', '/')
@@ -110,11 +144,13 @@ class Gateway(object):
         jsondata =  json.loads(result)
         return jsondata
 
-    async def set_value(self, path, value):
-        data = json.dumps({"value": value})
+    async def set(self, path, data):
         encrypted = self.encryption.encrypt(data)
         result = await self.submit(path, encrypted)
         return result
-    
-            
+
+    async def set_value(self, path, value):
+        data = json.dumps({"value": value})
+        result = await self.set(path, data)
+        return result    
 
