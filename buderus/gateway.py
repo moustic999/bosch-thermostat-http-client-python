@@ -87,7 +87,7 @@ class Gateway(object):
         await self.sensors.update()
 
 
-        self.heatingcirctuits = HeatingCircuits(self.get)
+        self.heatingcirctuits = HeatingCircuits(self.get, self.set)
         await self.heatingcirctuits.initialize()
         await self.heatingcirctuits.update()
 
