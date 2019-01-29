@@ -1,2 +1,55 @@
 example.py
 example2.py
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+.eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+
+# Logs
+*.log
+pip-log.txt
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+*__pycache__
+
+.python-version
+
+# emacs auto backups
+*~
+*#
+*.orig
+
+# venv stuff
+pyvenv.cfg
+pip-selfcheck.json
+venv
+.venv
+Pipfile*
+share/*
+Scripts/
+
+# vimmy stuff
+*.swp
+*.swo
+
+# Built docs
+docs/build
+
+
+password
+data_file.txt
