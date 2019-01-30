@@ -23,3 +23,15 @@ async def main():
 asyncio.get_event_loop().run_until_complete(main())
 ```
 
+To run this code do the following:
+
+* create file data_file.txt and insert like this:
+```
+ip
+access_key
+password
+```
+replace strings with proper values
+
+* run in dir `python3 -m venv .`
+* run `python3 test.py`
