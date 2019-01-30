@@ -1,12 +1,18 @@
+""" Test script of bosch_thermostat_http. """
 import asyncio
+
 import aiohttp
 import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import (FIRMWARE_VERSION, HARDWARE_VERSION,
-                                         UUID, TYPE_INFO,
-                                         SENSOR_NAME, SENSOR_VALUE)
+                                         SENSOR_NAME, SENSOR_VALUE, TYPE_INFO,
+                                         UUID)
 
 
 async def main():
+    """
+    Provide data_file.txt with ip, access_key, password and check
+    if you can retrieve data from your thermostat.
+    """
     async with aiohttp.ClientSession() as session:
         data_file = open("data_file.txt", "r")
         data = data_file.read().splitlines()
