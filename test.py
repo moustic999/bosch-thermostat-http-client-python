@@ -5,7 +5,7 @@ import aiohttp
 import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import (FIRMWARE_VERSION, HARDWARE_VERSION,
                                          SENSOR_NAME, SENSOR_VALUE, TYPE_INFO,
-                                         UUID)
+                                         UUID, SENSORS, DHW, HC, GATEWAY)
 
 
 async def main():
@@ -21,12 +21,28 @@ async def main():
                                 access_key=data[1],
                                 password=data[2])
         await gateway.initialize()
-        print("UUID")
-        print(gateway.get_property(TYPE_INFO, UUID))
-        print(gateway.get_property(TYPE_INFO, HARDWARE_VERSION))
-        print(gateway.get_property(TYPE_INFO, FIRMWARE_VERSION))
-        print("SENSORS")
-        for sensor in gateway.get_sensors():
+        geta = gateway.get_request()
+        # print("GATEWAY")
+        # print(await geta("/gateway"))
+        # print("SYSTEM")
+        # print(await geta("/system"))
+        # print("SENSORS")
+        # print(await geta("/system/sensors"))
+        # print("HS")
+        # print(await geta("/heatSources/hs1/status"))
+        # print("HC")
+        # print(await geta("/heatingCircuits"))
+        # print("DHW")
+        # print(await geta("/dhwCircuits/dhw1/status"))
+        # print("ale duzo")
+        # print(await geta("/heatingCircuits/hc1"))
+        # print("UUID")
+        # print(gateway.get_property(TYPE_INFO, UUID))
+        # print(gateway.get_property(TYPE_INFO, HARDWARE_VERSION))
+        # print(gateway.get_property(TYPE_INFO, FIRMWARE_VERSION))
+        # print(await geta("/system/sensors/temperatures/outdoor_t1"))
+        # print("SENSORS")
+        for sensor in gateway.get_items(SENSORS):
             print(sensor.get_property(SENSOR_NAME),
                   sensor.get_property(SENSOR_VALUE))
 
