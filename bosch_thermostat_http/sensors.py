@@ -13,26 +13,29 @@ class Sensors(BoschEntities):
         """
         super().__init__(requests)
 
-    def get_sensors(self):
+    @property
+    def sensors(self):
         """ Get sensor list. """
         return self.get_items()
 
     async def initialize(self, sensors=None):
+        restoring_data = True
         if not sensors:
             sensors = await self.retrieve_from_module(2, SENSORS)
+            restoring_data = False
         for sensor in sensors:
             if "id" in sensor:
                 self.register_sensor(sensor["id"].split('/').pop(),
-                                     sensor["id"])
+                                     sensor["id"], restoring_data)
 
-    def register_sensor(self, name, path):
+    def register_sensor(self, name, path, restoring_data):
         """ Register sensor for the module. """
-        self._items.append(Sensor(self._requests, name, path))
+        self._items.append(Sensor(self._requests, name, path, restoring_data))
 
 
 class Sensor(BoschSingleEntity):
     """ Single sensor object. """
-    def __init__(self, requests, name, path):
+    def __init__(self, requests, name, path, restoring_data):
         """
         :param dics requests: { GET: get function, SUBMIT: submit function}
         :param str name: name of the sensors
@@ -45,7 +48,7 @@ class Sensor(BoschSingleEntity):
             SENSOR_VALUE: None,
             SENSOR_UNIT: None
         }
-        super().__init__(name, self._data, path)
+        super().__init__(name, restoring_data, self._data, path)
 
     async def update(self):
         """ Update sensor data. """

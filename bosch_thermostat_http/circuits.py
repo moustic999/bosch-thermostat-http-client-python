@@ -16,7 +16,8 @@ class Circuits(BoschEntities):
         self._circuit_type = circuit_type
         super().__init__(requests)
 
-    def get_circuits(self):
+    @property
+    def circuits(self):
         """ Get circuits. """
         return self.get_items()
 
@@ -98,7 +99,7 @@ class Circuit(BoschSingleEntity):
 
     async def set_mode(self, new_mode):
         """ Set mode of Circuit. """
-        if self._operation_address and new_mode in self._operation_list:
+        if new_mode in self._operation_list:
             data = await self._requests[SUBMIT](
                 self._circuits_path[OPERATION_MODE],
                 new_mode)

@@ -57,8 +57,13 @@ class Gateway:
 
     @property
     def heating_circuits(self):
-        """ Get all sensors list. """
-        return self._data[HC].get_circuits()
+        """ Get circuit list. """
+        return self._data[HC].circuits
+
+    @property
+    def sensors(self):
+        """ Get sensors list. """
+        return self._data[SENSORS].sensors
 
     def get_property(self, qtype, property_name):
         """ Get property of gateway info. """
@@ -110,7 +115,7 @@ class Gateway:
                     return data
         except client_exceptions.ClientError as err:
             raise RequestError(
-                'Error putting data to {}, path: {}, message: {}'
+                'Error getting data from {}, path: {}, message: {}'
                 .format(self._host, path, err)
             )
 
