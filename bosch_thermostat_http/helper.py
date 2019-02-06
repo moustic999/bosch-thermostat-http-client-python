@@ -33,7 +33,7 @@ class BoschEntities:
         """ Get items. """
         return self._items
 
-    async def update(self):
+    async def update_all(self):
         """ Update all heating circuits. """
         for item in self._items:
             await item.update()
@@ -41,22 +41,31 @@ class BoschEntities:
 
 class BoschSingleEntity:
 
-    def __init__(self, name, data, path=None):
+    def __init__(self, name, restoring_data, data, path=None):
         self._main_data = {
             NAME: name,
             PATH: path
         }
         self._data = data
+        self._json_scheme_ready = restoring_data
 
     def get_property(self, property_name):
         if property_name in self._data:
             return self._data[property_name]
         return None
 
+    def get_all_properties(self):
+        return self._data
+
     @property
     def name(self):
         """ Name of Bosch entity. """
         return self._main_data[NAME]
+
+    @property
+    def json_scheme_ready(self):
+        """ Is Bosch entity restored from scheme. """
+        return self._json_scheme_ready
 
     @property
     def path(self):

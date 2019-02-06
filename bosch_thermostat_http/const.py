@@ -55,21 +55,27 @@ HTTP_HEADER = {
 
 TIMEOUT = 10
 
+""" VARS FOR HOME ASSISTANT. """
+HC_CURRENT_ROOMSETPOINT = "currentRoomSetpoint"
+HC_CURRENT_ROOMTEMPERATURE = "roomtemperature"
+HC_HOLIDAY_MODE = "holidayMode"
+HC_HEATING_STATUS = "status"
+HC_SETPOINT_ROOMTEMPERATURE = "temperatureRoomSetpoint"
 ##### OLD
-_HC_CURRENT_ROOMSETPOINT = "currentRoomSetpoint"  # current Selected Temp
+  # current Selected Temp
 _HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
-_HC_CURRENT_ROOMTEMPERATURE = "roomtemperature"  # room current temperature
+  # room current temperature
 """ set target temp in auto mode. """
-_HC_SETPOINT_ROOMTEMPERATURE = "temperatureRoomSetpoint"
 
 
-_HEATING_CIRCUIT_LIST = {
-    _HC_CURRENT_ROOMSETPOINT: HC+'/{}/currentRoomSetpoint',
-    _HC_MANUAL_ROOMSETPOINT: HC+'/{}/manualRoomSetpoint',
-    OPERATION_MODE: HC+'/{}/operationMode',
-    _HC_SETPOINT_ROOMTEMPERATURE: HC+'/{}/temperatureRoomSetpoint',
-    _HC_CURRENT_ROOMTEMPERATURE: HC+'/{}/roomtemperature'
-}
+#
+# _HEATING_CIRCUIT_LIST = {
+#     _HC_CURRENT_ROOMSETPOINT: HC+'/{}/currentRoomSetpoint',
+#     _HC_MANUAL_ROOMSETPOINT: HC+'/{}/manualRoomSetpoint',
+#     OPERATION_MODE: HC+'/{}/operationMode',
+#     _HC_SETPOINT_ROOMTEMPERATURE: HC+'/{}/temperatureRoomSetpoint',
+#     _HC_CURRENT_ROOMTEMPERATURE: HC+'/{}/roomtemperature'
+# }
 
 DHW_CURRENT_WATERTEMP = "actualTemp"
 DHW_CURRENT_SETPOINT = "currentSetpoint"

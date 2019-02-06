@@ -3,6 +3,7 @@ from .const import (SENSOR_NAME, SENSORS,
                     SENSOR_TYPE, SENSOR_UNIT, SENSOR_VALUE, GET, PATH)
 from .helper import BoschSingleEntity, BoschEntities
 
+### ADD RESTORING_DATA
 
 class Sensors(BoschEntities):
     """ Sensors object containing multiple Sensor objects. """
@@ -10,7 +11,7 @@ class Sensors(BoschEntities):
         """
         :param dict requests: { GET: get function, SUBMIT: submit function}
         """
-        super().__init__(self, requests)
+        super().__init__(requests)
 
     def get_sensors(self):
         """ Get sensor list. """

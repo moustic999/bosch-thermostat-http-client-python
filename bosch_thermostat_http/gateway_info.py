@@ -6,7 +6,7 @@ from .helper import BoschSingleEntity
 
 class GatewayInfo(BoschSingleEntity):
     """Gateway info gets UUID, FIRMWARE_VERSION and HARDWARE_VERSION. """
-    def __init__(self, requests):
+    def __init__(self, requests, name, restoring_data=None):
         """
         :param dict requests: { GET: get function, SUBMIT: submit function}
         """
@@ -15,7 +15,7 @@ class GatewayInfo(BoschSingleEntity):
             FIRMWARE_VERSION: None,
             HARDWARE_VERSION: None
         }
-        BoschSingleEntity.__init__(self, self._data)
+        super().__init__(name, restoring_data, self._data)
         self._requests = requests
 
     async def update(self):

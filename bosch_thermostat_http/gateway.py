@@ -34,6 +34,10 @@ class Gateway:
             SENSORS: None
         }
         self._serial_number = None
+        self._requests = {
+            GET: self.get,
+            SUBMIT: self.set_value
+        }
 
     def encrypt(self, data):
         """ Encrypt message to gateway. """
@@ -66,37 +70,34 @@ class Gateway:
         """ For testing purposes only. Delete it in final lib."""
         return self.get
 
-    async def initialize_gatewayinfo(self, requests, restored_data=None):
-        self._data[GATEWAY] = GatewayInfo(requests)
+    async def initialize_gatewayinfo(self, restored_data=None):
+        self._data[GATEWAY] = GatewayInfo(self._requests, GATEWAY)
         await self._data[GATEWAY].update()
 
-    async def initialize_hc_circuits(self, requests, restored_data=None):
-        self._data[HC] = Circuits(requests, HC)
+    async def initialize_hc_circuits(self, restored_data=None):
+        self._data[HC] = Circuits(self._requests, HC)
         await self._data[HC].initialize(restored_data)
             # here can add circuits from memory
-        await self._data[HC].update()
+        # await self._data[HC].update()
 
-    async def initialize_dhw_circuits(self, requests, restored_data=None):
-        self._data[HC] = Circuits(requests, DHW)
+    async def initialize_dhw_circuits(self, restored_data=None):
+        self._data[HC] = Circuits(self._requests, DHW)
         await self._data[HC].initialize(restored_data)
             # here can add circuits from memory
-        await self._data[HC].update()
+        # await self._data[HC].update()
 
-    async def initialize_sensors(self, requests, restored_data=None):
-        self._data[SENSORS] = Sensors(requests)
+    async def initialize_sensors(self, restored_data=None):
+        self._data[SENSORS] = Sensors(self._requests)
         await self._data[SENSORS].initialize(restored_data)
             # here can sensors from memory
-        await self._data[SENSORS].update()
+        # await self._data[SENSORS].update()
 
     async def initialize(self):
         """ Initialize gateway asynchronously. """
-        requests = {
-            GET: self.get,
-            SUBMIT: self.set
-        }
-        await self.initialize_gatewayinfo(requests)
-        await self.initialize_hc_circuits(requests, None)
-        await self.initialize_dhw_circuits(requests, None)
+        await self.initialize_gatewayinfo()
+        await self.initialize_sensors()
+        await self.initialize_hc_circuits(None)
+        await self.initialize_dhw_circuits(None)
 
     async def request(self, path):
         """ Make a get request to the API. """
@@ -121,7 +122,8 @@ class Gateway:
                         self.format_url(path),
                         data=data,
                         headers=HTTP_HEADER) as req:
-                    await req.text()
+                    data = await req.text()
+                    return data
         except client_exceptions.ClientError as err:
             raise RequestError(
                 'Error putting data to {}, path: {}, message: {}'.
