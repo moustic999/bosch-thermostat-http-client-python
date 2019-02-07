@@ -1,60 +1,55 @@
 """ Sensors of Bosch thermostat. """
-from .const import SENSOR_NAME, SENSOR_TYPE, SENSOR_UNIT, SENSOR_VALUE
+from .const import (SENSOR_NAME, SENSORS,
+                    SENSOR_TYPE, SENSOR_UNIT, SENSOR_VALUE, GET, PATH)
+from .helper import BoschSingleEntity, BoschEntities
 
+### ADD RESTORING_DATA
 
-class Sensors:
+class Sensors(BoschEntities):
     """ Sensors object containing multiple Sensor objects. """
-    def __init__(self, get_request):
+    def __init__(self, requests):
         """
-        :param obj get_request: function to retrieve data from thermostat.
+        :param dict requests: { GET: get function, SUBMIT: submit function}
         """
-        self._get_request = get_request
-        self._items = []
-
-    async def update(self):
-        """ Update all sensors state asynchronously. """
-        for item in self._items:
-            await item.update()
+        super().__init__(requests)
 
     def get_sensors(self):
         """ Get sensor list. """
-        return self._items
+        return self.get_items()
+
+    async def initialize(self, sensors=None):
+        if not sensors:
+            sensors = await self.retrieve_from_module(2, SENSORS)
+        for sensor in sensors:
+            if "id" in sensor:
+                self.register_sensor(sensor["id"].split('/').pop(),
+                                     sensor["id"])
 
     def register_sensor(self, name, path):
         """ Register sensor for the module. """
-        self._items.append(Sensor(self._get_request, name, path))
+        self._items.append(Sensor(self._requests, name, path))
 
 
-class Sensor:
+class Sensor(BoschSingleEntity):
     """ Single sensor object. """
-    def __init__(self, get_request, name, path):
+    def __init__(self, requests, name, path):
         """
-        :param obj get_request: function to retrieve data from thermostat.
+        :param dics requests: { GET: get function, SUBMIT: submit function}
         :param str name: name of the sensors
         :param str path: path to retrieve data from sensor.
         """
-        self._get_request = get_request
+        self._requests = requests
         self._data = {
             SENSOR_NAME: name,
             SENSOR_TYPE: None,
             SENSOR_VALUE: None,
             SENSOR_UNIT: None
         }
-        self._path = path
-
-    def get_property(self, property_name):
-        """
-        Get sensor data.
-        :param str property_name: use on of values from const.py
-            SENSOR_NAME, SENSOR_VALUE, SENSOR_TYPE, SENSOR_UNIT
-        """
-        if property_name in self._data:
-            return self._data[property_name]
-        return None
+        super().__init__(name, self._data, path)
 
     async def update(self):
         """ Update sensor data. """
-        data = await self._get_request(self._path)
+        data = await self._requests[GET](self._main_data[PATH])
         self._data[SENSOR_VALUE] = data['value']
         self._data[SENSOR_TYPE] = data['type']
         self._data[SENSOR_UNIT] = data['unitOfMeasure']
