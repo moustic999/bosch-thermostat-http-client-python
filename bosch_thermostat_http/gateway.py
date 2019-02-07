@@ -4,10 +4,10 @@ import json
 import async_timeout
 from aiohttp import client_exceptions
 
-from .const import HTTP_HEADER, SENSOR_LIST, TIMEOUT
+from .const import HTTP_HEADER, TIMEOUT, GET, SUBMIT, DHW, HC, GATEWAY, SENSORS
 from .encryption import Encryption
 from .gateway_info import GatewayInfo
-from .heating_circuits import HeatingCircuits
+from .circuits import Circuits
 from .sensors import Sensors
 
 
@@ -27,10 +27,17 @@ class Gateway:
         self._host = host
         self._websession = websession
         self._encryption = Encryption(access_key, password)
-        self._sensors = None
-        self._info = None
-        self._heatingcirctuits = None
+        self._data = {
+            GATEWAY: None,
+            HC: None,
+            DHW: None,
+            SENSORS: None
+        }
         self._serial_number = None
+        self._requests = {
+            GET: self.get,
+            SUBMIT: self.set_value
+        }
 
     def encrypt(self, data):
         """ Encrypt message to gateway. """
@@ -44,29 +51,58 @@ class Gateway:
         """ Format URL to make requests to gateway. """
         return 'http://{}{}'.format(self._host, path)
 
-    def get_sensors(self):
-        """ Get all sensors list. """
-        return self._sensors.get_sensors()
+    def get_items(self, data_type):
+        """ Get items on types like Sensors, Heating Circuits etc. """
+        return self._data[data_type].get_items()
+
+    @property
+    def heating_circuits(self):
+        """ Get circuit list. """
+        return self._data[HC].circuits
+
+    @property
+    def sensors(self):
+        """ Get sensors list. """
+        return self._data[SENSORS].sensors
 
     def get_property(self, qtype, property_name):
         """ Get property of gateway info. """
         if qtype == 'info':
-            return self._info.get_property(property_name)
+            return self._data[GATEWAY].get_property(property_name)
         return None
+
+    def get_request(self):
+        """ For testing purposes only. Delete it in final lib."""
+        return self.get
+
+    async def initialize_gatewayinfo(self, restored_data=None):
+        self._data[GATEWAY] = GatewayInfo(self._requests, GATEWAY)
+        await self._data[GATEWAY].update()
+
+    async def initialize_hc_circuits(self, restored_data=None):
+        self._data[HC] = Circuits(self._requests, HC)
+        await self._data[HC].initialize(restored_data)
+            # here can add circuits from memory
+        # await self._data[HC].update()
+
+    async def initialize_dhw_circuits(self, restored_data=None):
+        self._data[HC] = Circuits(self._requests, DHW)
+        await self._data[HC].initialize(restored_data)
+            # here can add circuits from memory
+        # await self._data[HC].update()
+
+    async def initialize_sensors(self, restored_data=None):
+        self._data[SENSORS] = Sensors(self._requests)
+        await self._data[SENSORS].initialize(restored_data)
+            # here can sensors from memory
+        # await self._data[SENSORS].update()
 
     async def initialize(self):
         """ Initialize gateway asynchronously. """
-        self._info = GatewayInfo(self.get)
-        await self._info.update()
-
-        self._sensors = Sensors(self.get)
-        for sensor_name, sensor_address in SENSOR_LIST.items():
-            self._sensors.register_sensor(sensor_name, sensor_address)
-        await self._sensors.update()
-
-        self._heatingcirctuits = HeatingCircuits(self.get, self.set)
-        await self._heatingcirctuits.initialize()
-        await self._heatingcirctuits.update()
+        await self.initialize_gatewayinfo()
+        await self.initialize_sensors()
+        await self.initialize_hc_circuits(None)
+        await self.initialize_dhw_circuits(None)
 
     async def request(self, path):
         """ Make a get request to the API. """
@@ -79,7 +115,8 @@ class Gateway:
                     return data
         except client_exceptions.ClientError as err:
             raise RequestError(
-                'Error requesting data from {}: {}'.format(self._host, err)
+                'Error getting data from {}, path: {}, message: {}'
+                .format(self._host, path, err)
             )
 
     async def submit(self, path, data):
@@ -90,10 +127,12 @@ class Gateway:
                         self.format_url(path),
                         data=data,
                         headers=HTTP_HEADER) as req:
-                    await req.text()
+                    data = await req.text()
+                    return data
         except client_exceptions.ClientError as err:
             raise RequestError(
-                'Error putting data to {}: {}'.format(self._host, err)
+                'Error putting data to {}, path: {}, message: {}'.
+                format(self._host, path, err)
             )
 
     async def get(self, path):

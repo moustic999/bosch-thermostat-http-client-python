@@ -6,7 +6,6 @@ from pyaes import PADDING_NONE, AESModeOfOperationECB, Decrypter, Encrypter
 
 from .const import BS, MAGIC
 
-
 class Encryption:
     """ Encryption class. """
 
@@ -29,22 +28,23 @@ class Encryption:
             AESModeOfOperationECB(self.key),
             padding=PADDING_NONE)
         ciphertext = cipher.feed(raw) + cipher.feed()
-
         return base64.b64encode(ciphertext)
 
     def decrypt(self, enc):
-        """ Decrypt raw message only if lenght > 0. """
-        # trying to decrypt empty data fails
-        if not enc:
-            return ""
-        if len(enc) % self._bs != 0:
-            enc = self._pad(enc)
-        enc = base64.b64decode(enc)
-        cipher = Decrypter(
-            AESModeOfOperationECB(self.key),
-            padding=PADDING_NONE)
-        decrypted = cipher.feed(enc) + cipher.feed()
-        return decrypted.decode("utf8").rstrip(chr(0))
+        """
+        Decrypt raw message only if length > 2.
+        Padding is not working for lenght less than 2.
+        """
+        if enc and len(enc) > 2:
+            if len(enc) % self._bs != 0:
+                enc = self._pad(enc)
+            enc = base64.b64decode(enc)
+            cipher = Decrypter(
+                AESModeOfOperationECB(self.key),
+                padding=PADDING_NONE)
+            decrypted = cipher.feed(enc) + cipher.feed()
+            return decrypted.decode("utf8").rstrip(chr(0))
+        return "{}"
 
     def _pad(self, _s):
         """ Padding of encryption. """
