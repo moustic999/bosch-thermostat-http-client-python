@@ -11,18 +11,24 @@ GET = "get"
 SUBMIT = "submit"
 NAME = "name"
 PATH = "path"
+ID = "id"
 
 """ Section of gateway info consts. """
 GATEWAY = "/gateway/"
+SYSTEM = "/system/"
 UUID = "uuid"
 
 FIRMWARE_VERSION = "versionFirmware"
 HARDWARE_VERSION = "versionHardware"
+SYSTEM_BRAND = "brand"
+SYSTEM_TYPE = "systemType"
 
 GATEWAY_PATH_LIST = {
     UUID: GATEWAY + UUID,
     FIRMWARE_VERSION: GATEWAY + FIRMWARE_VERSION,
-    HARDWARE_VERSION: GATEWAY + HARDWARE_VERSION
+    HARDWARE_VERSION: GATEWAY + HARDWARE_VERSION,
+    SYSTEM_BRAND: SYSTEM + SYSTEM_BRAND,
+    SYSTEM_TYPE: SYSTEM + SYSTEM_TYPE
 }
 
 HC = '/heatingCircuits'  # get all heating Circuits
@@ -61,9 +67,11 @@ HC_CURRENT_ROOMTEMPERATURE = "roomtemperature"
 HC_HOLIDAY_MODE = "holidayMode"
 HC_HEATING_STATUS = "status"
 HC_SETPOINT_ROOMTEMPERATURE = "temperatureRoomSetpoint"
+HC_TEMPORARY_TEMPERATURE = "temporaryRoomSetpoint"
+HC_ECO = "temperatureLevels/eco"
 ##### OLD
   # current Selected Temp
-_HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
+HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
   # room current temperature
 """ set target temp in auto mode. """
 

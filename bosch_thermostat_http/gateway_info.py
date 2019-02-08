@@ -1,6 +1,5 @@
 """Gateway info module retrieving basic information from Bosch thermostat."""
-from .const import (FIRMWARE_VERSION, GATEWAY_PATH_LIST, HARDWARE_VERSION,
-                    UUID, GET)
+from .const import (GATEWAY_PATH_LIST, GET)
 from .helper import BoschSingleEntity
 
 
@@ -10,16 +9,15 @@ class GatewayInfo(BoschSingleEntity):
         """
         :param dict requests: { GET: get function, SUBMIT: submit function}
         """
-        self._data = {
-            UUID: None,
-            FIRMWARE_VERSION: None,
-            HARDWARE_VERSION: None
-        }
-        super().__init__(name, restoring_data, self._data)
+        self._data = {}
+        for key in GATEWAY_PATH_LIST:
+            self._data[key] = None
+        super().__init__(name, name, restoring_data, self._data)
         self._requests = requests
 
     async def update(self):
         """ Update data of thermostat asynchronously. """
         for key in self._data:
             result = await self._requests[GET](GATEWAY_PATH_LIST[key])
-            self._data[key] = result['value']
+            if 'value' in result:
+                self._data[key] = result['value']
