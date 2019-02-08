@@ -26,7 +26,7 @@ pip-log.txt
 .project
 .pydevproject
 *__pycache__
-
+*.pyc
 .python-version
 
 # emacs auto backups

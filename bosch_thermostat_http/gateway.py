@@ -1,6 +1,6 @@
 """Gateway module connecting to Bosch thermostat."""
 import json
-
+import asyncio
 import async_timeout
 from aiohttp import client_exceptions
 
