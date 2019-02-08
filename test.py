@@ -2,6 +2,8 @@
 import asyncio
 
 import aiohttp
+import binascii
+import hashlib
 import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import (FIRMWARE_VERSION, HARDWARE_VERSION,
                                          SENSOR_NAME, SENSOR_VALUE, TYPE_INFO,
@@ -21,21 +23,34 @@ async def main():
                                 host=data[0],
                                 access_key=data[1],
                                 password=data[2])
-        await gateway.initialize()
-        await gateway.initialize_hc_circuits()
+        print(await gateway.check_connection())
+        await gateway.initialize_circuits(HC)
         hcs = gateway.heating_circuits
-        hc = hcs[1]
-        await hc.initialize()
+        hc = hcs[0]
         await hc.update()
-        print(hc.get_property(OPERATION_MODE))
-        await hc.set_mode("manual")
         await hc.set_temperature("23")
-        await hc.update()
-        await hc.update_requested_keys(OPERATION_MODE)
-        print(hc.get_property(OPERATION_MODE))
+        # keeey = gateway.access_key
+        # import base64
+        # key_b64 = base64.b64encode(keeey)
+        # w = {
+        #     "da": key_b64
+        # }
+        # print(key_b64)
+        # import json
+        # print(json.dumps(w))
+        # await gateway.initialize()
+        # await gateway.initialize_hc_circuits()
+
+        # await hc.initialize()
+        # await hc.update()
+        # print(hc.get_property(OPERATION_MODE))
+        # await hc.set_mode("manual")
+        #
+        # await hc.update()
+        # await hc.update_requested_keys(OPERATION_MODE)
+        # print(hc.get_property(OPERATION_MODE))
         # geta = gateway.get_request()
         # print("GATEWAY")
-        # print(await geta("/gateway"))
         # # print("SYSTEM")
         # print(await geta("/heatingCircuits/hc1/operationMode"))
         # print("SENSORS")

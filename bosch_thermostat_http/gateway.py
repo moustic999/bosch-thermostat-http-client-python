@@ -4,21 +4,20 @@ import json
 import async_timeout
 from aiohttp import client_exceptions
 
-from .const import HTTP_HEADER, TIMEOUT, GET, SUBMIT, DHW, HC, GATEWAY, SENSORS
+from .const import (HTTP_HEADER, TIMEOUT, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
+                    SENSORS, TYPE_INFO)
 from .encryption import Encryption
 from .gateway_info import GatewayInfo
 from .circuits import Circuits
 from .sensors import Sensors
 
-
-class RequestError(Exception):
-    """Raise request to Bosch thermostat error. """
+from .helper import RequestError
 
 
 class Gateway:
     """Gateway to Bosch thermostat."""
 
-    def __init__(self, websession, host, access_key, password):
+    def __init__(self, websession, host, access_key, password=None):
         """
         :param access_key:
         :param password:
@@ -26,7 +25,11 @@ class Gateway:
         """
         self._host = host
         self._websession = websession
-        self._encryption = Encryption(access_key, password)
+        self._encryption = None
+        if password:
+            self._encryption = Encryption(access_key, password)
+        else:
+            self._encryption = Encryption(access_key)
         self._data = {
             GATEWAY: None,
             HC: None,
@@ -56,9 +59,19 @@ class Gateway:
         return self._data[data_type].get_items()
 
     @property
+    def access_key(self):
+        """ Return key to store in config entry."""
+        return self._encryption.key
+
+    @property
     def heating_circuits(self):
         """ Get circuit list. """
         return self._data[HC].circuits
+
+    @property
+    def gateway_info(self):
+        """ Get gateway info list. """
+        return self._data[GATEWAY]
 
     @property
     def sensors(self):
@@ -79,15 +92,10 @@ class Gateway:
         self._data[GATEWAY] = GatewayInfo(self._requests, GATEWAY)
         await self._data[GATEWAY].update()
 
-    async def initialize_hc_circuits(self, restored_data=None):
-        self._data[HC] = Circuits(self._requests, HC)
-        await self._data[HC].initialize(restored_data)
-            # here can add circuits from memory
-        # await self._data[HC].update()
-
-    async def initialize_dhw_circuits(self, restored_data=None):
-        self._data[HC] = Circuits(self._requests, DHW)
-        await self._data[HC].initialize(restored_data)
+    async def initialize_circuits(self, circ_type, restored_data=None):
+        # type = HC, DHW
+        self._data[circ_type] = Circuits(self._requests, circ_type)
+        await self._data[circ_type].initialize(restored_data)
             # here can add circuits from memory
         # await self._data[HC].update()
 
@@ -101,10 +109,17 @@ class Gateway:
         """ Initialize gateway asynchronously. """
         await self.initialize_gatewayinfo()
         await self.initialize_sensors()
-        await self.initialize_hc_circuits(None)
-        await self.initialize_dhw_circuits(None)
+        await self.initialize_circuits(HC, None)
+        await self.initialize_circuits(DHW, None)
 
-    async def request(self, path):
+    async def check_connection(self):
+        try:
+            await self.initialize_gatewayinfo()
+            return self.get_property(TYPE_INFO, UUID)
+        except RequestError:
+            return False
+
+    async def _request(self, path):
         """ Make a get request to the API. """
         try:
             with async_timeout.timeout(TIMEOUT):
@@ -119,7 +134,7 @@ class Gateway:
                 .format(self._host, path, err)
             )
 
-    async def submit(self, path, data):
+    async def _submit(self, path, data):
         """Make a put request to the API."""
         try:
             with async_timeout.timeout(TIMEOUT):
@@ -137,19 +152,19 @@ class Gateway:
 
     async def get(self, path):
         """ Get message from API with given path. """
-        encrypted = await self.request(path)
+        encrypted = await self._request(path)
         result = self._encryption.decrypt(encrypted)
         jsondata = json.loads(result)
         return jsondata
 
-    async def set(self, path, data):
+    async def _set(self, path, data):
         """ Send message to API with given path. """
         encrypted = self._encryption.encrypt(data)
-        result = await self.submit(path, encrypted)
+        result = await self._submit(path, encrypted)
         return result
 
     async def set_value(self, path, value):
         """ Set value for thermostat. """
         data = json.dumps({"value": value})
-        result = await self.set(path, data)
+        result = await self._set(path, data)
         return result

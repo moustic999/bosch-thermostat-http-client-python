@@ -106,6 +106,8 @@ class Circuit(BoschSingleEntity):
 
     async def set_temperature(self, temperature):
         """ Set temperature of Circuit. """
-        await self._requests[SUBMIT](
+        data = await self._requests[SUBMIT](
             self._circuits_path[HC_SETPOINT_ROOMTEMPERATURE],
             temperature)
+        print("response")
+        print(data)

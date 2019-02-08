@@ -14,15 +14,20 @@ PATH = "path"
 
 """ Section of gateway info consts. """
 GATEWAY = "/gateway/"
+SYSTEM = "/system/"
 UUID = "uuid"
 
 FIRMWARE_VERSION = "versionFirmware"
 HARDWARE_VERSION = "versionHardware"
+SYSTEM_BRAND = "brand"
+SYSTEM_TYPE = "systemType"
 
 GATEWAY_PATH_LIST = {
     UUID: GATEWAY + UUID,
     FIRMWARE_VERSION: GATEWAY + FIRMWARE_VERSION,
-    HARDWARE_VERSION: GATEWAY + HARDWARE_VERSION
+    HARDWARE_VERSION: GATEWAY + HARDWARE_VERSION,
+    SYSTEM_BRAND: SYSTEM + SYSTEM_BRAND,
+    SYSTEM_TYPE: SYSTEM + SYSTEM_TYPE
 }
 
 HC = '/heatingCircuits'  # get all heating Circuits

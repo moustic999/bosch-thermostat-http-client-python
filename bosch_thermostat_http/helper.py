@@ -14,6 +14,8 @@ async def crawl(url, _list, deep, get):
                     await crawl(uri["id"], _list, deep-1, get)
     return _list
 
+class RequestError(Exception):
+    """Raise request to Bosch thermostat error. """
 
 class BoschEntities:
     """

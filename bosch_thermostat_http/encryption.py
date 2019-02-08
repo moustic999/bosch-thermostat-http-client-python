@@ -1,31 +1,43 @@
 """ Encryption logic of Bosch thermostat. """
 import base64
 import hashlib
+import binascii
 
 from pyaes import PADDING_NONE, AESModeOfOperationECB, Decrypter, Encrypter
 
 from .const import BS, MAGIC
 
+
 class Encryption:
     """ Encryption class. """
 
-    def __init__(self, access_key, password):
+    def __init__(self, access_key, password=None):
         """
-        :param str access_key: Access key to Bosch thermostatself.
+        :param str access_key: Access key to Bosch thermostat.
+            If no password specified assumed as ready key to encrypt.
         :param str password: Password created with Bosch app.
         """
         self._bs = BS
-        key_arrray = bytearray(access_key, "utf8")
-        password_array = bytearray(password, "utf8")
-        self.key = (hashlib.md5(key_arrray + MAGIC).digest() +
-                    hashlib.md5(MAGIC + password_array).digest())
+        if password and access_key:
+            key_hash = hashlib.md5(bytearray(access_key, "utf8") + MAGIC)
+            password_hash = hashlib.md5(MAGIC + bytearray(password, "utf8"))
+            self._saved_key = key_hash.hexdigest() + password_hash.hexdigest()
+            self._key = binascii.unhexlify(self._saved_key)
+        elif access_key:
+            self._saved_key = access_key
+            self._key = binascii.unhexlify(self._saved_key)
+
+    @property
+    def key(self):
+        """ Return key to store in config entry."""
+        return self._saved_key
 
     def encrypt(self, raw):
         """ Encrypt raw message. """
         if len(raw) % self._bs != 0:
             raw = self._pad(raw)
         cipher = Encrypter(
-            AESModeOfOperationECB(self.key),
+            AESModeOfOperationECB(self._key),
             padding=PADDING_NONE)
         ciphertext = cipher.feed(raw) + cipher.feed()
         return base64.b64encode(ciphertext)
@@ -40,7 +52,7 @@ class Encryption:
                 enc = self._pad(enc)
             enc = base64.b64decode(enc)
             cipher = Decrypter(
-                AESModeOfOperationECB(self.key),
+                AESModeOfOperationECB(self._key),
                 padding=PADDING_NONE)
             decrypted = cipher.feed(enc) + cipher.feed()
             return decrypted.decode("utf8").rstrip(chr(0))
