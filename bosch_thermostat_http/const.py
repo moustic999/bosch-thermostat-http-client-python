@@ -11,6 +11,7 @@ GET = "get"
 SUBMIT = "submit"
 NAME = "name"
 PATH = "path"
+ID = "id"
 
 """ Section of gateway info consts. """
 GATEWAY = "/gateway/"
@@ -66,9 +67,11 @@ HC_CURRENT_ROOMTEMPERATURE = "roomtemperature"
 HC_HOLIDAY_MODE = "holidayMode"
 HC_HEATING_STATUS = "status"
 HC_SETPOINT_ROOMTEMPERATURE = "temperatureRoomSetpoint"
+HC_TEMPORARY_TEMPERATURE = "temporaryRoomSetpoint"
+HC_ECO = "temperatureLevels/eco"
 ##### OLD
   # current Selected Temp
-_HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
+HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
   # room current temperature
 """ set target temp in auto mode. """
 

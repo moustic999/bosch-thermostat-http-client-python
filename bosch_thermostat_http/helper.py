@@ -1,6 +1,6 @@
 """ Helper functions. """
 
-from .const import GET, NAME, PATH
+from .const import GET, NAME, PATH, ID
 
 
 async def crawl(url, _list, deep, get):
@@ -43,9 +43,10 @@ class BoschEntities:
 
 class BoschSingleEntity:
 
-    def __init__(self, name, restoring_data, data, path=None):
+    def __init__(self, name, attr_id, restoring_data, data, path=None):
         self._main_data = {
             NAME: name,
+            ID: attr_id,
             PATH: path
         }
         self._data = data
@@ -55,6 +56,10 @@ class BoschSingleEntity:
         if property_name in self._data:
             return self._data[property_name]
         return None
+
+    @property
+    def attr_id(self):
+        return self._main_data[ID]
 
     def get_all_properties(self):
         return self._data

@@ -12,11 +12,12 @@ class GatewayInfo(BoschSingleEntity):
         self._data = {}
         for key in GATEWAY_PATH_LIST:
             self._data[key] = None
-        super().__init__(name, restoring_data, self._data)
+        super().__init__(name, name, restoring_data, self._data)
         self._requests = requests
 
     async def update(self):
         """ Update data of thermostat asynchronously. """
         for key in self._data:
             result = await self._requests[GET](GATEWAY_PATH_LIST[key])
-            self._data[key] = result['value']
+            if 'value' in result:
+                self._data[key] = result['value']

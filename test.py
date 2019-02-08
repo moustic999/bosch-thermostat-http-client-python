@@ -4,11 +4,13 @@ import asyncio
 import aiohttp
 import binascii
 import hashlib
+from bosch_thermostat_http.helper import crawl
 import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import (FIRMWARE_VERSION, HARDWARE_VERSION,
                                          SENSOR_NAME, SENSOR_VALUE, TYPE_INFO,
                                          UUID, SENSORS, DHW, HC, GATEWAY,
-                                         OPERATION_MODE)
+                                         OPERATION_MODE,
+                                         HC_CURRENT_ROOMSETPOINT)
 
 
 async def main():
@@ -27,12 +29,43 @@ async def main():
         await gateway.initialize_circuits(HC)
         hcs = gateway.heating_circuits
         hc = hcs[0]
+<<<<<<< HEAD
         await hc.initialize()
         await hc.update()
         await hc.set_temperature("23")
+=======
+        # await hc.update()
+        await hc.set_temperature("23.0")
+        await hc.update()
+        #
+        # print(hc.get_property(OPERATION_MODE))
+        # print(hc.get_property(HC_CURRENT_ROOMSETPOINT))
+        # keeey = gateway.access_key
+        # import base64
+        # key_b64 = base64.b64encode(keeey)
+        # w = {
+        #     "da": key_b64
+        # }
+        # print(key_b64)
+        # import json
+        # print(json.dumps(w))
+        # await gateway.initialize()
+        # await gateway.initialize_hc_circuits()
+
+        # await hc.initialize()
+        # await hc.update()
+        # print(hc.get_property(OPERATION_MODE))
+        # await hc.set_mode("manual")
+        #
+        # await hc.update()
+        # await hc.update_requested_keys(OPERATION_MODE)
+        # print(hc.get_property(OPERATION_MODE))
+        geta = gateway.get_request()
+>>>>>>> added posibility to restore scheme
         # print("GATEWAY")
         # # print("SYSTEM")
-        # print(await geta("/heatingCircuits/hc1/operationMode"))
+        # print(await geta("/heatingCircuits/hc1/currentRoomSetpoint"))
+        print(await crawl("/heatingCircuits/hc1", [], 3, geta))
         # print("SENSORS")
         # print(await geta("/system/sensors"))
         # print("HS")

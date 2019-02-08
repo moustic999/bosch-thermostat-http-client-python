@@ -36,7 +36,7 @@ class Gateway:
             DHW: None,
             SENSORS: None
         }
-        self._serial_number = None
+        self._empty_json = self.encrypt("{}")
         self._requests = {
             GET: self.get,
             SUBMIT: self.set_value
@@ -126,6 +126,8 @@ class Gateway:
                 async with self._websession.get(
                         self.format_url(path),
                         headers=HTTP_HEADER) as res:
+                    if res.status != 200:
+                        return None
                     data = await res.text()
                     return data
         except client_exceptions.ClientError as err:
