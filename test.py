@@ -27,29 +27,9 @@ async def main():
         await gateway.initialize_circuits(HC)
         hcs = gateway.heating_circuits
         hc = hcs[0]
+        await hc.initialize()
         await hc.update()
         await hc.set_temperature("23")
-        # keeey = gateway.access_key
-        # import base64
-        # key_b64 = base64.b64encode(keeey)
-        # w = {
-        #     "da": key_b64
-        # }
-        # print(key_b64)
-        # import json
-        # print(json.dumps(w))
-        # await gateway.initialize()
-        # await gateway.initialize_hc_circuits()
-
-        # await hc.initialize()
-        # await hc.update()
-        # print(hc.get_property(OPERATION_MODE))
-        # await hc.set_mode("manual")
-        #
-        # await hc.update()
-        # await hc.update_requested_keys(OPERATION_MODE)
-        # print(hc.get_property(OPERATION_MODE))
-        # geta = gateway.get_request()
         # print("GATEWAY")
         # # print("SYSTEM")
         # print(await geta("/heatingCircuits/hc1/operationMode"))
