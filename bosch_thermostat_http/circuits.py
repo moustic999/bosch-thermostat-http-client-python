@@ -107,11 +107,6 @@ class Circuit(BoschSingleEntity):
             del self._data[key]
             del self._circuits_path[key]
         self._json_scheme_ready = True
-        print("sprawdzam co ja tu mam")
-        print(self.name)
-        print(self._data)
-        print(self._circuits_path)
-        print("KONIC")
 
     @property
     def allowed_operations(self):
