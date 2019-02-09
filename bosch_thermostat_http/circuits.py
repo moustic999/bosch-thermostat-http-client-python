@@ -91,6 +91,9 @@ class Circuit(BoschSingleEntity):
             self._data[key] = (result['value'] if 'value' in result
                                else self._data[key])
             if key == OPERATION_MODE:
+                if 'allowedValues' not in result:
+                    print("TODO: values not present!!")
+                    print(result)
                 self._operation_list = result['allowedValues']
 
     async def initialize(self):

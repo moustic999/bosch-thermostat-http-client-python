@@ -122,14 +122,13 @@ class Gateway:
     async def _request(self, path):
         """ Make a get request to the API. """
         try:
-            with async_timeout.timeout(TIMEOUT):
-                async with self._websession.get(
-                        self.format_url(path),
-                        headers=HTTP_HEADER) as res:
-                    if res.status != 200:
-                        return None
-                    data = await res.text()
-                    return data
+            async with self._websession.get(
+                    self.format_url(path),
+                    headers=HTTP_HEADER) as res:
+                if res.status != 200:
+                    return None
+                data = await res.text()
+                return data
         except client_exceptions.ClientError as err:
             raise RequestError(
                 'Error getting data from {}, path: {}, message: {}'
@@ -139,13 +138,12 @@ class Gateway:
     async def _submit(self, path, data):
         """Make a put request to the API."""
         try:
-            with async_timeout.timeout(TIMEOUT):
-                async with self._websession.put(
-                        self.format_url(path),
-                        data=data,
-                        headers=HTTP_HEADER) as req:
-                    data = await req.text()
-                    return data
+            async with self._websession.put(
+                    self.format_url(path),
+                    data=data,
+                    headers=HTTP_HEADER) as req:
+                data = await req.text()
+                return data
         except client_exceptions.ClientError as err:
             raise RequestError(
                 'Error putting data to {}, path: {}, message: {}'.
