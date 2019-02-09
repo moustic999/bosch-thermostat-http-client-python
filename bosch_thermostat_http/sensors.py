@@ -51,7 +51,6 @@ class Sensor(BoschSingleEntity):
         }
         super().__init__(attr_id.split('/').pop(), attr_id, restoring_data,
                          self._data, path)
-
     @property
     def json_scheme(self):
         return {
