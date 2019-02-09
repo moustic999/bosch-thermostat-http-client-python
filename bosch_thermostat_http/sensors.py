@@ -1,6 +1,7 @@
 """ Sensors of Bosch thermostat. """
 from .const import (SENSOR_NAME, SENSORS,
-                    SENSOR_TYPE, SENSOR_UNIT, SENSOR_VALUE, GET, PATH)
+                    SENSOR_TYPE, SENSOR_UNIT, SENSOR_VALUE, GET, PATH, ID,
+                    NAME)
 from .helper import BoschSingleEntity, BoschEntities
 
 ### ADD RESTORING_DATA
@@ -25,8 +26,8 @@ class Sensors(BoschEntities):
             restoring_data = False
         for sensor in sensors:
             if "id" in sensor:
-                self.register_sensor(sensor["id"],
-                                     sensor["id"], restoring_data)
+                self.register_sensor(sensor[ID],
+                                     sensor[ID], restoring_data)
 
     def register_sensor(self, attr_id, path, restoring_data):
         """ Register sensor for the module. """
@@ -50,6 +51,13 @@ class Sensor(BoschSingleEntity):
         }
         super().__init__(attr_id.split('/').pop(), attr_id, restoring_data,
                          self._data, path)
+
+    @property
+    def json_scheme(self):
+        return {
+            NAME: self._main_data[NAME],
+            ID: self._main_data[ID]
+        }
 
     async def update(self):
         """ Update sensor data. """
