@@ -26,8 +26,6 @@ class Gateway:
         self._host = host
         self._websession = websession
         self._encryption = None
-        self._requesting = True
-        self._first_req = 0
         if password:
             self._encryption = Encryption(access_key, password)
         else:
@@ -121,15 +119,6 @@ class Gateway:
         except RequestError:
             return False
 
-    def add_request(self):
-        if self._first_req == 0:
-            print("updating first req")
-            self._first_req += 1
-            self._requesting = True
-
-    def is_requesting(self):
-        return self._first_req
-
     async def _request(self, path):
         """ Make a get request to the API. """
         try:
@@ -143,11 +132,6 @@ class Gateway:
         except client_exceptions.ClientError as err:
             raise RequestError(
                 'Error getting data from {}, path: {}, message: {}'
-                .format(self._host, path, err)
-            )
-        except TimeoutError as err:
-            raise RequestError(
-                'Too long to get reponse from {}, path: {}, message: {}'
                 .format(self._host, path, err)
             )
 
