@@ -29,11 +29,6 @@ async def main():
         await gateway.initialize_circuits(HC)
         hcs = gateway.heating_circuits
         hc = hcs[0]
-<<<<<<< HEAD
-        await hc.initialize()
-        await hc.update()
-        await hc.set_temperature("23")
-=======
         # await hc.update()
         await hc.set_temperature("23.0")
         await hc.update()
@@ -61,7 +56,6 @@ async def main():
         # await hc.update_requested_keys(OPERATION_MODE)
         # print(hc.get_property(OPERATION_MODE))
         geta = gateway.get_request()
->>>>>>> added posibility to restore scheme
         # print("GATEWAY")
         # # print("SYSTEM")
         # print(await geta("/heatingCircuits/hc1/currentRoomSetpoint"))

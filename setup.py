@@ -6,7 +6,7 @@ VERSION = '0.1.0'
 
 REQUIRES = [
     'pyaes>=1.6.1',
-    'aiohttp>=3.5.4'
+    'aiohttp'
     ]
 
 

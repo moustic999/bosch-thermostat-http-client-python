@@ -27,7 +27,8 @@ class Gateway:
         self._websession = websession
         self._encryption = None
         if password:
-            self._encryption = Encryption(access_key, password)
+            access_token = access_key.replace('-','')
+            self._encryption = Encryption(access_token, password)
         else:
             self._encryption = Encryption(access_key)
         self._data = {
