@@ -47,16 +47,21 @@ class Encryption:
         Decrypt raw message only if length > 2.
         Padding is not working for lenght less than 2.
         """
-        if enc and len(enc) > 2:
-            if len(enc) % self._bs != 0:
-                enc = self._pad(enc)
-            enc = base64.b64decode(enc)
-            cipher = Decrypter(
-                AESModeOfOperationECB(self._key),
-                padding=PADDING_NONE)
-            decrypted = cipher.feed(enc) + cipher.feed()
-            return decrypted.decode("utf8").rstrip(chr(0))
-        return "{}"
+        try:
+            if enc and len(enc) > 2:
+                if len(enc) % self._bs != 0:
+                    enc = self._pad(enc)
+                enc = base64.b64decode(enc)
+                cipher = Decrypter(
+                    AESModeOfOperationECB(self._key),
+                    padding=PADDING_NONE)
+                decrypted = cipher.feed(enc) + cipher.feed()
+                return decrypted.decode("utf8").rstrip(chr(0))
+            return "{}"
+        except:
+            print("An exception occurred during decryption")
+            return '{}'
+
 
     def _pad(self, _s):
         """ Padding of encryption. """

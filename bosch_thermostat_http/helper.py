@@ -14,6 +14,16 @@ async def crawl(url, _list, deep, get):
                     await crawl(uri["id"], _list, deep-1, get)
     return _list
 
+async def deep_into(url, get, log=None):
+    if(log):
+        print (url)
+    resp = await get(url)
+    if (log):
+        print (resp)
+    if("references" in resp):
+        for uri in resp["references"]:
+            await deep_into(uri["id"], get, log)
+
 class RequestError(Exception):
     """Raise request to Bosch thermostat error. """
 

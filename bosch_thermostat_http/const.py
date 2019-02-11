@@ -14,8 +14,18 @@ PATH = "path"
 ID = "id"
 
 """ Section of gateway info consts. """
-GATEWAY = "/gateway/"
-SYSTEM = "/system/"
+GATEWAY = "/gateway"
+SYSTEM = '/system'
+DHW = '/dhwCircuits' 
+HC = '/heatingCircuits'
+HEATSOURCES = '/heatSources'
+NOTIFICATIONS = "/notifications"
+
+ROOT_PATHS = [DHW,GATEWAY,HC,HEATSOURCES,NOTIFICATIONS,SYSTEM]
+
+
+
+SENSORS = "/system/sensors"
 UUID = "uuid"
 
 FIRMWARE_VERSION = "versionFirmware"
@@ -24,22 +34,22 @@ SYSTEM_BRAND = "brand"
 SYSTEM_TYPE = "systemType"
 
 GATEWAY_PATH_LIST = {
-    UUID: GATEWAY + UUID,
-    FIRMWARE_VERSION: GATEWAY + FIRMWARE_VERSION,
-    HARDWARE_VERSION: GATEWAY + HARDWARE_VERSION,
-    SYSTEM_BRAND: SYSTEM + SYSTEM_BRAND,
-    SYSTEM_TYPE: SYSTEM + SYSTEM_TYPE
+    UUID: GATEWAY +'/' +UUID,
+    FIRMWARE_VERSION: GATEWAY +'/'+ FIRMWARE_VERSION,
+    HARDWARE_VERSION: GATEWAY +'/'+ HARDWARE_VERSION,
+    SYSTEM_BRAND: SYSTEM +'/'+ SYSTEM_BRAND,
+    SYSTEM_TYPE: SYSTEM +'/'+ SYSTEM_TYPE
 }
 
-HC = '/heatingCircuits'  # get all heating Circuits
+
 """
 Get/set actual mode + get allowed modes
 (manual, auto, 'Off', 'high', 'HCprogram', 'ownprogram').
 """
 OPERATION_MODE = "operationMode"
 
-DHW = '/dhwCircuits'
-SENSORS = "/system/sensors"
+
+
 
 """ Section of sensor friendly names. To be used in future. """
 SENSOR_FRIENDLY_NAMES = {
@@ -70,6 +80,10 @@ HC_SETPOINT_ROOMTEMPERATURE = "temperatureRoomSetpoint"
 HC_TEMPORARY_TEMPERATURE = "temporaryRoomSetpoint"
 HC_ECO = "temperatureLevels/eco"
 ##### OLD
+HC_OPERATION_MODE = "operationMode"
+HC_MODE_AUTO = 'auto'
+HC_MODE_MANUAL = 'manual'
+
   # current Selected Temp
 HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
   # room current temperature

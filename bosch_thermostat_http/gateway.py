@@ -5,13 +5,14 @@ import async_timeout
 from aiohttp import client_exceptions
 
 from .const import (HTTP_HEADER, TIMEOUT, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
-                    SENSORS, TYPE_INFO)
+                    SENSORS, TYPE_INFO, ROOT_PATHS)
 from .encryption import Encryption
 from .gateway_info import GatewayInfo
 from .circuits import Circuits
 from .sensors import Sensors
-
+ 
 from .helper import RequestError
+from .helper import deep_into
 
 
 class Gateway:
@@ -31,6 +32,7 @@ class Gateway:
             self._encryption = Encryption(access_token, password)
         else:
             self._encryption = Encryption(access_key)
+
         self._data = {
             GATEWAY: None,
             HC: None,
@@ -68,7 +70,7 @@ class Gateway:
     def heating_circuits(self):
         """ Get circuit list. """
         return self._data[HC].circuits
-
+    
     @property
     def gateway_info(self):
         """ Get gateway info list. """
@@ -97,8 +99,6 @@ class Gateway:
         # type = HC, DHW
         self._data[circ_type] = Circuits(self._requests, circ_type)
         await self._data[circ_type].initialize(restored_data)
-            # here can add circuits from memory
-        # await self._data[HC].update()
 
     async def initialize_sensors(self, restored_data=None):
         self._data[SENSORS] = Sensors(self._requests)
@@ -112,6 +112,11 @@ class Gateway:
         await self.initialize_sensors()
         await self.initialize_circuits(HC, None)
         await self.initialize_circuits(DHW, None)
+    
+    async def rawscan(self):
+        """ print out all info from gateway """
+        for root in ROOT_PATHS:
+            await deep_into(root, self.get, True)
 
     async def check_connection(self):
         try:
