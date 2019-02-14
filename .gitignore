@@ -25,6 +25,7 @@ pip-log.txt
 *__pycache__
 *.pyc
 .python-version
+.vscode
 
 # emacs auto backups
 *~
