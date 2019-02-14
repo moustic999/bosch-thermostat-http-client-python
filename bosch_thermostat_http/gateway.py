@@ -103,7 +103,7 @@ class Gateway:
     async def get_info(self):
         gateway_info = []
         for key in GATEWAY_PATH_LIST:
-            response = self.get(key)
+            response = await self.get(key)
             if 'value' in response:
                 gateway_info.append({response['id'].split('/').pop() : response['value']})
         return gateway_info
