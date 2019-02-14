@@ -110,3 +110,44 @@ DHEATING_WATER_CIRCUIT_LIST = {
     DHW_WATERFLOW: DHW+'/dhw{}/waterFlow',
     DHW_WORKINGTIME: DHW+'/dhw{}/workingTime',
 }
+
+HC_CAPABILITY = 'heatingCircuit'
+DHW_CAPABILITY = 'hotWater'
+SOLAR_CAPACITY = 'solar'
+SENSOR_CAPACITY = 'sensor'
+
+SYTEM_CAPABILITIES = {
+   HC_CAPABILITY : ['/heatingCircuits'],
+   DHW_CAPABILITY : ['/dhwCircuits'], 
+#   SOLAR_CAPACITY : ['/solarCircuits'],
+   SENSOR_CAPACITY : ['/system/sensors/temperatures','/heatSources']
+}
+
+DETAILED_CAPABILITIES = {
+    HC_CAPABILITY :  ['/heatingCircuits/{}/currentRoomSetpoint',
+                          '/heatingCircuits/{}/operationMode',
+                          '/heatingCircuits/{}/roomtemperature'],
+    DHW_CAPABILITY : ['/dhwCircuits/{}/currentSetpoint',
+              '/dhwCircuits/{}/operationMode',
+              '/dhwCircuits/{}/actualTemp'],
+    SOLAR_CAPACITY :[] 
+    }
+
+SENSORS_CAPABILITIES = [
+    '/system/sensors/temperatures/outdoor_t1',
+    '/system/sensors/temperatures/supply_t1_setpoint',
+    '/system/sensors/temperatures/supply_t1',
+    '/system/sensors/temperatures/hotWater_t2',
+    '/system/sensors/temperatures/return',
+    '/heatSources/actualPower',
+    '/heatSources/actualModulation',
+    '/heatSources/burnerModulationSetpoint',
+    '/heatSources/burnerPowerSetpoint',
+    '/heatSources/flameStatus',
+    '/heatSources/CHpumpModulation',
+    '/heatSources/systemPressure',
+    '/heatSources/flameCurrent',
+    '/heatSources/workingTime',
+    '/heatSources/numberOfStarts'
+]
+

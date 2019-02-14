@@ -1,11 +1,12 @@
 """Gateway module connecting to Bosch thermostat."""
 import json
 import asyncio
-import async_timeout
+import aiohttp
 from aiohttp import client_exceptions
 
 from .const import (HTTP_HEADER, TIMEOUT, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
-                    SENSORS, TYPE_INFO, ROOT_PATHS)
+                    SENSORS, TYPE_INFO, ROOT_PATHS, GATEWAY_PATH_LIST, 
+                    SYTEM_CAPABILITIES, DETAILED_CAPABILITIES, SENSORS_CAPABILITIES)
 from .encryption import Encryption
 from .gateway_info import GatewayInfo
 from .circuits import Circuits
@@ -27,11 +28,16 @@ class Gateway:
         self._host = host
         self._websession = websession
         self._encryption = None
+
         if password:
             access_token = access_key.replace('-','')
             self._encryption = Encryption(access_token, password)
         else:
             self._encryption = Encryption(access_key)
+
+        self._request_timeout = 10
+        self._monitored_keys = {}
+        # {'keyname': self._data[HC][HC_NAME][HC_CURRENT_ROOMSETPOINT]
 
         self._data = {
             GATEWAY: None,
@@ -60,6 +66,9 @@ class Gateway:
     def get_items(self, data_type):
         """ Get items on types like Sensors, Heating Circuits etc. """
         return self._data[data_type].get_items()
+
+    def set_timeout(self, timeout):
+        self._request_timeout = timeout
 
     @property
     def access_key(self):
@@ -90,6 +99,32 @@ class Gateway:
     def get_request(self):
         """ For testing purposes only. Delete it in final lib."""
         return self.get
+
+    async def get_info(self):
+        gateway_info = []
+        for key in GATEWAY_PATH_LIST:
+            response = self.get(key)
+            if 'value' in response:
+                gateway_info.append({response['id'].split('/').pop() : response['value']})
+        return gateway_info
+
+    async def get_capabilities(self):
+        capabilities = []
+        for key, values in SYTEM_CAPABILITIES.items():
+            for value in values:                  
+                response = await self.get(value) 
+                if (response['type'] == 'refEnum'):
+                    for ref in response['references']:
+                        if (key in DETAILED_CAPABILITIES) or (ref['id'] in SENSORS_CAPABILITIES):
+                            capability = {
+                                    'name' : None,
+                                    'type' : None,
+                                }
+                            capability['name'] = ref["id"].split('/').pop()
+                            capability['type'] = key                     
+                            capabilities.append(capability)    
+                       
+        return  capabilities
 
     async def initialize_gatewayinfo(self, restored_data=None):
         self._data[GATEWAY] = GatewayInfo(self._requests, GATEWAY)
@@ -130,12 +165,13 @@ class Gateway:
         try:
             async with self._websession.get(
                     self.format_url(path),
-                    headers=HTTP_HEADER) as res:
+                    headers=HTTP_HEADER,timeout=self._request_timeout) as res:
                 if res.status != 200:
+                    print("request returned status : ", res.status)
                     return None
                 data = await res.text()
                 return data
-        except client_exceptions.ClientError as err:
+        except (client_exceptions.ClientError, TimeoutError) as err:
             raise RequestError(
                 'Error getting data from {}, path: {}, message: {}'
                 .format(self._host, path, err)
