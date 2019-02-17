@@ -5,13 +5,14 @@ import aiohttp
 from aiohttp import client_exceptions
 
 from .const import (HTTP_HEADER, TIMEOUT, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
-                    SENSORS, TYPE_INFO, ROOT_PATHS, GATEWAY_PATH_LIST, 
+                    SENSORS, TYPE_INFO, ROOT_PATHS, GATEWAY_PATH_LIST,
                     SYTEM_CAPABILITIES, DETAILED_CAPABILITIES, SENSORS_CAPABILITIES)
 from .encryption import Encryption
 from .gateway_info import GatewayInfo
 from .circuits import Circuits
 from .sensors import Sensors
- 
+from .heating_circuits import HeatingCircuits
+
 from .helper import RequestError
 from .helper import deep_into
 
@@ -78,8 +79,8 @@ class Gateway:
     @property
     def heating_circuits(self):
         """ Get circuit list. """
-        return self._data[HC].circuits
-    
+        return self._data[HC].heating_circuits
+
     @property
     def gateway_info(self):
         """ Get gateway info list. """
@@ -111,8 +112,8 @@ class Gateway:
     async def get_capabilities(self):
         capabilities = []
         for key, values in SYTEM_CAPABILITIES.items():
-            for value in values:                  
-                response = await self.get(value) 
+            for value in values:
+                response = await self.get(value)
                 if (response['type'] == 'refEnum'):
                     for ref in response['references']:
                         if (key in DETAILED_CAPABILITIES) or (ref['id'] in SENSORS_CAPABILITIES):
@@ -121,9 +122,9 @@ class Gateway:
                                     'type' : None,
                                 }
                             capability['name'] = ref["id"].split('/').pop()
-                            capability['type'] = key                     
-                            capabilities.append(capability)    
-                       
+                            capability['type'] = key
+                            capabilities.append(capability)
+
         return  capabilities
 
     async def initialize_gatewayinfo(self, restored_data=None):
@@ -132,7 +133,7 @@ class Gateway:
 
     async def initialize_circuits(self, circ_type, restored_data=None):
         # type = HC, DHW
-        self._data[circ_type] = Circuits(self._requests, circ_type)
+        self._data[circ_type] = HeatingCircuits(self._requests)
         await self._data[circ_type].initialize(restored_data)
 
     async def initialize_sensors(self, restored_data=None):
@@ -147,7 +148,7 @@ class Gateway:
         await self.initialize_sensors()
         await self.initialize_circuits(HC, None)
         await self.initialize_circuits(DHW, None)
-    
+
     async def rawscan(self):
         """ print out all info from gateway """
         for root in ROOT_PATHS:

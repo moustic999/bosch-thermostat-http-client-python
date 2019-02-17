@@ -13,10 +13,16 @@ NAME = "name"
 PATH = "path"
 ID = "id"
 
+VALUE = "value"
+MINVALUE = "minValue"
+MAXVALUE = "maxValue"
+ALLOWED_VALUES = "allowedValues"
+UNITS = "unitOfMeasure"
+
 """ Section of gateway info consts. """
 GATEWAY = "/gateway"
 SYSTEM = '/system'
-DHW = '/dhwCircuits' 
+DHW = '/dhwCircuits'
 HC = '/heatingCircuits'
 HEATSOURCES = '/heatSources'
 NOTIFICATIONS = "/notifications"
@@ -118,7 +124,7 @@ SENSOR_CAPACITY = 'sensor'
 
 SYTEM_CAPABILITIES = {
    HC_CAPABILITY : ['/heatingCircuits'],
-   DHW_CAPABILITY : ['/dhwCircuits'], 
+   DHW_CAPABILITY : ['/dhwCircuits'],
 #   SOLAR_CAPACITY : ['/solarCircuits'],
    SENSOR_CAPACITY : ['/system/sensors/temperatures','/heatSources']
 }
@@ -130,7 +136,7 @@ DETAILED_CAPABILITIES = {
     DHW_CAPABILITY : ['/dhwCircuits/{}/currentSetpoint',
               '/dhwCircuits/{}/operationMode',
               '/dhwCircuits/{}/actualTemp'],
-    SOLAR_CAPACITY :[] 
+    SOLAR_CAPACITY :[]
     }
 
 SENSORS_CAPABILITIES = [
@@ -150,4 +156,3 @@ SENSORS_CAPABILITIES = [
     '/heatSources/workingTime',
     '/heatSources/numberOfStarts'
 ]
-
