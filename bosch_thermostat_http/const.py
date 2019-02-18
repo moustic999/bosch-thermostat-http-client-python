@@ -18,6 +18,7 @@ MINVALUE = "minValue"
 MAXVALUE = "maxValue"
 ALLOWED_VALUES = "allowedValues"
 UNITS = "unitOfMeasure"
+STATE = "state"
 
 """ Section of gateway info consts. """
 GATEWAY = "/gateway"

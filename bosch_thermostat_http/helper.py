@@ -1,7 +1,7 @@
 """ Helper functions. """
 
 from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE,
-                    ALLOWED_VALUES, UNITS)
+                    ALLOWED_VALUES, UNITS, STATE)
 
 
 async def crawl(url, _list, deep, get):
@@ -66,11 +66,9 @@ class BoschSingleEntity:
     def process_results(self, result, key):
         if result:
             for res_key in [VALUE, MINVALUE, MAXVALUE, ALLOWED_VALUES,
-                            UNITS]:
-                self._data[key][res_key] = \
-                    result.get(res_key, self._data[key].get(res_key, None))
-            print(key)
-            print(self._data[key])
+                            UNITS, STATE]:
+                if res_key in result:
+                    self._data[key][res_key] = result[res_key]
 
     def get_property(self, property_name):
         if property_name in self._data:
