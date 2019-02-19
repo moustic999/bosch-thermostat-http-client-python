@@ -15,18 +15,33 @@ async def crawl(url, _list, deep, get):
                     await crawl(uri["id"], _list, deep-1, get)
     return _list
 
+
 async def deep_into(url, get, log=None):
-    if(log):
-        print (url)
+    if log:
+        print(url)
     resp = await get(url)
-    if (log):
-        print (resp)
-    if("references" in resp):
+    if log:
+        print(resp)
+    if "references" in resp:
         for uri in resp["references"]:
             await deep_into(uri["id"], get, log)
 
+
+def check_sensor(sensor):
+    """ Check if sensor is valid. """
+    if ID in sensor and VALUE in sensor:
+        if STATE in sensor:
+            for item in sensor[STATE]:
+                for key in item:
+                    if sensor[VALUE] == item[key]:
+                        return False
+        return True
+    return False
+
+
 class RequestError(Exception):
     """Raise request to Bosch thermostat error. """
+
 
 class BoschEntities:
     """
@@ -54,26 +69,31 @@ class BoschEntities:
 
 class BoschSingleEntity:
 
-    def __init__(self, name, attr_id, restoring_data, data, path=None):
+    def __init__(self, name, attr_id, restoring_data, path=None):
         self._main_data = {
             NAME: name,
             ID: attr_id,
             PATH: path
         }
-        self._data = data
+        self._data = {}
+        self._type = None
         self._json_scheme_ready = restoring_data
 
-    def process_results(self, result, key):
+    def process_results(self, result, key=None):
+        data = self._data if self._type == "sensor" else self._data[key]
         if result:
             for res_key in [VALUE, MINVALUE, MAXVALUE, ALLOWED_VALUES,
                             UNITS, STATE]:
                 if res_key in result:
-                    self._data[key][res_key] = result[res_key]
+                    data[res_key] = result[res_key]
 
     def get_property(self, property_name):
-        if property_name in self._data:
-            return self._data[property_name]
-        return None
+        """ Retrieve JSON with all properties: value, min, max, state etc."""
+        return self._data.get(property_name, None)
+
+    def get_value(self, property_name):
+        """ Retrieve only value from JSON. """
+        return self.get_property(property_name).get(VALUE, None)
 
     @property
     def attr_id(self):

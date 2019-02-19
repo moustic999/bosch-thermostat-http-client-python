@@ -1,8 +1,8 @@
 """ Sensors of Bosch thermostat. """
 from .const import (SENSOR_NAME, SENSORS,
                     SENSOR_TYPE, SENSOR_UNIT, SENSOR_VALUE, GET, PATH, ID,
-                    NAME)
-from .helper import BoschSingleEntity, BoschEntities
+                    NAME, VALUE, STATE)
+from .helper import BoschSingleEntity, BoschEntities, check_sensor
 
 ### ADD RESTORING_DATA
 
@@ -25,7 +25,9 @@ class Sensors(BoschEntities):
             sensors = await self.retrieve_from_module(2, SENSORS)
             restoring_data = False
         for sensor in sensors:
-            if "id" in sensor:
+            sensor_check_status = (check_sensor(sensor)
+                                   if not restoring_data else True)
+            if sensor_check_status:
                 self.register_sensor(sensor[ID],
                                      sensor[ID], restoring_data)
 
@@ -43,14 +45,10 @@ class Sensor(BoschSingleEntity):
         :param str path: path to retrieve data from sensor.
         """
         self._requests = requests
-        self._data = {
-            SENSOR_NAME: attr_id.split('/').pop(),
-            SENSOR_TYPE: None,
-            SENSOR_VALUE: None,
-            SENSOR_UNIT: None
-        }
-        super().__init__(attr_id.split('/').pop(), attr_id, restoring_data,
-                         self._data, path)
+        name = attr_id.split('/').pop()
+        super().__init__(name, attr_id, restoring_data, path)
+        self._type = "sensor"
+
     @property
     def json_scheme(self):
         return {
@@ -60,7 +58,5 @@ class Sensor(BoschSingleEntity):
 
     async def update(self):
         """ Update sensor data. """
-        data = await self._requests[GET](self._main_data[PATH])
-        self._data[SENSOR_VALUE] = data['value']
-        self._data[SENSOR_TYPE] = data['type']
-        self._data[SENSOR_UNIT] = data['unitOfMeasure']
+        result = await self._requests[GET](self._main_data[PATH])
+        self.process_results(result)

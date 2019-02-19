@@ -124,10 +124,10 @@ SOLAR_CAPACITY = 'solar'
 SENSOR_CAPACITY = 'sensor'
 
 SYTEM_CAPABILITIES = {
-   HC_CAPABILITY : ['/heatingCircuits'],
-   DHW_CAPABILITY : ['/dhwCircuits'],
-#   SOLAR_CAPACITY : ['/solarCircuits'],
-   SENSOR_CAPACITY : ['/system/sensors/temperatures','/heatSources']
+    HC_CAPABILITY: ['/heatingCircuits'],
+    DHW_CAPABILITY: ['/dhwCircuits'],
+#    SOLAR_CAPACITY : ['/solarCircuits'],
+    SENSOR_CAPACITY: ['/system/sensors/temperatures', '/heatSources']
 }
 
 DETAILED_CAPABILITIES = {

@@ -4,14 +4,13 @@ import asyncio
 import aiohttp
 from aiohttp import client_exceptions
 
-from .const import (HTTP_HEADER, TIMEOUT, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
-                    SENSORS, TYPE_INFO, ROOT_PATHS, GATEWAY_PATH_LIST,
-                    SYTEM_CAPABILITIES, DETAILED_CAPABILITIES, SENSORS_CAPABILITIES)
+from .const import (HTTP_HEADER, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
+                    SENSORS, ROOT_PATHS, GATEWAY_PATH_LIST, FIRMWARE_VERSION,
+                    SYTEM_CAPABILITIES, DETAILED_CAPABILITIES, SENSORS_CAPABILITIES,
+                    VALUE, ID)
 from .encryption import Encryption
-from .gateway_info import GatewayInfo
-from .circuits import Circuits
 from .sensors import Sensors
-from .heating_circuits import HeatingCircuits
+from .circuits import Circuits
 
 from .helper import RequestError
 from .helper import deep_into
@@ -31,34 +30,29 @@ class Gateway:
         self._encryption = None
 
         if password:
-            access_token = access_key.replace('-','')
+            access_token = access_key.replace('-', '')
             self._encryption = Encryption(access_token, password)
         else:
             self._encryption = Encryption(access_key)
 
         self._request_timeout = 10
         self._monitored_keys = {}
-        # {'keyname': self._data[HC][HC_NAME][HC_CURRENT_ROOMSETPOINT]
 
         self._data = {
-            GATEWAY: None,
+            GATEWAY: {},
             HC: None,
             DHW: None,
             SENSORS: None
         }
-        self._empty_json = self.encrypt("{}")
         self._requests = {
             GET: self.get,
             SUBMIT: self.set_value
         }
 
-    def encrypt(self, data):
-        """ Encrypt message to gateway. """
-        return self._encryption.encrypt(data)
-
-    def decrypt(self, data):
-        """ Decrypt message from gateway. """
-        return self._encryption.decrypt(data)
+    async def initialize(self):
+        """ Initialize gateway asynchronously. """
+        if not self._data[GATEWAY]:
+            await self._update_info()
 
     def format_url(self, path):
         """ Format URL to make requests to gateway. """
@@ -79,75 +73,56 @@ class Gateway:
     @property
     def heating_circuits(self):
         """ Get circuit list. """
-        return self._data[HC].heating_circuits
+        return self._data[HC].circuits
 
     @property
-    def gateway_info(self):
-        """ Get gateway info list. """
-        return self._data[GATEWAY]
+    def dhw_circuits(self):
+        """ Get circuit list. """
+        return self._data[DHW].circuits
 
     @property
     def sensors(self):
         """ Get sensors list. """
         return self._data[SENSORS].sensors
 
-    def get_property(self, qtype, property_name):
-        """ Get property of gateway info. """
-        if qtype == 'info':
-            return self._data[GATEWAY].get_property(property_name)
-        return None
-
     def get_request(self):
         """ For testing purposes only. Delete it in final lib."""
         return self.get
 
-    async def get_info(self):
-        gateway_info = []
+    def get_info(self, key):
+        if key in self._data[GATEWAY]:
+            return self._data[GATEWAY][key]
+        return None
+
+    async def _update_info(self):
         for key in GATEWAY_PATH_LIST:
-            response = await self.get(key)
-            if 'value' in response:
-                gateway_info.append({response['id'].split('/').pop() : response['value']})
-        return gateway_info
+            response = await self.get(GATEWAY_PATH_LIST[key])
+            if VALUE in response:
+                name = response[ID].split('/').pop()
+                self._data[GATEWAY][name] = response[VALUE]
 
     async def get_capabilities(self):
         capabilities = []
         for key, values in SYTEM_CAPABILITIES.items():
             for value in values:
                 response = await self.get(value)
-                if (response['type'] == 'refEnum'):
+                if response['type'] == 'refEnum':
                     for ref in response['references']:
-                        if (key in DETAILED_CAPABILITIES) or (ref['id'] in SENSORS_CAPABILITIES):
-                            capability = {
-                                    'name' : None,
-                                    'type' : None,
-                                }
-                            capability['name'] = ref["id"].split('/').pop()
-                            capability['type'] = key
-                            capabilities.append(capability)
-
-        return  capabilities
-
-    async def initialize_gatewayinfo(self, restored_data=None):
-        self._data[GATEWAY] = GatewayInfo(self._requests, GATEWAY)
-        await self._data[GATEWAY].update()
+                        if (key in DETAILED_CAPABILITIES or
+                                ref['id'] in SENSORS_CAPABILITIES):
+                            capabilities.append({
+                                'name': ref[ID].split('/').pop(),
+                                'type': key,
+                            })
+        return capabilities
 
     async def initialize_circuits(self, circ_type, restored_data=None):
-        # type = HC, DHW
-        self._data[circ_type] = HeatingCircuits(self._requests)
+        self._data[circ_type] = Circuits(self._requests, circ_type)
         await self._data[circ_type].initialize(restored_data)
 
     async def initialize_sensors(self, restored_data=None):
         self._data[SENSORS] = Sensors(self._requests)
         await self._data[SENSORS].initialize(restored_data)
-            # here can sensors from memory
-        # await self._data[SENSORS].update()
-
-    async def initialize(self):
-        """ Initialize gateway asynchronously. """
-        await self.initialize_gatewayinfo()
-        await self.initialize_sensors()
-        await self.initialize_circuits(HC, None)
-        await self.initialize_circuits(DHW, None)
 
     async def rawscan(self):
         """ print out all info from gateway """
@@ -156,17 +131,20 @@ class Gateway:
 
     async def check_connection(self):
         try:
-            await self.initialize_gatewayinfo()
-            return self.get_property(TYPE_INFO, UUID)
-        except RequestError:
-            return False
+            await self.initialize()
+            return self.get_info(UUID)
+        except RequestError as err:
+            raise RequestError(
+                'Error getting data from {}, path: {}, message: {}'
+                .format(self._host, UUID, err)
+            )
 
     async def _request(self, path):
         """ Make a get request to the API. """
         try:
             async with self._websession.get(
                     self.format_url(path),
-                    headers=HTTP_HEADER,timeout=self._request_timeout) as res:
+                    headers=HTTP_HEADER, timeout=self._request_timeout) as res:
                 if res.status != 200:
                     print("request returned status : ", res.status)
                     return None
