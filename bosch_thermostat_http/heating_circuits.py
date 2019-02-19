@@ -3,8 +3,9 @@ from .const import HC as HEATING_CIRCUITS
 from .const import (GET, SUBMIT, NAME, PATH, OPERATION_MODE,
                     HC_SETPOINT_ROOMTEMPERATURE, HC_MANUAL_ROOMSETPOINT,
                     HC_TEMPORARY_TEMPERATURE, HC_CURRENT_ROOMSETPOINT, HC_CURRENT_ROOMTEMPERATURE,
-                    HC_OPERATION_MODE, HC)
-                    
+                    HC_OPERATION_MODE, HC, HC_MODE_AUTO, VALUE,
+                    MINVALUE, MAXVALUE, ALLOWED_VALUES, UNITS)
+
 from .helper import crawl, BoschSingleEntity, BoschEntities
 
 
@@ -22,8 +23,6 @@ class HeatingCircuits(BoschEntities):
     def heating_circuits(self):
         """ Get circuits. """
         return self.get_items()
-
-
 
     async def initialize(self, circuits=None):
         """ Initialize HeatingCircuits asynchronously. """
@@ -61,9 +60,8 @@ class HeatingCircuit(BoschSingleEntity):
         self._data = {
             HC_CURRENT_ROOMSETPOINT: None,
             HC_CURRENT_ROOMTEMPERATURE: None,
-            HC_OPERATION_MODE: None
+            HC_OPERATION_MODE: {}
         }
-        self._operation_list = []
 
         super().__init__(attr_id.split('/').pop(), attr_id, restoring_data, {})
 
@@ -92,19 +90,21 @@ class HeatingCircuit(BoschSingleEntity):
             else:
                 short_id = key['id'].split('/').pop()
                 self._circuits_path[short_id] = key["id"]
-            self._data[short_id] = None
+            self._data[short_id] = {}
 
     async def set_operation_mode(self, new_mode):
         """ Set operation_mode of Heating Circuit. """
-        if new_mode in self._operation_list:
+        if (self._data[OPERATION_MODE][VALUE] != new_mode and
+                ALLOWED_VALUES in self._data[OPERATION_MODE] and
+                new_mode in self._data[OPERATION_MODE][ALLOWED_VALUES]):
             await self._requests[SUBMIT](
                 self._circuits_path[OPERATION_MODE],
                 new_mode)
 
     async def set_temperature(self, temperature):
         """ Set temperature of Circuit. """
-        if(self._data[HC_OPERATION_MODE] is not None):
-            if (self._data[HC_OPERATION_MODE] == 'auto'):
+        if self._data[HC_OPERATION_MODE] is not None:
+            if self._data[HC_OPERATION_MODE] == HC_MODE_AUTO:
                 temp_property = HC_TEMPORARY_TEMPERATURE
             else:
                 temp_property = HC_MANUAL_ROOMSETPOINT
@@ -113,28 +113,30 @@ class HeatingCircuit(BoschSingleEntity):
             self._circuits_path[temp_property],
             temperature)
 
+    def get_target_temperature(self):
+        """ Get target temperature of Circtuit. Temporary or Room set point."""
+        temporary_key = self._data[HC_TEMPORARY_TEMPERATURE]
+        if (self._data[HC_OPERATION_MODE] == HC_MODE_AUTO and
+                (VALUE in temporary_key and MINVALUE in temporary_key and
+                 MAXVALUE in temporary_key) and
+                temporary_key[MINVALUE] < temporary_key[VALUE] <
+                temporary_key[MAXVALUE]):
+            return temporary_key[VALUE]
+        return self._data[HC_CURRENT_ROOMSETPOINT]
+
     async def update(self):
         """ Update info about Circuit asynchronously. """
         for key in self._data:
             result = await self._requests[GET](
                 self._circuits_path[key])
-            self._data[key] = (result['value'] if 'value' in result
-                               else self._data[key])
-            if key == OPERATION_MODE:
-                self._operation_list = result['allowedValues']
+            self.process_results(result, key)
 
     async def update_requested_keys(self, key):
         """ Update info about Circuit asynchronously. """
         if key in self._data:
             result = await self._requests[GET](
                 self._circuits_path[key])
-            self._data[key] = (result['value'] if 'value' in result
-                               else self._data[key])
-            if key == OPERATION_MODE:
-                if 'allowedValues' not in result:
-                    print("TODO: values not present!!")
-                    print(result)
-                self._operation_list = result['allowedValues']
+            self.process_results(result, key)
 
 
 
@@ -147,7 +149,7 @@ class HeatingCircuit(BoschSingleEntity):
 #            if key == HC_OPERATION_MODE:
 #                self._operation_list = result['allowedValues']
 
-    def set_mode(self, new_mode):
+    async def set_mode(self, new_mode):
         """ Set mode of HeatingCircuit. """
         if new_mode in self._operation_list:
             await self._requests[SUBMIT](

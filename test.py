@@ -29,12 +29,13 @@ async def main():
         await gateway.initialize_circuits(HC)
         hcs = gateway.heating_circuits
         hc = hcs[0]
-        
+
         await hc.update()
+        # print(value)
         #await hc.set_temperature("23.0")
         #await hc.update()
         #
-        # print(hc.get_property(OPERATION_MODE))
+        print(hc.get_property(OPERATION_MODE))
         # print(hc.get_property(HC_CURRENT_ROOMSETPOINT))
         # keeey = gateway.access_key
         # import base64
@@ -83,5 +84,5 @@ async def main():
         # for sensor in gateway.get_items(SENSORS):
         #     print(sensor.get_property(SENSOR_NAME),
         #           sensor.get_property(SENSOR_VALUE))
-        session.close()
+        await session.close()
 asyncio.get_event_loop().run_until_complete(main())
