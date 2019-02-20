@@ -9,7 +9,7 @@ import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import (FIRMWARE_VERSION, HARDWARE_VERSION,
                                          SENSOR_NAME, SENSOR_VALUE, TYPE_INFO,
                                          UUID, SENSORS, DHW, HC, GATEWAY,
-                                         OPERATION_MODE,
+                                         OPERATION_MODE, DHW_OFFTEMP_LEVEL,
                                          HC_CURRENT_ROOMSETPOINT)
 
 
@@ -27,15 +27,22 @@ async def main():
                                 password=data[2])
         print(await gateway.check_connection())
         await gateway.initialize_circuits(DHW)
-        hcs = gateway.dhw_circuits
-        hc = hcs[0]
+        await gateway.initialize_circuits(HC)
+        dhws = gateway.dhw_circuits
+        dhw = dhws[0]
 
+        print("getting property")
+        print(dhw.get_property(DHW_OFFTEMP_LEVEL))
+        await dhw.update()
+        print(dhw.get_property(DHW_OFFTEMP_LEVEL))
+        hcs = gateway.heating_circuits
+        hc = hcs[0]
         await hc.update()
         # print(value)
         #await hc.set_temperature("23.0")
         #await hc.update()
         #
-   #     print(hc.get_property())
+        print(hc.get_all_properties())
         # print(hc.get_property(HC_CURRENT_ROOMSETPOINT))
         # keeey = gateway.access_key
         # import base64

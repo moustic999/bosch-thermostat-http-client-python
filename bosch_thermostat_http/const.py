@@ -81,7 +81,7 @@ TIMEOUT = 10
 """ VARS FOR HOME ASSISTANT. """
 HC_CURRENT_ROOMSETPOINT = "currentRoomSetpoint"
 HC_CURRENT_ROOMTEMPERATURE = "roomtemperature"
-HC_HOLIDAY_MODE = "holidayMode"
+HC_HOLIDAY_MODE = "holidayModeactivated"
 HC_HEATING_STATUS = "status"
 HC_SETPOINT_ROOMTEMPERATURE = "temperatureRoomSetpoint"
 HC_TEMPORARY_TEMPERATURE = "temporaryRoomSetpoint"
@@ -110,6 +110,8 @@ DHW_CURRENT_WATERTEMP = "actualTemp"
 DHW_CURRENT_SETPOINT = "currentSetpoint"
 DHW_WATERFLOW = "waterFlow"
 DHW_WORKINGTIME = "workingTime"
+DHW_OFFTEMP_LEVEL = "temperatureLevelsoff"
+DHW_HIGHTTEMP_LEVEL = "temperatureLevelshigh"
 
 DHEATING_WATER_CIRCUIT_LIST = {
     DHW_CURRENT_WATERTEMP: DHW+'/dhw{}/actualTemp',

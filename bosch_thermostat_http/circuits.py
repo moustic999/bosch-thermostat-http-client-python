@@ -24,7 +24,13 @@ class Circuits(BoschEntities):
         """ Initialize HeatingCircuits asynchronously. """
         restoring_data = True
         if not circuits:
-            circuits = await self.retrieve_from_module(1, self._circuit_type)
+            # deep = 1 if self._circuit_type == HC else 1
+            # print("========= A ===========")
+            circuits = await self.retrieve_from_module(1,
+                                                       self._circuit_type)
+            # print(circuits)
+            # print("========= B ===========")
+            # print(await self.retrieve_from_module(2, self._circuit_type))
             restoring_data = False
         for circuit in circuits:
             if "references" in circuit:

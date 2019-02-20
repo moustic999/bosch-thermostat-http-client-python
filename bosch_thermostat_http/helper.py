@@ -1,7 +1,7 @@
 """ Helper functions. """
 
 from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE,
-                    ALLOWED_VALUES, UNITS, STATE)
+                    ALLOWED_VALUES, UNITS, STATE, DHW_OFFTEMP_LEVEL)
 
 
 async def crawl(url, _list, deep, get):
@@ -89,11 +89,20 @@ class BoschSingleEntity:
 
     def get_property(self, property_name):
         """ Retrieve JSON with all properties: value, min, max, state etc."""
-        return self._data.get(property_name, None)
+        if property_name == DHW_OFFTEMP_LEVEL:
+            print("sprawdzawm")
+            print(self._data)
+        return self._data[property_name]
 
     def get_value(self, property_name):
         """ Retrieve only value from JSON. """
-        return self.get_property(property_name).get(VALUE, None)
+        ref = self.get_property(property_name)
+        if ref:
+            return ref.get(VALUE)
+        print("no value")
+        print(VALUE)
+        return None
+
 
     @property
     def attr_id(self):

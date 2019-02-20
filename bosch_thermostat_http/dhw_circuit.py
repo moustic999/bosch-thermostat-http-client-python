@@ -1,7 +1,7 @@
 """ Heating Circuits module of Bosch thermostat. """
 from .const import DHW
 from .const import (SUBMIT, NAME, OPERATION_MODE,
-                    DHW_CURRENT_WATERTEMP, HC_MANUAL_ROOMSETPOINT,
+                    DHW_CURRENT_SETPOINT, HC_MANUAL_ROOMSETPOINT,
                     HC_TEMPORARY_TEMPERATURE,
                     HC_OPERATION_MODE, HC_MODE_AUTO, VALUE,
                     MINVALUE, MAXVALUE, ALLOWED_VALUES, UNITS)
@@ -43,7 +43,7 @@ class DHWCircuit(Circuit):
 
     def get_target_temperature(self):
         """ Get target temperature of Circtuit. Temporary or Room set point."""
-        return self._data[DHW_CURRENT_WATERTEMP].get(VALUE)
+        return self._data[DHW_CURRENT_SETPOINT].get(VALUE)
 
 #    async def update(self):
 #        """ Update info about HeatingCircuit asynchronously. """
