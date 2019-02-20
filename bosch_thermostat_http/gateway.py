@@ -12,7 +12,7 @@ from .encryption import Encryption
 from .sensors import Sensors
 from .circuits import Circuits
 
-from .helper import RequestError
+from .errors import RequestError, ResponseError, EncryptionError
 from .helper import deep_into
 
 
@@ -145,15 +145,18 @@ class Gateway:
             async with self._websession.get(
                     self.format_url(path),
                     headers=HTTP_HEADER, timeout=self._request_timeout) as res:
-                if res.status != 200:
-                    print("request returned status : ", res.status)
-                    return None
-                data = await res.text()
-                return data
+                if res.status == 200 :
+                    if res.content_type != 'application/json':
+                        raise ResponseError('Invalid content type: {}'.format(res.content_type))
+                    else:   
+                        data = await res.text()
+                        return data
+                else:
+                    raise ResponseError('Invalid response code: {}'.format(res.status))
+
         except (client_exceptions.ClientError, TimeoutError) as err:
             raise RequestError(
-                'Error getting data from {}, path: {}, message: {}'
-                .format(self._host, path, err)
+                'Error requesting data from {}: {}'.format(self._host, err)
             )
 
     async def _submit(self, path, data):
@@ -162,10 +165,12 @@ class Gateway:
             async with self._websession.put(
                     self.format_url(path),
                     data=data,
-                    headers=HTTP_HEADER) as req:
+                    headers=HTTP_HEADER,
+                    timeout=self._request_timeout) as req:
+                print(req.status)    
                 data = await req.text()
                 return data
-        except client_exceptions.ClientError as err:
+        except (client_exceptions.ClientError, TimeoutError) as err:
             raise RequestError(
                 'Error putting data to {}, path: {}, message: {}'.
                 format(self._host, path, err)
@@ -173,10 +178,14 @@ class Gateway:
 
     async def get(self, path):
         """ Get message from API with given path. """
-        encrypted = await self._request(path)
-        result = self._encryption.decrypt(encrypted)
-        jsondata = json.loads(result)
-        return jsondata
+        try: 
+            encrypted = await self._request(path)
+            result = self._encryption.decrypt(encrypted)
+            jsondata = json.loads(result)
+            return jsondata
+        except json.JSONDecodeError as err:
+            raise ResponseError("Unable to decode Json response : {}".format(err))
+            
 
     async def _set(self, path, data):
         """ Send message to API with given path. """

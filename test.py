@@ -37,20 +37,12 @@ async def main():
         print(dhw.get_property(DHW_OFFTEMP_LEVEL))
         hcs = gateway.heating_circuits
         hc = hcs[0]
-<<<<<<< HEAD
-=======
-
->>>>>>> master
         await hc.update()
         # print(value)
-        #await hc.set_temperature("23.0")
+        await hc.set_temperature("21.0")
         #await hc.update()
         #
-<<<<<<< HEAD
-        print(hc.get_all_properties())
-=======
         print(hc.get_property(OPERATION_MODE))
->>>>>>> master
         # print(hc.get_property(HC_CURRENT_ROOMSETPOINT))
         # keeey = gateway.access_key
         # import base64

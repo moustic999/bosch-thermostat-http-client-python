@@ -1,5 +1,4 @@
 """ Python library to control Bosch driven thermostats. """
 
+from .errors import *
 from .gateway import Gateway
-
-version = __version__ = '0.1.0'

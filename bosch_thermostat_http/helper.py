@@ -3,28 +3,37 @@
 from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE,
                     ALLOWED_VALUES, UNITS, STATE, DHW_OFFTEMP_LEVEL)
 
+from .errors import ResponseError
 
 async def crawl(url, _list, deep, get):
-    resp = await get(url)
-    if (("references" not in resp or deep == 0) and "id" in resp):
-        _list.append(resp)
-    else:
-        if "references" in resp:
-            for uri in resp["references"]:
-                if "id" in uri and deep > 0:
-                    await crawl(uri["id"], _list, deep-1, get)
-    return _list
+    try:
+        resp = await get(url)
+        if (("references" not in resp or deep == 0) and "id" in resp):
+            _list.append(resp)
+        else:
+            if "references" in resp:
+                for uri in resp["references"]:
+                    if "id" in uri and deep > 0:
+                        await crawl(uri["id"], _list, deep-1, get)
+        return _list
+    except ResponseError as err:
+        print("error while retrieving url {} with error {}".format(url, err))
+        return _list
 
 
 async def deep_into(url, get, log=None):
     if log:
         print(url)
-    resp = await get(url)
-    if log:
-        print(resp)
-    if "references" in resp:
-        for uri in resp["references"]:
-            await deep_into(uri["id"], get, log)
+    try:    
+        resp = await get(url)
+        if log:
+            print(resp)
+        if "references" in resp:
+            for uri in resp["references"]:
+                await deep_into(uri["id"], get, log)
+    except ResponseError as err: 
+        print ("error : {}". format(err))
+
 
 
 def check_sensor(sensor):
@@ -37,10 +46,6 @@ def check_sensor(sensor):
                         return False
         return True
     return False
-
-
-class RequestError(Exception):
-    """Raise request to Bosch thermostat error. """
 
 
 class BoschEntities:

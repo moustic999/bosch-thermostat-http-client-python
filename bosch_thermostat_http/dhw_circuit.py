@@ -33,7 +33,7 @@ class DHWCircuit(Circuit):
 
     async def set_temperature(self, temperature):
         """ Set temperature of Circuit. """
-        if self._data[HC_OPERATION_MODE]:
+        if self._data[HC_OPERATION_MODE][VALUE]:
             temp_property = (HC_TEMPORARY_TEMPERATURE if
                              self._data[HC_OPERATION_MODE] == HC_MODE_AUTO
                              else HC_MANUAL_ROOMSETPOINT)
@@ -53,10 +53,3 @@ class DHWCircuit(Circuit):
 #            self._data[key] = result['value']
 #            if key == HC_OPERATION_MODE:
 #                self._operation_list = result['allowedValues']
-
-    async def set_mode(self, new_mode):
-        """ Set mode of HeatingCircuit. """
-        if new_mode in self._operation_list:
-            await self._requests[SUBMIT](
-                self._circuits_path[OPERATION_MODE],
-                new_mode)

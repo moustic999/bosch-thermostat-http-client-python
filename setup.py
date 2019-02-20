@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 from setuptools import setup
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 
 REQUIRES = [
     'pyaes>=1.6.1',

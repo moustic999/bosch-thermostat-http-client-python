@@ -32,7 +32,7 @@ class HeatingCircuit(Circuit):
 
     async def set_temperature(self, temperature):
         """ Set temperature of Circuit. """
-        if self._data[HC_OPERATION_MODE]:
+        if self._data[HC_OPERATION_MODE][VALUE]:
             temp_property = (HC_TEMPORARY_TEMPERATURE if
                              self._data[HC_OPERATION_MODE] == HC_MODE_AUTO
                              else HC_MANUAL_ROOMSETPOINT)
@@ -47,10 +47,3 @@ class HeatingCircuit(Circuit):
         if temp.get(MINVALUE, 5) < temp_val < temp.get(MAXVALUE, 30):
             return temp_val
         return self._data[HC_CURRENT_ROOMSETPOINT].get(VALUE)
-
-    async def set_mode(self, new_mode):
-        """ Set mode of HeatingCircuit. """
-        if new_mode in self._operation_list:
-            await self._requests[SUBMIT](
-                self._circuits_path[OPERATION_MODE],
-                new_mode)
