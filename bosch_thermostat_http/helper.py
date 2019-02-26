@@ -5,6 +5,7 @@ from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE,
 
 from .errors import ResponseError
 
+
 async def crawl(url, _list, deep, get):
     try:
         resp = await get(url)
@@ -24,14 +25,14 @@ async def crawl(url, _list, deep, get):
 async def deep_into(url, get, log=None):
     if log:
         print(url)
-    try:    
+    try:
         resp = await get(url)
         if log:
             print(resp)
         if "references" in resp:
             for uri in resp["references"]:
                 await deep_into(uri["id"], get, log)
-    except ResponseError as err: 
+    except ResponseError as err:
         print ("error : {}". format(err))
 
 

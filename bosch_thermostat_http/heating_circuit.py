@@ -34,8 +34,8 @@ class HeatingCircuit(Circuit):
         """ Set temperature of Circuit. """
         if self._data[HC_OPERATION_MODE][VALUE]:
             temp_property = (HC_TEMPORARY_TEMPERATURE if
-                             self._data[HC_OPERATION_MODE] == HC_MODE_AUTO
-                             else HC_MANUAL_ROOMSETPOINT)
+                             self._data[HC_OPERATION_MODE][VALUE] ==
+                             HC_MODE_AUTO else HC_MANUAL_ROOMSETPOINT)
             await self._requests[SUBMIT](
                 self._circuits_path[temp_property],
                 temperature)
