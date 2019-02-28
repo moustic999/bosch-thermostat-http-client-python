@@ -1,13 +1,12 @@
 """Gateway module connecting to Bosch thermostat."""
 import json
 import asyncio
-import aiohttp
 from aiohttp import client_exceptions
 
 from .const import (HTTP_HEADER, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
-                    SENSORS, ROOT_PATHS, GATEWAY_PATH_LIST, FIRMWARE_VERSION,
-                    SYTEM_CAPABILITIES, DETAILED_CAPABILITIES, SENSORS_CAPABILITIES,
-                    VALUE, ID)
+                    SENSORS, ROOT_PATHS, GATEWAY_PATH_LIST,
+                    SYTEM_CAPABILITIES, DETAILED_CAPABILITIES,
+                    SENSORS_CAPABILITIES, VALUE, ID)
 from .encryption import Encryption
 from .sensors import Sensors
 from .circuits import Circuits
@@ -28,16 +27,14 @@ class Gateway:
         self._host = host
         self._websession = websession
         self._encryption = None
+        self._lock = asyncio.Lock()
+        self._request_timeout = 10
 
         if password:
             access_token = access_key.replace('-', '')
             self._encryption = Encryption(access_token, password)
         else:
             self._encryption = Encryption(access_key)
-
-        self._request_timeout = 10
-        self._monitored_keys = {}
-
         self._data = {
             GATEWAY: {},
             HC: None,
@@ -133,11 +130,8 @@ class Gateway:
         try:
             await self.initialize()
             return self.get_info(UUID)
-        except RequestError as err:
-            raise RequestError(
-                'Error getting data from {}, path: {}, message: {}'
-                .format(self._host, UUID, err)
-            )
+        except RequestError:
+            return False
 
     async def _request(self, path):
         """ Make a get request to the API. """
@@ -145,16 +139,20 @@ class Gateway:
             async with self._websession.get(
                     self.format_url(path),
                     headers=HTTP_HEADER, timeout=self._request_timeout) as res:
-                if res.status == 200 :
+                if res.status == 200:
                     if res.content_type != 'application/json':
-                        raise ResponseError('Invalid content type: {}'.format(res.content_type))
-                    else:   
+                        raise ResponseError('Invalid content type: {}'.
+                                            format(res.content_type))
+                    else:
                         data = await res.text()
                         return data
                 else:
-                    raise ResponseError('Invalid response code: {}'.format(res.status))
+                    raise ResponseError('Invalid response code: {}'.
+                                        format(res.status))
 
-        except (client_exceptions.ClientError, TimeoutError) as err:
+        except (client_exceptions.ClientError,
+                client_exceptions.ClientConnectorError,
+                TimeoutError) as err:
             raise RequestError(
                 'Error requesting data from {}: {}'.format(self._host, err)
             )
@@ -167,7 +165,6 @@ class Gateway:
                     data=data,
                     headers=HTTP_HEADER,
                     timeout=self._request_timeout) as req:
-                print(req.status)    
                 data = await req.text()
                 return data
         except (client_exceptions.ClientError, TimeoutError) as err:
@@ -178,20 +175,22 @@ class Gateway:
 
     async def get(self, path):
         """ Get message from API with given path. """
-        try: 
-            encrypted = await self._request(path)
-            result = self._encryption.decrypt(encrypted)
-            jsondata = json.loads(result)
-            return jsondata
-        except json.JSONDecodeError as err:
-            raise ResponseError("Unable to decode Json response : {}".format(err))
-            
+        async with self._lock:
+            try:
+                encrypted = await self._request(path)
+                result = self._encryption.decrypt(encrypted)
+                jsondata = json.loads(result)
+                return jsondata
+            except json.JSONDecodeError as err:
+                raise ResponseError("Unable to decode Json response : {}".
+                                    format(err))
 
     async def _set(self, path, data):
         """ Send message to API with given path. """
-        encrypted = self._encryption.encrypt(data)
-        result = await self._submit(path, encrypted)
-        return result
+        async with self._lock:
+            encrypted = self._encryption.encrypt(data)
+            result = await self._submit(path, encrypted)
+            return result
 
     async def set_value(self, path, value):
         """ Set value for thermostat. """
