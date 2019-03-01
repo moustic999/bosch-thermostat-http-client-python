@@ -1,10 +1,9 @@
 """ Sensors of Bosch thermostat. """
-from .const import (SENSOR_NAME, SENSORS,
-                    SENSOR_TYPE, SENSOR_UNIT, SENSOR_VALUE, GET, PATH, ID,
-                    NAME, VALUE, STATE)
+from .const import (SENSORS, APPLIANCES, GET, PATH, ID,
+                    NAME, SENSORS_EXLUDE, HEATSOURCES_EXLUDE,
+                    APPLIANCES_EXLUDE, HEATSOURCES)
 from .helper import BoschSingleEntity, BoschEntities, check_sensor
 
-### ADD RESTORING_DATA
 
 class Sensors(BoschEntities):
     """ Sensors object containing multiple Sensor objects. """
@@ -13,16 +12,27 @@ class Sensors(BoschEntities):
         :param dict requests: { GET: get function, SUBMIT: submit function}
         """
         super().__init__(requests)
+        self._items = {}
 
     @property
     def sensors(self):
         """ Get sensor list. """
-        return self.get_items()
+        return self.get_items().values()
 
     async def initialize(self, sensors=None):
+        """
+        Asynchronously initialize all sensorsself.
+        :param sensors dict if declared then restore sensors from it.
+                            If not download data from device.
+        """
         restoring_data = True
         if not sensors:
-            sensors = await self.retrieve_from_module(2, SENSORS)
+            sensors = (await self.retrieve_from_module(2, SENSORS,
+                                                       SENSORS_EXLUDE) +
+                       await self.retrieve_from_module(2, APPLIANCES,
+                                                       APPLIANCES_EXLUDE) +
+                       await self.retrieve_from_module(2, HEATSOURCES,
+                                                       HEATSOURCES_EXLUDE))
             restoring_data = False
         for sensor in sensors:
             sensor_check_status = (check_sensor(sensor)
@@ -33,7 +43,10 @@ class Sensors(BoschEntities):
 
     def register_sensor(self, attr_id, path, restoring_data):
         """ Register sensor for the module. """
-        self._items.append(Sensor(self._requests, attr_id, path, restoring_data))
+        name = attr_id.split('/').pop()
+        if name not in self._items:
+            self._items[name] = Sensor(self._requests,
+                                       attr_id, path, restoring_data)
 
 
 class Sensor(BoschSingleEntity):
@@ -51,6 +64,7 @@ class Sensor(BoschSingleEntity):
 
     @property
     def json_scheme(self):
+        """ Get json scheme of sensor. """
         return {
             NAME: self._main_data[NAME],
             ID: self._main_data[ID]
