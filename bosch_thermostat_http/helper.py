@@ -1,21 +1,38 @@
 """ Helper functions. """
 
-from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE,
-                    ALLOWED_VALUES, UNITS, STATE, DHW_OFFTEMP_LEVEL)
+from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN, SHORT,
+                    ALLOWED_VALUES, UNITS, STATE)
 
 from .errors import ResponseError
 
 
-async def crawl(url, _list, deep, get):
+def parse_float_value(value, single_value=True, min_max_obligatory=False):
+    """ Parse if value is between min and max. """
+    if value:
+        if STATE in value and all(k in value[STATE] for k in (OPEN, SHORT)):
+            if value[VALUE] in (value[STATE][OPEN], value[STATE][SHORT]):
+                return None
+        if all(k in value for k in (VALUE, MINVALUE, MAXVALUE)):
+            if value[MINVALUE] <= value[VALUE] <= value[MAXVALUE]:
+                return value[VALUE] if single_value else value
+            return None
+        if not min_max_obligatory:
+            return value[VALUE] if single_value else value
+    return None
+
+
+async def crawl(url, _list, deep, get, exclude=()):
+    """ Crawl for Bosch API correct values. """
     try:
         resp = await get(url)
         if (("references" not in resp or deep == 0) and "id" in resp):
-            _list.append(resp)
+            if not resp['id'] in exclude:
+                _list.append(resp)
         else:
             if "references" in resp:
                 for uri in resp["references"]:
                     if "id" in uri and deep > 0:
-                        await crawl(uri["id"], _list, deep-1, get)
+                        await crawl(uri["id"], _list, deep-1, get, exclude)
         return _list
     except ResponseError as err:
         print("error while retrieving url {} with error {}".format(url, err))
@@ -23,6 +40,7 @@ async def crawl(url, _list, deep, get):
 
 
 async def deep_into(url, get, log=None):
+    """ Test for getting references. Used for raw scan. """
     if log:
         print(url)
     try:
@@ -33,8 +51,7 @@ async def deep_into(url, get, log=None):
             for uri in resp["references"]:
                 await deep_into(uri["id"], get, log)
     except ResponseError as err:
-        print ("error : {}". format(err))
-
+        print("error : {}". format(err))
 
 
 def check_sensor(sensor):
@@ -60,8 +77,9 @@ class BoschEntities:
         self._items = []
         self._requests = requests
 
-    async def retrieve_from_module(self, deep, path):
-        return await crawl(path, [], deep, self._requests[GET])
+    async def retrieve_from_module(self, deep, path, exclude=()):
+        """ Retrieve all json objects with simple values. """
+        return await crawl(path, [], deep, self._requests[GET], exclude)
 
     def get_items(self):
         """ Get items. """
@@ -74,6 +92,7 @@ class BoschEntities:
 
 
 class BoschSingleEntity:
+    """ Object for single sensor/circuit. Don't use it directly. """
 
     def __init__(self, name, attr_id, restoring_data, path=None):
         self._main_data = {
@@ -86,6 +105,7 @@ class BoschSingleEntity:
         self._json_scheme_ready = restoring_data
 
     def process_results(self, result, key=None):
+        """ Convert multi-level json object to one level object. """
         data = self._data if self._type == "sensor" else self._data[key]
         if result:
             for res_key in [VALUE, MINVALUE, MAXVALUE, ALLOWED_VALUES,
@@ -95,9 +115,6 @@ class BoschSingleEntity:
 
     def get_property(self, property_name):
         """ Retrieve JSON with all properties: value, min, max, state etc."""
-        if property_name == DHW_OFFTEMP_LEVEL:
-            print("sprawdzawm")
-            print(self._data)
         return self._data[property_name]
 
     def get_value(self, property_name):
@@ -105,16 +122,15 @@ class BoschSingleEntity:
         ref = self.get_property(property_name)
         if ref:
             return ref.get(VALUE)
-        print("no value")
-        print(VALUE)
         return None
-
 
     @property
     def attr_id(self):
+        """ Get ID of the entity. """
         return self._main_data[ID]
 
     def get_all_properties(self):
+        """ Retrieve all properties with value, min, max etc. """
         return self._data
 
     @property
@@ -129,4 +145,5 @@ class BoschSingleEntity:
 
     @property
     def path(self):
+        """ Get path of Bosch API which entity is using for data. """
         return self._main_data[PATH]

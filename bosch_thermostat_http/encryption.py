@@ -8,6 +8,7 @@ from pyaes import PADDING_NONE, AESModeOfOperationECB, Decrypter, Encrypter
 from .const import BS, MAGIC
 from .errors import EncryptionError
 
+
 class Encryption:
     """ Encryption class. """
 
@@ -59,8 +60,7 @@ class Encryption:
                 return decrypted.decode("utf8").rstrip(chr(0))
             return "{}"
         except Exception as err:
-            raise EncryptionError("Unable to decrypt: {}".format(err)) 
-
+            raise EncryptionError("Unable to decrypt: {}".format(err))
 
     def _pad(self, _s):
         """ Padding of encryption. """

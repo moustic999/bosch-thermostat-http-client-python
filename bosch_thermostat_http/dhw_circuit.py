@@ -1,12 +1,10 @@
 """ Heating Circuits module of Bosch thermostat. """
-from .const import DHW
-from .const import (SUBMIT, NAME, OPERATION_MODE,
+from .const import (SUBMIT, MINVALUE, MAXVALUE, VALUE, DHW_HIGHTTEMP_LEVEL,
                     DHW_CURRENT_SETPOINT, HC_MANUAL_ROOMSETPOINT,
-                    HC_TEMPORARY_TEMPERATURE,
-                    HC_OPERATION_MODE, HC_MODE_AUTO, VALUE,
-                    MINVALUE, MAXVALUE, ALLOWED_VALUES, UNITS)
+                    HC_TEMPORARY_TEMPERATURE, OPERATION_MODE, HC_MODE_AUTO)
 
 from .circuit import Circuit
+from .helper import parse_float_value
 
 
 class DHWCircuit(Circuit):
@@ -22,34 +20,28 @@ class DHWCircuit(Circuit):
         super().__init__(requests, attr_id, restoring_data)
         self._type = "dhw"
 
-    async def set_operation_mode(self, new_mode):
-        """ Set operation_mode of Heating Circuit. """
-        if (self._data[OPERATION_MODE][VALUE] != new_mode and
-                ALLOWED_VALUES in self._data[OPERATION_MODE] and
-                new_mode in self._data[OPERATION_MODE][ALLOWED_VALUES]):
-            await self._requests[SUBMIT](
-                self._circuits_path[OPERATION_MODE],
-                new_mode)
-
     async def set_temperature(self, temperature):
         """ Set temperature of Circuit. """
-        if self._data[HC_OPERATION_MODE][VALUE]:
+        return
+        test = self._data[DHW_HIGHTTEMP_LEVEL]
+        if self._data[OPERATION_MODE][VALUE]:
             temp_property = (HC_TEMPORARY_TEMPERATURE if
-                             self._data[HC_OPERATION_MODE] == HC_MODE_AUTO
+                             self._data[OPERATION_MODE] == HC_MODE_AUTO
                              else HC_MANUAL_ROOMSETPOINT)
             await self._requests[SUBMIT](
                 self._circuits_path[temp_property],
                 temperature)
 
-    def get_target_temperature(self):
+    @property
+    def target_temperature(self):
         """ Get target temperature of Circtuit. Temporary or Room set point."""
-        return self._data[DHW_CURRENT_SETPOINT].get(VALUE)
-
-#    async def update(self):
-#        """ Update info about HeatingCircuit asynchronously. """
-#        for key in self._data:
-#            result = await self._get_request(
-#                HEATING_CIRCUIT_LIST[key].format(self.name))
-#            self._data[key] = result['value']
-#            if key == HC_OPERATION_MODE:
-#                self._operation_list = result['allowedValues']
+        temp_levels_high = self.get_property(DHW_HIGHTTEMP_LEVEL)
+        temp = parse_float_value(temp_levels_high, False, True)
+        if temp:
+            return (temp[VALUE], temp[MINVALUE], temp[MAXVALUE])
+        setpoint_temp = self._data[DHW_CURRENT_SETPOINT].get(VALUE)
+        if setpoint_temp:
+            if all(k in temp_levels_high for k in (MINVALUE, MAXVALUE)):
+                return (setpoint_temp, temp[MINVALUE], temp[MAXVALUE])
+            return (setpoint_temp, 0, 99)
+        return (-1, 0, 99)

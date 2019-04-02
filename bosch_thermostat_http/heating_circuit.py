@@ -1,12 +1,11 @@
 """ Heating Circuits module of Bosch thermostat. """
-from .const import (SUBMIT, OPERATION_MODE,
-                    HC_SETPOINT_ROOMTEMPERATURE, HC_MANUAL_ROOMSETPOINT,
+from .const import (SUBMIT, HC_MANUAL_ROOMSETPOINT,
                     HC_TEMPORARY_TEMPERATURE, HC_CURRENT_ROOMSETPOINT,
-                    HC_CURRENT_ROOMTEMPERATURE,
-                    HC_OPERATION_MODE, HC_MODE_AUTO, VALUE,
-                    MINVALUE, MAXVALUE, ALLOWED_VALUES,)
-
+                    OPERATION_MODE, HC_MODE_AUTO, VALUE,
+                    MINVALUE, MAXVALUE, HC_ROOMTEMPERATURE, UNITS)
 from .circuit import Circuit
+
+from .helper import parse_float_value
 
 
 class HeatingCircuit(Circuit):
@@ -21,29 +20,31 @@ class HeatingCircuit(Circuit):
         super().__init__(requests, attr_id, restoring_data)
         self._type = "hc"
 
-    async def set_operation_mode(self, new_mode):
-        """ Set operation_mode of Heating Circuit. """
-        if (self._data[OPERATION_MODE][VALUE] != new_mode and
-                ALLOWED_VALUES in self._data[OPERATION_MODE] and
-                new_mode in self._data[OPERATION_MODE][ALLOWED_VALUES]):
-            await self._requests[SUBMIT](
-                self._circuits_path[OPERATION_MODE],
-                new_mode)
-
     async def set_temperature(self, temperature):
         """ Set temperature of Circuit. """
-        if self._data[HC_OPERATION_MODE][VALUE]:
+        if self._data[OPERATION_MODE][VALUE]:
             temp_property = (HC_TEMPORARY_TEMPERATURE if
-                             self._data[HC_OPERATION_MODE][VALUE] ==
+                             self._data[OPERATION_MODE][VALUE] ==
                              HC_MODE_AUTO else HC_MANUAL_ROOMSETPOINT)
             await self._requests[SUBMIT](
                 self._circuits_path[temp_property],
                 temperature)
 
-    def get_target_temperature(self):
+    @property
+    def target_temperature(self):
         """ Get target temperature of Circtuit. Temporary or Room set point."""
         temp = self.get_property(HC_TEMPORARY_TEMPERATURE)
         temp_val = temp.get(VALUE, -1)
         if temp.get(MINVALUE, 5) < temp_val < temp.get(MAXVALUE, 30):
             return temp_val
         return self._data[HC_CURRENT_ROOMSETPOINT].get(VALUE)
+
+    @property
+    def current_temp(self):
+        """ Give current temperautre of Heating circuit. """
+        return parse_float_value(self.get_property(HC_ROOMTEMPERATURE))
+
+    @property
+    def temp_units(self):
+        """ Return units of temperaure. """
+        return self.get_property(HC_ROOMTEMPERATURE).get(UNITS)

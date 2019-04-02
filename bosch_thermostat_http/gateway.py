@@ -5,13 +5,13 @@ from aiohttp import client_exceptions
 
 from .const import (HTTP_HEADER, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
                     SENSORS, ROOT_PATHS, GATEWAY_PATH_LIST,
-                    SYTEM_CAPABILITIES, DETAILED_CAPABILITIES,
+                    SYSTEM_CAPABILITIES, DETAILED_CAPABILITIES,
                     SENSORS_CAPABILITIES, VALUE, ID)
 from .encryption import Encryption
 from .sensors import Sensors
 from .circuits import Circuits
 
-from .errors import RequestError, ResponseError, EncryptionError
+from .errors import RequestError, ResponseError
 from .helper import deep_into
 
 
@@ -60,6 +60,7 @@ class Gateway:
         return self._data[data_type].get_items()
 
     def set_timeout(self, timeout):
+        """ Set timeout for API calls. """
         self._request_timeout = timeout
 
     @property
@@ -87,11 +88,13 @@ class Gateway:
         return self.get
 
     def get_info(self, key):
+        """ Get gateway info given key. """
         if key in self._data[GATEWAY]:
             return self._data[GATEWAY][key]
         return None
 
     async def _update_info(self):
+        """ Update gateway info from Bosch device. """
         for key in GATEWAY_PATH_LIST:
             response = await self.get(GATEWAY_PATH_LIST[key])
             if VALUE in response:
@@ -99,8 +102,9 @@ class Gateway:
                 self._data[GATEWAY][name] = response[VALUE]
 
     async def get_capabilities(self):
+        """ Get capabilities of gateway. """
         capabilities = []
-        for key, values in SYTEM_CAPABILITIES.items():
+        for key, values in SYSTEM_CAPABILITIES.items():
             for value in values:
                 response = await self.get(value)
                 if response['type'] == 'refEnum':
@@ -114,19 +118,22 @@ class Gateway:
         return capabilities
 
     async def initialize_circuits(self, circ_type, restored_data=None):
+        """ Initialize circuits objects of given type (dhw/hcs). """
         self._data[circ_type] = Circuits(self._requests, circ_type)
         await self._data[circ_type].initialize(restored_data)
 
     async def initialize_sensors(self, restored_data=None):
+        """ Initialize sensors objects. """
         self._data[SENSORS] = Sensors(self._requests)
         await self._data[SENSORS].initialize(restored_data)
 
     async def rawscan(self):
-        """ print out all info from gateway """
+        """ Print out all info from gateway. """
         for root in ROOT_PATHS:
             await deep_into(root, self.get, True)
 
     async def check_connection(self):
+        """Check if we are able to connect to Bosch device and return UUID."""
         try:
             await self.initialize()
             return self.get_info(UUID)

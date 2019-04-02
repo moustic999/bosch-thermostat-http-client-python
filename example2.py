@@ -26,8 +26,9 @@ async def main():
                                 access_key=data[1],
                                 password=data[2])
         print(await gateway.check_connection())
+        await gateway.initialize_sensors()
        
-        await gateway.rawscan()
+#        await gateway.rawscan()
 
         await session.close()
 
