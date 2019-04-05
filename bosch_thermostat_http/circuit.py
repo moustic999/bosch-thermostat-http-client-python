@@ -26,6 +26,11 @@ class Circuit(BoschSingleEntity):
         """ Inform if we successfully invoked update at least one time. """
         return self._updated_initialized
 
+    @property
+    def get_schedule(self):
+        """Preparation to retrieve schedule of HC/DHW."""
+        return None
+
     async def initialize(self):
         """ Check each uri if return json with values. """
         keys_to_del = []
@@ -70,6 +75,7 @@ class Circuit(BoschSingleEntity):
             result = await self._requests[GET](
                 self._circuits_path[key])
             self.process_results(result, key)
+
         self._updated_initialized = True
 
     async def update_requested_key(self, key):

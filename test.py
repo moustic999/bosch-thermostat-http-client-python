@@ -3,11 +3,9 @@ import asyncio
 
 import aiohttp
 import binascii
-import hashlib
 from bosch_thermostat_http.helper import crawl
 import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import (FIRMWARE_VERSION, HARDWARE_VERSION,
-                                         SENSOR_NAME, SENSOR_VALUE, TYPE_INFO,
                                          UUID, SENSORS, DHW, HC, GATEWAY,
                                          OPERATION_MODE, DHW_OFFTEMP_LEVEL,
                                          HC_CURRENT_ROOMSETPOINT)
@@ -21,28 +19,31 @@ async def main():
     async with aiohttp.ClientSession() as session:
         data_file = open("data_file.txt", "r")
         data = data_file.read().splitlines()
-        gateway = bosch.Gateway(session,
+        gateway = bosch.Gateway(session=session,
                                 host=data[0],
                                 access_key=data[1],
                                 password=data[2])
         print(await gateway.check_connection())
-        await gateway.initialize_circuits(DHW)
+        # print(await gateway.get('/heatingCircuits/hc1/manualRoomSetpoint'))
+        # return
+        # await gateway.initialize_circuits(DHW)
         await gateway.initialize_circuits(HC)
-        dhws = gateway.dhw_circuits
-        dhw = dhws[0]
-
-        print("getting property")
-        print(dhw.get_property(DHW_OFFTEMP_LEVEL))
-        await dhw.update()
-        print(dhw.get_property(DHW_OFFTEMP_LEVEL))
+        # dhws = gateway.dhw_circuits
+        # dhw = dhws[0]
+        #
+        # print("getting property")
+        # print(dhw.get_property(DHW_OFFTEMP_LEVEL))
+        # await dhw.update()
+        # print(dhw.get_property(DHW_OFFTEMP_LEVEL))
         hcs = gateway.heating_circuits
         hc = hcs[0]
-        await hc.update()
+        # await hc.update()
         # print(value)
-        await hc.set_temperature("21.0")
+        # await hc.set_temperature(21.0)
+        # print(await gateway.get('/heatingCircuits/hc1/manualRoomSetpoint'))
         #await hc.update()
         #
-        print(hc.get_property(OPERATION_MODE))
+        # print(hc.get_property(OPERATION_MODE))
         # print(hc.get_property(HC_CURRENT_ROOMSETPOINT))
         # keeey = gateway.access_key
         # import base64

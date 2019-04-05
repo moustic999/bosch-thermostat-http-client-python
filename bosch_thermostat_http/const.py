@@ -53,7 +53,7 @@ Get/set actual mode + get allowed modes
 OPERATION_MODE = "operationMode"
 
 HTTP_HEADER = {
-    'User-agent': 'TeleHeater/2.2.3',
+    'User-agent': 'TeleHeater',
     'Accept': 'application/json'
 }
 
@@ -67,11 +67,8 @@ HC_HEATING_STATUS = "status"
 HC_SETPOINT_ROOMTEMPERATURE = "temperatureRoomSetpoint"
 HC_TEMPORARY_TEMPERATURE = "temporaryRoomSetpoint"
 HC_ECO = "temperatureLevels/eco"
-##### OLD
 HC_MODE_AUTO = 'auto'
 HC_MODE_MANUAL = 'manual'
-
-  # current Selected Temp
 HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
   # room current temperature
 """ set target temp in auto mode. """
