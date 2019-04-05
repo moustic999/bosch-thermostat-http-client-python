@@ -33,10 +33,10 @@ class HeatingCircuit(Circuit):
     @property
     def target_temperature(self):
         """ Get target temperature of Circtuit. Temporary or Room set point."""
-        temp = self.get_property(HC_TEMPORARY_TEMPERATURE)
-        temp_val = temp.get(VALUE, -1)
-        if temp.get(MINVALUE, 5) < temp_val < temp.get(MAXVALUE, 30):
-            return temp_val
+        #temp = self.get_property(HC_TEMPORARY_TEMPERATURE)
+        #temp_val = temp.get(VALUE, -1)
+        #if temp.get(MINVALUE, 5) < temp_val < temp.get(MAXVALUE, 30):
+        #    return temp_val
         return self._data[HC_CURRENT_ROOMSETPOINT].get(VALUE)
 
     @property
