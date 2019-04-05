@@ -3,6 +3,7 @@ from .const import (SENSORS, APPLIANCES, GET, PATH, ID,
                     NAME, SENSORS_EXLUDE, HEATSOURCES_EXLUDE,
                     APPLIANCES_EXLUDE, HEATSOURCES)
 from .helper import BoschSingleEntity, BoschEntities, check_sensor
+from .errors import ResponseError
 
 
 class Sensors(BoschEntities):
@@ -72,5 +73,8 @@ class Sensor(BoschSingleEntity):
 
     async def update(self):
         """ Update sensor data. """
-        result = await self._requests[GET](self._main_data[PATH])
-        self.process_results(result)
+        try:
+            result = await self._requests[GET](self._main_data[PATH])
+            self.process_results(result)
+        except ResponseError:
+            self._data = None

@@ -3,7 +3,7 @@
 from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN, SHORT,
                     ALLOWED_VALUES, UNITS, STATE)
 
-from .errors import ResponseError
+from .errors import ResponseError, EncryptionError
 
 
 def parse_float_value(value, single_value=True, min_max_obligatory=False):
@@ -35,7 +35,7 @@ async def crawl(url, _list, deep, get, exclude=()):
                         await crawl(uri["id"], _list, deep-1, get, exclude)
         return _list
     except ResponseError as err:
-        print("error while retrieving url {} with error {}".format(url, err))
+        # print("error while retrieving url {} with error {}".format(url, err))
         return _list
 
 
@@ -50,8 +50,9 @@ async def deep_into(url, get, log=None):
         if "references" in resp:
             for uri in resp["references"]:
                 await deep_into(uri["id"], get, log)
-    except ResponseError as err:
-        print("error : {}". format(err))
+    except (EncryptionError, ResponseError) as err:
+        pass
+        # print("error : {}". format(err))
 
 
 def check_sensor(sensor):

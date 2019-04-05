@@ -1,9 +1,9 @@
 """Gateway module connecting to Bosch thermostat."""
 import json
 import asyncio
-from aiohttp import client_exceptions
 
-from .const import (HTTP_HEADER, GET, UUID, SUBMIT, DHW, HC, GATEWAY,
+
+from .const import (GET, UUID, SUBMIT, DHW, HC, GATEWAY,
                     SENSORS, ROOT_PATHS, GATEWAY_PATH_LIST,
                     SYSTEM_CAPABILITIES, DETAILED_CAPABILITIES,
                     SENSORS_CAPABILITIES, VALUE, ID)
@@ -18,18 +18,19 @@ from .helper import deep_into
 class Gateway:
     """Gateway to Bosch thermostat."""
 
-    def __init__(self, websession, host, access_key, password=None):
+    def __init__(self, session, host, access_key, password=None):
         """
         :param access_key:
         :param password:
         :param host:
         """
-        self._host = host
-        self._websession = websession
+        if type(session).__name__ == 'ClientSession':
+            from .http_connector import HttpConnector
+            self._connector = HttpConnector(host, session)
+        else:
+            return
         self._encryption = None
         self._lock = asyncio.Lock()
-        self._request_timeout = 10
-
         if password:
             access_token = access_key.replace('-', '')
             self._encryption = Encryption(access_token, password)
@@ -51,17 +52,13 @@ class Gateway:
         if not self._data[GATEWAY]:
             await self._update_info()
 
-    def format_url(self, path):
-        """ Format URL to make requests to gateway. """
-        return 'http://{}{}'.format(self._host, path)
-
     def get_items(self, data_type):
         """ Get items on types like Sensors, Heating Circuits etc. """
         return self._data[data_type].get_items()
 
     def set_timeout(self, timeout):
         """ Set timeout for API calls. """
-        self._request_timeout = timeout
+        self._connector.set_timeout(timeout)
 
     @property
     def access_key(self):
@@ -140,51 +137,11 @@ class Gateway:
         except RequestError:
             return False
 
-    async def _request(self, path):
-        """ Make a get request to the API. """
-        try:
-            async with self._websession.get(
-                    self.format_url(path),
-                    headers=HTTP_HEADER, timeout=self._request_timeout) as res:
-                if res.status == 200:
-                    if res.content_type != 'application/json':
-                        raise ResponseError('Invalid content type: {}'.
-                                            format(res.content_type))
-                    else:
-                        data = await res.text()
-                        return data
-                else:
-                    raise ResponseError('Invalid response code: {}'.
-                                        format(res.status))
-
-        except (client_exceptions.ClientError,
-                client_exceptions.ClientConnectorError,
-                TimeoutError) as err:
-            raise RequestError(
-                'Error requesting data from {}: {}'.format(self._host, err)
-            )
-
-    async def _submit(self, path, data):
-        """Make a put request to the API."""
-        try:
-            async with self._websession.put(
-                    self.format_url(path),
-                    data=data,
-                    headers=HTTP_HEADER,
-                    timeout=self._request_timeout) as req:
-                data = await req.text()
-                return data
-        except (client_exceptions.ClientError, TimeoutError) as err:
-            raise RequestError(
-                'Error putting data to {}, path: {}, message: {}'.
-                format(self._host, path, err)
-            )
-
     async def get(self, path):
         """ Get message from API with given path. """
         async with self._lock:
             try:
-                encrypted = await self._request(path)
+                encrypted = await self._connector.request(path)
                 result = self._encryption.decrypt(encrypted)
                 jsondata = json.loads(result)
                 return jsondata
@@ -196,7 +153,7 @@ class Gateway:
         """ Send message to API with given path. """
         async with self._lock:
             encrypted = self._encryption.encrypt(data)
-            result = await self._submit(path, encrypted)
+            result = await self._connector.submit(path, encrypted)
             return result
 
     async def set_value(self, path, value):
