@@ -86,6 +86,7 @@ class Gateway:
 
     def get_info(self, key):
         """ Get gateway info given key. """
+        print(self._data[GATEWAY])
         if key in self._data[GATEWAY]:
             return self._data[GATEWAY][key]
         return None

@@ -3,6 +3,8 @@ import asyncio
 
 import aiohttp
 import bosch_thermostat_http as bosch
+from bosch_thermostat_http.const import FIRMWARE_VERSION
+from bosch_thermostat_http.db import bosch_sensors
 
 
 async def main():
@@ -18,9 +20,12 @@ async def main():
                                 access_key=data[1],
                                 password=data[2])
         print(await gateway.check_connection())
-        await gateway.initialize_sensors()
-
-        await gateway.rawscan()
+        sensors = bosch_sensors(gateway.get_info(FIRMWARE_VERSION))
+        print(sensors)
+        await gateway.initialize_sensors(sensors)
+        print(gateway.sensors)
+        #
+        # await gateway.rawscan()
 
         await session.close()
 
