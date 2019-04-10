@@ -1,0 +1,17 @@
+{
+  "data" : {
+    "04.06.07": {
+      "sensors": [
+                {
+                    "id": "/system/sensors/temperatures/outdoor_t1",
+                    "name": "Outdoor temperature"
+                },
+                {
+                    "id": "/system/sensors/temperatures/hotWater_t2",
+                    "name": "Hotwater temp"
+                }
+              ],
+      "firmware_version": "04.06.07"
+    }
+  }
+}
