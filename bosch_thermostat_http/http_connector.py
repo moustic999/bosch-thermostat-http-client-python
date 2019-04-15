@@ -1,5 +1,6 @@
 """HTTP connector class to Bosch thermostat."""
 from aiohttp import client_exceptions
+from asyncio import TimeoutError
 from .const import (HTTP_HEADER)
 
 from .errors import RequestError, ResponseError, Response404Error
@@ -14,7 +15,7 @@ class HttpConnector:
         self._request_timeout = 10
 
     async def request(self, path):
-        """ Make a get request to the API. """
+        """Make a get request to the API."""
         try:
             async with self._websession.get(
                     self._format_url(path),
@@ -39,7 +40,7 @@ class HttpConnector:
                 client_exceptions.ClientConnectorError,
                 TimeoutError) as err:
             raise RequestError(
-                'Error requesting data from {}: {}'.format(self._host, err)
+                'Error requesting data from {}: {}'.format(path, err)
             )
 
     async def submit(self, path, data):
@@ -59,9 +60,9 @@ class HttpConnector:
             )
 
     def _format_url(self, path):
-        """ Format URL to make requests to gateway. """
+        """Format URL to make requests to gateway."""
         return 'http://{}{}'.format(self._host, path)
 
     def set_timeout(self, timeout=10):
-        """ Set timeout for API calls. """
+        """Set timeout for API calls."""
         self._request_timeout = timeout

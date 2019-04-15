@@ -1,17 +1,19 @@
 """ Helper functions. """
 
-from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN, SHORT,
-                    ALLOWED_VALUES, UNITS, STATE)
+from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN,
+                    SHORT, ALLOWED_VALUES, UNITS, STATE)
 
 from .errors import ResponseError, EncryptionError
 
 
 def parse_float_value(value, single_value=True, min_max_obligatory=False):
-    """ Parse if value is between min and max. """
+    """Parse if value is between min and max."""
     if value:
-        if STATE in value and all(k in value[STATE] for k in (OPEN, SHORT)):
-            if value[VALUE] in (value[STATE][OPEN], value[STATE][SHORT]):
-                return None
+        if STATE in value:
+            for k in value[STATE]:
+                if ((OPEN in k and k[OPEN] == value[VALUE]) or
+                        (SHORT in k and k[SHORT] == value[SHORT])):
+                    return None
         if all(k in value for k in (VALUE, MINVALUE, MAXVALUE)):
             if value[MINVALUE] <= value[VALUE] <= value[MAXVALUE]:
                 return value[VALUE] if single_value else value
@@ -22,7 +24,7 @@ def parse_float_value(value, single_value=True, min_max_obligatory=False):
 
 
 async def crawl(url, _list, deep, get, exclude=()):
-    """ Crawl for Bosch API correct values. """
+    """Crawl for Bosch API correct values."""
     try:
         resp = await get(url)
         if (("references" not in resp or deep == 0) and "id" in resp):

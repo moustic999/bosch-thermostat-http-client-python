@@ -41,7 +41,7 @@ class HeatingCircuit(Circuit):
 
     @property
     def current_temp(self):
-        """ Give current temperautre of Heating circuit. """
+        """Give current temperautre of Heating circuit."""
         return parse_float_value(self.get_property(HC_ROOMTEMPERATURE))
 
     @property
