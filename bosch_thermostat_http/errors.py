@@ -6,7 +6,10 @@ class BoschException(Exception):
 
 
 class RequestError(BoschException):
-    """Unable to fulfill request.
+    """
+    Invalid request.
+
+    Unable to fulfill request.
     Raised when host or API cannot be reached.
     """
 
@@ -14,11 +17,14 @@ class RequestError(BoschException):
 class ResponseError(BoschException):
     """Invalid response."""
 
+
 class Response404Error(BoschException):
     """Invalid response."""
+
 
 class SensorNoLongerAvailable(BoschException):
     """Invalid response."""
 
+
 class EncryptionError(BoschException):
-    """Unable to decrypt"""
+    """Unable to decrypt."""

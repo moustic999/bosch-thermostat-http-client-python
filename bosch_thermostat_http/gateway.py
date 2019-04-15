@@ -20,6 +20,8 @@ class Gateway:
 
     def __init__(self, session, host, access_key, password=None):
         """
+        Initialize gateway.
+
         :param access_key:
         :param password:
         :param host:
@@ -48,54 +50,54 @@ class Gateway:
         }
 
     async def initialize(self):
-        """ Initialize gateway asynchronously. """
+        """Initialize gateway asynchronously."""
         if not self._data[GATEWAY]:
             await self._update_info()
 
     def get_items(self, data_type):
-        """ Get items on types like Sensors, Heating Circuits etc. """
+        """Get items on types like Sensors, Heating Circuits etc."""
         return self._data[data_type].get_items()
 
     def set_timeout(self, timeout):
-        """ Set timeout for API calls. """
+        """Set timeout for API calls."""
         self._connector.set_timeout(timeout)
 
     @property
     def access_key(self):
-        """ Return key to store in config entry."""
+        """Return key to store in config entry."""
         return self._encryption.key
 
     @property
     def heating_circuits(self):
-        """ Get circuit list. """
+        """Get circuit list."""
         return self._data[HC].circuits
 
     def get_circuits(self, ctype):
-        """ Get circuit list. """
+        """Get circuit list."""
         return self._data[ctype].circuits if ctype in self._data else None
 
     @property
     def dhw_circuits(self):
-        """ Get circuit list. """
+        """Get circuit list."""
         return self._data[DHW].circuits
 
     @property
     def sensors(self):
-        """ Get sensors list. """
+        """Get sensors list."""
         return self._data[SENSORS].sensors
 
     def get_request(self):
-        """ For testing purposes only. Delete it in final lib."""
+        """For testing purposes only. Delete it in final lib."""
         return self.get
 
     def get_info(self, key):
-        """ Get gateway info given key. """
+        """Get gateway info given key."""
         if key in self._data[GATEWAY]:
             return self._data[GATEWAY][key]
         return None
 
     async def _update_info(self):
-        """ Update gateway info from Bosch device. """
+        """Update gateway info from Bosch device."""
         for key in GATEWAY_PATH_LIST:
             response = await self.get(GATEWAY_PATH_LIST[key])
             if VALUE in response:
@@ -103,7 +105,7 @@ class Gateway:
                 self._data[GATEWAY][name] = response[VALUE]
 
     async def get_capabilities(self):
-        """ Get capabilities of gateway. """
+        """Get capabilities of gateway."""
         capabilities = []
         for key, values in SYSTEM_CAPABILITIES.items():
             for value in values:
@@ -119,17 +121,17 @@ class Gateway:
         return capabilities
 
     async def initialize_circuits(self, circ_type, restored_data=None):
-        """ Initialize circuits objects of given type (dhw/hcs). """
+        """Initialize circuits objects of given type (dhw/hcs)."""
         self._data[circ_type] = Circuits(self._requests, circ_type)
         await self._data[circ_type].initialize(restored_data)
 
     async def initialize_sensors(self, restored_data=None):
-        """ Initialize sensors objects. """
+        """Initialize sensors objects."""
         self._data[SENSORS] = Sensors(self._requests)
         await self._data[SENSORS].initialize(restored_data)
 
     async def rawscan(self):
-        """ Print out all info from gateway. """
+        """Print out all info from gateway."""
         for root in ROOT_PATHS:
             await deep_into(root, self.get, True)
 
@@ -142,7 +144,7 @@ class Gateway:
             return False
 
     async def get(self, path):
-        """ Get message from API with given path. """
+        """Get message from API with given path."""
         async with self._lock:
             try:
                 encrypted = await self._connector.request(path)
@@ -154,14 +156,14 @@ class Gateway:
                                     format(err))
 
     async def _set(self, path, data):
-        """ Send message to API with given path. """
+        """Send message to API with given path."""
         async with self._lock:
             encrypted = self._encryption.encrypt(data)
             result = await self._connector.submit(path, encrypted)
             return result
 
     async def set_value(self, path, value):
-        """ Set value for thermostat. """
+        """Set value for thermostat."""
         data = json.dumps({"value": value})
         result = await self._set(path, data)
         return result

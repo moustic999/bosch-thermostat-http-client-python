@@ -1,4 +1,4 @@
-""" Encryption logic of Bosch thermostat. """
+"""Encryption logic of Bosch thermostat."""
 import base64
 import hashlib
 import binascii
@@ -10,10 +10,12 @@ from .errors import EncryptionError
 
 
 class Encryption:
-    """ Encryption class. """
+    """Encryption class."""
 
     def __init__(self, access_key, password=None):
         """
+        Initialize encryption.
+
         :param str access_key: Access key to Bosch thermostat.
             If no password specified assumed as ready key to encrypt.
         :param str password: Password created with Bosch app.
@@ -30,11 +32,11 @@ class Encryption:
 
     @property
     def key(self):
-        """ Return key to store in config entry."""
+        """Return key to store in config entry."""
         return self._saved_key
 
     def encrypt(self, raw):
-        """ Encrypt raw message. """
+        """Encrypt raw message."""
         if len(raw) % self._bs != 0:
             raw = self._pad(raw)
         cipher = Encrypter(
@@ -45,6 +47,8 @@ class Encryption:
 
     def decrypt(self, enc):
         """
+        Decryption algorithm.
+
         Decrypt raw message only if length > 2.
         Padding is not working for lenght less than 2.
         """
@@ -63,5 +67,5 @@ class Encryption:
             raise EncryptionError("Unable to decrypt: {}".format(err))
 
     def _pad(self, _s):
-        """ Padding of encryption. """
+        """Pad of encryption."""
         return _s + (self._bs - len(_s) % self._bs) * chr(0)

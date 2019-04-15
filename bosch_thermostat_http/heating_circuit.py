@@ -1,4 +1,4 @@
-""" Heating Circuits module of Bosch thermostat. """
+"""Heating Circuits module of Bosch thermostat."""
 from .const import (SUBMIT, HC_MANUAL_ROOMSETPOINT,
                     HC_TEMPORARY_TEMPERATURE, HC_CURRENT_ROOMSETPOINT,
                     OPERATION_MODE, HC_MODE_AUTO, VALUE,
@@ -9,10 +9,12 @@ from .helper import parse_float_value
 
 
 class HeatingCircuit(Circuit):
-    """ Single Heating Circuits object. """
+    """Single Heating Circuits object."""
 
     def __init__(self, requests, attr_id, restoring_data):
         """
+        Initialize heating circuit.
+
         :param obj get_request:    function to retrieve data from thermostat.
         :param obj submit_request: function to send data to thermostat.
         :param str hc_name: name of heating circuit.
@@ -21,7 +23,7 @@ class HeatingCircuit(Circuit):
         self._type = "hc"
 
     async def set_temperature(self, temperature):
-        """ Set temperature of Circuit. """
+        """Set temperature of Circuit."""
         if self._data[OPERATION_MODE][VALUE]:
             temp_property = (HC_TEMPORARY_TEMPERATURE if
                              self._data[OPERATION_MODE][VALUE] ==
@@ -32,10 +34,10 @@ class HeatingCircuit(Circuit):
 
     @property
     def target_temperature(self):
-        """ Get target temperature of Circtuit. Temporary or Room set point."""
-        #temp = self.get_property(HC_TEMPORARY_TEMPERATURE)
-        #temp_val = temp.get(VALUE, -1)
-        #if temp.get(MINVALUE, 5) < temp_val < temp.get(MAXVALUE, 30):
+        """Get target temperature of Circtuit. Temporary or Room set point."""
+        # temp = self.get_property(HC_TEMPORARY_TEMPERATURE)
+        # temp_val = temp.get(VALUE, -1)
+        # if temp.get(MINVALUE, 5) < temp_val < temp.get(MAXVALUE, 30):
         #    return temp_val
         return self._data[HC_CURRENT_ROOMSETPOINT].get(VALUE)
 
@@ -46,5 +48,5 @@ class HeatingCircuit(Circuit):
 
     @property
     def temp_units(self):
-        """ Return units of temperaure. """
+        """Return units of temperaure."""
         return self.get_property(HC_ROOMTEMPERATURE).get(UNITS)

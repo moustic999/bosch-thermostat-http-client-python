@@ -1,14 +1,14 @@
-""" Circuits module of Bosch thermostat. """
+"""Circuits module of Bosch thermostat."""
 from .const import DHW, HC
 from .helper import BoschEntities
 
 
 class Circuits(BoschEntities):
-    """
-    Circuits main object containing multiple Circuit objects.
-    """
+    """Circuits main object containing multiple Circuit objects."""
+
     def __init__(self, requests, circuit_type):
         """
+        Initialize circuits.
         :param dict requests: { GET: get function, SUBMIT: submit function}
         :param str circuit_type: is it HC or DHW
         """
@@ -17,11 +17,11 @@ class Circuits(BoschEntities):
 
     @property
     def circuits(self):
-        """ Get circuits. """
+        """Get circuits."""
         return self.get_items()
 
     async def initialize(self, circuits=None):
-        """ Initialize HeatingCircuits asynchronously. """
+        """Initialize HeatingCircuits asynchronously."""
         restoring_data = True
         if not circuits:
             circuits = await self.retrieve_from_module(1,
@@ -39,7 +39,7 @@ class Circuits(BoschEntities):
                     self._items.append(circuit_object)
 
     def create_circuit(self, circuit, restoring_data):
-        """ Create single circuit of given type. """
+        """Create single circuit of given type."""
         if self._circuit_type == DHW:
             from .dhw_circuit import DHWCircuit
             return DHWCircuit(

@@ -1,13 +1,13 @@
-""" Main circuit object. """
+"""Main circuit object."""
 from .const import GET, PATH, ID, VALUE, ALLOWED_VALUES, OPERATION_MODE, SUBMIT
 from .helper import BoschSingleEntity, crawl
 
 
 class Circuit(BoschSingleEntity):
-    """ Parent object for circuit of type HC or DHW. """
+    """Parent object for circuit of type HC or DHW."""
 
     def __init__(self, requests, attr_id, restoring_data):
-        """ Initialize circuit with requests and id from gateway. """
+        """Initialize circuit with requests and id from gateway."""
         self._circuits_path = {}
         self._references = None
         self._requests = requests
@@ -18,21 +18,21 @@ class Circuit(BoschSingleEntity):
 
     @property
     def json_scheme(self):
-        """ Give simple json scheme of circuit. """
+        """Give simple json scheme of circuit."""
         return self._circuits_path
 
     @property
     def update_initialized(self):
-        """ Inform if we successfully invoked update at least one time. """
+        """Inform if we successfully invoked update at least one time."""
         return self._updated_initialized
 
     @property
     def get_schedule(self):
-        """Preparation to retrieve schedule of HC/DHW."""
+        """Prepare to retrieve schedule of HC/DHW."""
         return None
 
     async def initialize(self):
-        """ Check each uri if return json with values. """
+        """Check each uri if return json with values."""
         keys_to_del = []
         keys_to_add = {}
         for key, value in self._circuits_path.items():
@@ -57,7 +57,7 @@ class Circuit(BoschSingleEntity):
         self._json_scheme_ready = True
 
     def add_data(self, path, references):
-        """ Add all URI which we taking values from. """
+        """Add all URI which we taking values from."""
         self._main_data[PATH] = path
         for key in references:
             if self._restoring_data:
@@ -70,7 +70,7 @@ class Circuit(BoschSingleEntity):
             self._data[short_id] = {}
 
     async def update(self):
-        """ Update info about Circuit asynchronously. """
+        """Update info about Circuit asynchronously."""
         for key in self._data:
             result = await self._requests[GET](
                 self._circuits_path[key])
@@ -79,7 +79,7 @@ class Circuit(BoschSingleEntity):
         self._updated_initialized = True
 
     async def update_requested_key(self, key):
-        """ Update info about Circuit asynchronously. """
+        """Update info about Circuit asynchronously."""
         if key in self._data:
             result = await self._requests[GET](
                 self._circuits_path[key])

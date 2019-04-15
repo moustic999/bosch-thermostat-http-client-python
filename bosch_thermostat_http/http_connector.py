@@ -10,6 +10,7 @@ class HttpConnector:
     """HTTP connector to Bosch thermostat."""
 
     def __init__(self, host, websession):
+        """Init of HTTP connector."""
         self._host = host
         self._websession = websession
         self._request_timeout = 10

@@ -1,4 +1,4 @@
-""" Sensors of Bosch thermostat. """
+"""Sensors of Bosch thermostat."""
 from .const import (SENSORS, APPLIANCES, GET, PATH, ID,
                     NAME, SENSORS_EXLUDE, HEATSOURCES_EXLUDE,
                     APPLIANCES_EXLUDE, HEATSOURCES)
@@ -7,9 +7,12 @@ from .errors import ResponseError, Response404Error, SensorNoLongerAvailable
 
 
 class Sensors(BoschEntities):
-    """ Sensors object containing multiple Sensor objects. """
+    """Sensors object containing multiple Sensor objects."""
+
     def __init__(self, requests):
         """
+        Initialize sensors.
+
         :param dict requests: { GET: get function, SUBMIT: submit function}
         """
         super().__init__(requests)
@@ -17,12 +20,13 @@ class Sensors(BoschEntities):
 
     @property
     def sensors(self):
-        """ Get sensor list. """
+        """Get sensor list."""
         return self.get_items().values()
 
     async def initialize(self, sensors=None):
         """
-        Asynchronously initialize all sensorsself.
+        Asynchronously initialize all sensors.
+
         :param sensors dict if declared then restore sensors from it.
                             If not download data from device.
         """

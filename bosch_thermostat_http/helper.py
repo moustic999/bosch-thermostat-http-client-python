@@ -1,4 +1,4 @@
-""" Helper functions. """
+"""Helper functions."""
 
 from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN,
                     SHORT, ALLOWED_VALUES, UNITS, STATE)
@@ -36,13 +36,13 @@ async def crawl(url, _list, deep, get, exclude=()):
                     if "id" in uri and deep > 0:
                         await crawl(uri["id"], _list, deep-1, get, exclude)
         return _list
-    except ResponseError as err:
+    except ResponseError:
         # print("error while retrieving url {} with error {}".format(url, err))
         return _list
 
 
 async def deep_into(url, get, log=None):
-    """ Test for getting references. Used for raw scan. """
+    """Test for getting references. Used for raw scan."""
     if log:
         print(url)
     try:
@@ -52,13 +52,13 @@ async def deep_into(url, get, log=None):
         if "references" in resp:
             for uri in resp["references"]:
                 await deep_into(uri["id"], get, log)
-    except (EncryptionError, ResponseError) as err:
+    except (EncryptionError, ResponseError):
         pass
         # print("error : {}". format(err))
 
 
 def check_sensor(sensor):
-    """ Check if sensor is valid. """
+    """Check if sensor is valid."""
     if ID in sensor and VALUE in sensor:
         if STATE in sensor:
             for item in sensor[STATE]:
@@ -70,34 +70,36 @@ def check_sensor(sensor):
 
 
 class BoschEntities:
-    """
-    Main object to deriver sensors and circuits.
-    """
+    """Main object to deriver sensors and circuits."""
+
     def __init__(self, requests):
         """
+        Initiazlie Bosch entities.
+
         :param dic requests: { GET: get function, SUBMIT: submit function}
         """
         self._items = []
         self._requests = requests
 
     async def retrieve_from_module(self, deep, path, exclude=()):
-        """ Retrieve all json objects with simple values. """
+        """Retrieve all json objects with simple values."""
         return await crawl(path, [], deep, self._requests[GET], exclude)
 
     def get_items(self):
-        """ Get items. """
+        """Get items."""
         return self._items
 
     async def update_all(self):
-        """ Update all heating circuits. """
+        """Update all heating circuits."""
         for item in self._items:
             await item.update()
 
 
 class BoschSingleEntity:
-    """ Object for single sensor/circuit. Don't use it directly. """
+    """Object for single sensor/circuit. Don't use it directly."""
 
     def __init__(self, name, attr_id, restoring_data, path=None):
+        """Initialize single entity."""
         self._main_data = {
             NAME: name,
             ID: attr_id,
@@ -108,7 +110,7 @@ class BoschSingleEntity:
         self._json_scheme_ready = restoring_data
 
     def process_results(self, result, key=None):
-        """ Convert multi-level json object to one level object. """
+        """Convert multi-level json object to one level object."""
         data = self._data if self._type == "sensor" else self._data[key]
         if result:
             for res_key in [VALUE, MINVALUE, MAXVALUE, ALLOWED_VALUES,
@@ -117,11 +119,11 @@ class BoschSingleEntity:
                     data[res_key] = result[res_key]
 
     def get_property(self, property_name):
-        """ Retrieve JSON with all properties: value, min, max, state etc."""
+        """Retrieve JSON with all properties: value, min, max, state etc."""
         return self._data[property_name]
 
     def get_value(self, property_name):
-        """ Retrieve only value from JSON. """
+        """Retrieve only value from JSON."""
         ref = self.get_property(property_name)
         if ref:
             return ref.get(VALUE)
@@ -129,24 +131,24 @@ class BoschSingleEntity:
 
     @property
     def attr_id(self):
-        """ Get ID of the entity. """
+        """Get ID of the entity."""
         return self._main_data[ID]
 
     def get_all_properties(self):
-        """ Retrieve all properties with value, min, max etc. """
+        """Retrieve all properties with value, min, max etc."""
         return self._data
 
     @property
     def name(self):
-        """ Name of Bosch entity. """
+        """Name of Bosch entity."""
         return self._main_data[NAME]
 
     @property
     def json_scheme_ready(self):
-        """ Is Bosch entity restored from scheme. """
+        """Is Bosch entity restored from scheme."""
         return self._json_scheme_ready
 
     @property
     def path(self):
-        """ Get path of Bosch API which entity is using for data. """
+        """Get path of Bosch API which entity is using for data."""
         return self._main_data[PATH]

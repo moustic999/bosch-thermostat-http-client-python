@@ -1,4 +1,4 @@
-""" Constants used in Bosch thermostat. """
+"""Constants used in Bosch thermostat."""
 
 BS = 16
 MAGIC = bytearray.fromhex(
@@ -72,13 +72,17 @@ HC_ECO = "temperatureLevels/eco"
 HC_MODE_AUTO = 'auto'
 HC_MODE_MANUAL = 'manual'
 HC_MANUAL_ROOMSETPOINT = "manualRoomSetpoint"  # set target Temp in manual mode
-  # room current temperature
+# room current temperature
 """ set target temp in auto mode. """
 
 DHW_CURRENT_WATERTEMP = "actualTemp"
 DHW_CURRENT_SETPOINT = "currentSetpoint"
 DHW_HIGHTTEMP_LEVEL = "temperatureLevelshigh"
 DHW_OFFTEMP_LEVEL = "temperatureLevelsoff"
+DHW_OFF = "Off"
+DHW_HIGH = "high"
+DHW_HCPROGRAM = "HCprogram"
+DHW_OWNPROGRAM = "ownprogram"
 
 SENSORS_EXLUDE = ()
 HEATSOURCES_EXLUDE = ('/system/appliance/workingTime/secondBurner')
