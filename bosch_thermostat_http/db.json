@@ -9,6 +9,34 @@
                 {
                     "id": "/system/sensors/temperatures/hotWater_t2",
                     "name": "Hotwater temp"
+                },
+                {
+                    "id": "/system/sensors/temperatures/supply_t1_setpoint",
+                    "name": "Supply temp setpoint"
+                },
+                {
+                    "id": "/system/sensors/temperatures/supply_t1",
+                    "name": "Actual supply temp"
+                },
+                {
+                    "id": "/system/sensors/temperatures/return",
+                    "name": "Return temp"
+                },
+                {
+                    "id": "/system/healthStatus",
+                    "name": "Health status"
+                },
+                {
+                    "id": "/heatSources/actualPower",
+                    "name": "Actual Power"
+                },
+                {
+                    "id": "/heatSources/actualModulation",
+                    "name": "Actual modulation"
+                },
+                {
+                    "id": "/heatSources/CHpumpModulation",
+                    "name": "Actual heating pump modulation"
                 }
               ],
       "firmware_version": "04.06.07"
