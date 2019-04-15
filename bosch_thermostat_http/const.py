@@ -3,6 +3,8 @@
 BS = 16
 MAGIC = bytearray.fromhex(
     "867845e97c4e29dce522b9a7d3a3e07b152bffadddbed7f5ffd842e9895ad1e4")
+# MAGIC = bytearray.fromhex(
+#     "75735458393830414a6a5651566b3635516b76574f4c615038452b795249504f")
 
 GET = "get"
 SUBMIT = "submit"
@@ -54,7 +56,7 @@ OPERATION_MODE = "operationMode"
 
 HTTP_HEADER = {
     'User-agent': 'TeleHeater',
-    'Accept': 'application/json'
+    'Connection': 'close'
 }
 
 TIMEOUT = 10

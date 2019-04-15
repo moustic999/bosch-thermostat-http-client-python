@@ -2,7 +2,7 @@
 from aiohttp import client_exceptions
 from .const import (HTTP_HEADER)
 
-from .errors import RequestError, ResponseError
+from .errors import RequestError, ResponseError, Response404Error
 
 
 class HttpConnector:
@@ -18,7 +18,9 @@ class HttpConnector:
         try:
             async with self._websession.get(
                     self._format_url(path),
-                    headers=HTTP_HEADER, timeout=self._request_timeout) as res:
+                    headers=HTTP_HEADER,
+                    timeout=self._request_timeout,
+                    skip_auto_headers=['Accept-Encoding', 'Accept']) as res:
                 if res.status == 200:
                     if res.content_type != 'application/json':
                         raise ResponseError('Invalid content type: {}'.
@@ -26,7 +28,11 @@ class HttpConnector:
                     else:
                         data = await res.text()
                         return data
+                elif res.status == 404:
+                    raise Response404Error('URI not exists: {}'.
+                                           format(path))
                 else:
+                    # await res.close()
                     raise ResponseError('Invalid response code: {}'.
                                         format(res.status))
         except (client_exceptions.ClientError,

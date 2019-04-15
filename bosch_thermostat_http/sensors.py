@@ -3,7 +3,7 @@ from .const import (SENSORS, APPLIANCES, GET, PATH, ID,
                     NAME, SENSORS_EXLUDE, HEATSOURCES_EXLUDE,
                     APPLIANCES_EXLUDE, HEATSOURCES)
 from .helper import BoschSingleEntity, BoschEntities, check_sensor
-from .errors import ResponseError
+from .errors import ResponseError, Response404Error, SensorNoLongerAvailable
 
 
 class Sensors(BoschEntities):
@@ -76,5 +76,7 @@ class Sensor(BoschSingleEntity):
         try:
             result = await self._requests[GET](self._main_data[PATH])
             self.process_results(result)
+        except Response404Error:
+            raise SensorNoLongerAvailable("This sensor is no available.")
         except ResponseError:
             self._data = None

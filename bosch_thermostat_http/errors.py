@@ -14,6 +14,11 @@ class RequestError(BoschException):
 class ResponseError(BoschException):
     """Invalid response."""
 
+class Response404Error(BoschException):
+    """Invalid response."""
+
+class SensorNoLongerAvailable(BoschException):
+    """Invalid response."""
 
 class EncryptionError(BoschException):
     """Unable to decrypt"""

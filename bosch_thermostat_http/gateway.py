@@ -70,6 +70,10 @@ class Gateway:
         """ Get circuit list. """
         return self._data[HC].circuits
 
+    def get_circuits(self, ctype):
+        """ Get circuit list. """
+        return self._data[ctype].circuits if ctype in self._data else None
+
     @property
     def dhw_circuits(self):
         """ Get circuit list. """
@@ -86,7 +90,6 @@ class Gateway:
 
     def get_info(self, key):
         """ Get gateway info given key. """
-        print(self._data[GATEWAY])
         if key in self._data[GATEWAY]:
             return self._data[GATEWAY][key]
         return None
