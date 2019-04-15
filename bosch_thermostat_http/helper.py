@@ -12,7 +12,7 @@ def parse_float_value(value, single_value=True, min_max_obligatory=False):
         if STATE in value:
             for k in value[STATE]:
                 if ((OPEN in k and k[OPEN] == value[VALUE]) or
-                        (SHORT in k and k[SHORT] == value[SHORT])):
+                        (SHORT in k and k[SHORT] == value[VALUE])):
                     return None
         if all(k in value for k in (VALUE, MINVALUE, MAXVALUE)):
             if value[MINVALUE] <= value[VALUE] <= value[MAXVALUE]:

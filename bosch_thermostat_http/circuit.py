@@ -87,7 +87,7 @@ class Circuit(BoschSingleEntity):
             self._updated_initialized = True
 
     async def set_operation_mode(self, new_mode):
-        """ Set operation_mode of Heating Circuit. """
+        """Set operation_mode of Heating Circuit."""
         if (self._data[OPERATION_MODE][VALUE] != new_mode and
                 ALLOWED_VALUES in self._data[OPERATION_MODE] and
                 new_mode in self._data[OPERATION_MODE][ALLOWED_VALUES]):

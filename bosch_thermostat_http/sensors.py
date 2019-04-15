@@ -39,40 +39,42 @@ class Sensors(BoschEntities):
             sensor_check_status = (check_sensor(sensor)
                                    if not restoring_data else True)
             if sensor_check_status:
-                self.register_sensor(sensor[ID],
+                self.register_sensor(sensor[NAME],
                                      sensor[ID], restoring_data)
 
-    def register_sensor(self, attr_id, path, restoring_data):
-        """ Register sensor for the module. """
-        name = attr_id.split('/').pop()
-        if name not in self._items:
-            self._items[name] = Sensor(self._requests,
-                                       attr_id, path, restoring_data)
+    def register_sensor(self, name, path, restoring_data):
+        """Register sensor for the module."""
+        attr_id = path.split('/').pop()
+        if attr_id not in self._items:
+            self._items[attr_id] = Sensor(self._requests, attr_id,
+                                          name, path, restoring_data)
 
 
 class Sensor(BoschSingleEntity):
-    """ Single sensor object. """
-    def __init__(self, requests, attr_id, path, restoring_data):
+    """Single sensor object."""
+
+    def __init__(self, requests, attr_id, name, path, restoring_data):
         """
+        Single sensor init.
+
         :param dics requests: { GET: get function, SUBMIT: submit function}
         :param str name: name of the sensors
         :param str path: path to retrieve data from sensor.
         """
         self._requests = requests
-        name = attr_id.split('/').pop()
         super().__init__(name, attr_id, restoring_data, path)
         self._type = "sensor"
 
     @property
     def json_scheme(self):
-        """ Get json scheme of sensor. """
+        """Get json scheme of sensor."""
         return {
             NAME: self._main_data[NAME],
             ID: self._main_data[ID]
         }
 
     async def update(self):
-        """ Update sensor data. """
+        """Update sensor data."""
         try:
             result = await self._requests[GET](self._main_data[PATH])
             self.process_results(result)

@@ -20,5 +20,5 @@ def bosch_sensors(firmware_version):
     db = open_json()
     if db:
         if firmware_version in db and SENSORS in db[firmware_version]:
-            return db[firmware_version][SENSORS]
+            return db[firmware_version]
     return None

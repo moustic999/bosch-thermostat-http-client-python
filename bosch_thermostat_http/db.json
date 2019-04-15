@@ -39,7 +39,7 @@
                     "name": "Actual heating pump modulation"
                 }
               ],
-      "firmware_version": "04.06.07"
+      "versionFirmware": "04.06.07"
     }
   }
 }
