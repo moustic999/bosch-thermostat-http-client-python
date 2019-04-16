@@ -54,9 +54,9 @@ class Encryption:
         """
         try:
             if enc and len(enc) > 2:
+                enc = base64.b64decode(enc)
                 if len(enc) % self._bs != 0:
                     enc = self._pad(enc)
-                enc = base64.b64decode(enc)
                 cipher = Decrypter(
                     AESModeOfOperationECB(self._key),
                     padding=PADDING_NONE)
