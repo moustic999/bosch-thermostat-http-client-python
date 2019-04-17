@@ -1,46 +1,31 @@
 import unittest
-import requests
-import aiounittest
-from .mockserver import MockServer
+from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
+from aiohttp import web
 from bosch_thermostat_http.gateway import Gateway
 
+class GatewayTestCase(AioHTTPTestCase):
 
+    async def get_application(self):
+        """
+        Override the get_app method to return your application.
+        """
+        async def handler(request):
+            response = web.Response(text={'id':'/gateway/uuid'})
+            response.headers['Content-Type'] = 'application/json'
+            return response
 
-class TestGateway(aiounittest.AsyncTestCase):
+        app = web.Application()
+        app.router.add_get('/gateway/uuid', hello)
+        return app
 
-    @classmethod
-    def setUpClass(self):
-        data_file = open("tests/data_file.txt", "r")
-        self.data = data_file.read().splitlines()
-
-        self.server = MockServer(port=1234)
-        self.server.start()
-
-    def setUp(self):
-        pass
-
-    def test_mock_with_json_encrypted(self):
-        self.server.add_encrypted_json_response("/gateway/uuid", 
-            {"id":"/gateway/uuid",
-             "type":"stringValue",
-             "writeable":0,
-             "recordable":0,
-             "value":"123456789",
-             "allowedValues":["<123456789>"]})
-
-
-
-        response = requests.get(self.server.url + "/gateway/uuid")
-
-        self.assertEqual(200, response.status_code)
-        self.assertEqual('application/json', response.headers['Content-Type'])
-
-        self.assertEqual('123456789',response.text)
-        print(response.text)
-        #self.assertIn('hello', response.json())
-        #self.assertEqual('welt', response.json()['hello'])    
     
-    @classmethod
-    def tearDownClass(self):
-        self.server.shutdown_server()
-    
+
+    @unittest_run_loop
+    async def test_example(self):
+        async with aiohttp.ClientSession() as session:
+            resp = await self.client.request("GET", "/gateway/uuid")
+            assert resp.status == 200
+            text = await resp.text()
+            assert "Hello, world" in text
+
+   
