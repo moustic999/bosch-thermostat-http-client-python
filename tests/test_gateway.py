@@ -1,31 +1,35 @@
 import unittest
+import json
+import asyncio
 from aiohttp.test_utils import AioHTTPTestCase, unittest_run_loop
-from aiohttp import web
+from aiohttp import web, ClientSession
 from bosch_thermostat_http.gateway import Gateway
+from bosch_thermostat_http.encryption import Encryption
+from .gateway_test_server import GatewayTestServer
+
+
 
 class GatewayTestCase(AioHTTPTestCase):
 
     async def get_application(self):
-        """
-        Override the get_app method to return your application.
-        """
-        async def handler(request):
-            response = web.Response(text={'id':'/gateway/uuid'})
-            response.headers['Content-Type'] = 'application/json'
-            return response
+        return web.Application()
 
-        app = web.Application()
-        app.router.add_get('/gateway/uuid', hello)
-        return app
+    async def get_server(self, app):
+        server = GatewayTestServer(access_key='aaa', password='xxx')
+        return server
 
     
-
     @unittest_run_loop
-    async def test_example(self):
-        async with aiohttp.ClientSession() as session:
-            resp = await self.client.request("GET", "/gateway/uuid")
-            assert resp.status == 200
-            text = await resp.text()
-            assert "Hello, world" in text
+    async def test_get(self):
+        async with ClientSession() as session:
+            loop = asyncio.get_event_loop()
 
-   
+            gtw_host = str(self.server.host)+':' + str(self.server.port)
+            gateway = Gateway(session, gtw_host, self.server.access_key(), self.server.password())
+            task = loop.create_task(gateway.get('/gateway/uuid'))
+            request = await self.server.receive_request()
+            assert request.path_qs == '/gateway/uuid'
+            self.server.send_response(request, data={'id':'/gateway/uuid'})
+            g_resp = await task
+            assert {'id':'/gateway/uuid'} == g_resp
+    
