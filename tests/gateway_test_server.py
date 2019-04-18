@@ -4,45 +4,47 @@ import json
 from bosch_thermostat_http.encryption import Encryption
 
 class GatewayTestServer(aiohttp.test_utils.RawTestServer):
-    def __init__(self, **kwargs):
+    ''' Test server that relies on test case to supply responses and control timing '''
+
+    def __init__(self, *, ssl=None, **kwargs):
         super().__init__(self._handle_request, **kwargs)
+        self._ssl = ssl
         self._requests = asyncio.Queue()
-        self._responses = {}                # {id(request): Future}
-        self._access_key = kwargs.get('access_key')
-        self._password = kwargs.get('password')
+        self._responses = {}
 
-    def access_key(self):
-        return self._access_key
-
-    def password(self):
-        return self._password
+    async def start_server(self, **kwargs):
+        kwargs.setdefault('ssl', self._ssl)
+        await super().start_server(**kwargs)
 
     async def close(self):
-        ''' cancel all pending requests before closing '''
         for future in self._responses.values():
             future.cancel()
         await super().close()
 
     async def _handle_request(self, request):
-        ''' push request to test case and wait until it provides a response '''
         self._responses[id(request)] = response = asyncio.Future()
         self._requests.put_nowait(request)
         try:
-            # wait until test case provides a response
             return await response
         finally:
             del self._responses[id(request)]
+            
+    @property
+    def awaiting_request_count(self):
+        return self._requests.qsize()
 
-    async def receive_request(self):
-        ''' wait until test server receives a request '''
-        return await self._requests.get()
-
-    def send_response(self, request, data=None):
-        ''' send web response from test case to client code '''
-       
-        json_data = json.dumps(data)
-        encryption = Encryption(self._access_key, self._password)
-        data_encrypted = encryption.encrypt(json_data)
-        response = aiohttp.web.Response(body=data_encrypted)
-        response.headers['Content-Type'] = 'application/json'
-        self._responses[id(request)].set_result(response)
+    async def receive_request(self, *, timeout=None):
+        ''' Wait until the test server receives a request
+        :param float timeout: Bail out after that many seconds.
+        :return: received request, not yet serviced.
+        :rtype: aiohttp.web.BaseRequest
+        :see: :meth:`send_response`
+        '''
+        return await asyncio.wait_for(self._requests.get(), timeout=timeout)
+    def send_response(self, request, *args, **kwargs):
+        ''' Reply to a received request.
+        :param request: the request to respond to.
+        :param args: forwarded to :class:`aiohttp.web.Response`.
+        :param kwargs: forwarded to :class:`aiohttp.web.Response`.
+        '''
+        self._responses[id(request)].set_result(aiohttp.web.Response(*args, **kwargs))

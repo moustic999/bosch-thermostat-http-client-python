@@ -15,7 +15,7 @@ class GatewayTestCase(AioHTTPTestCase):
         return web.Application()
 
     async def get_server(self, app):
-        server = GatewayTestServer(access_key='aaa', password='xxx')
+        server = GatewayTestServer()
         return server
 
     
@@ -25,11 +25,11 @@ class GatewayTestCase(AioHTTPTestCase):
             loop = asyncio.get_event_loop()
 
             gtw_host = str(self.server.host)+':' + str(self.server.port)
-            gateway = Gateway(session, gtw_host, self.server.access_key(), self.server.password())
+            gateway = Gateway(session, gtw_host, 'aaa', 'xxx')
             task = loop.create_task(gateway.get('/gateway/uuid'))
             request = await self.server.receive_request()
             assert request.path_qs == '/gateway/uuid'
-            self.server.send_response(request, data={'id':'/gateway/uuid'})
+            self.server.send_response(request, text='{"id":"/gateway/uuid"}', content_type='application/json')
             g_resp = await task
             assert {'id':'/gateway/uuid'} == g_resp
     

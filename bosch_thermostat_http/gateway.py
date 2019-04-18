@@ -6,7 +6,7 @@ import asyncio
 from .const import (GET, UUID, SUBMIT, DHW, HC, GATEWAY,
                     SENSORS, ROOT_PATHS, GATEWAY_PATH_LIST,
                     SYSTEM_CAPABILITIES, DETAILED_CAPABILITIES,
-                    SENSORS_CAPABILITIES, VALUE, ID)
+                    SENSORS_CAPABILITIES, VALUE, ID, FIRMWARE_VERSION)
 from .encryption import Encryption
 from .sensors import Sensors
 from .circuits import Circuits
@@ -86,15 +86,14 @@ class Gateway:
         """Get sensors list."""
         return self._data[SENSORS].sensors
 
-    def get_request(self):
-        """For testing purposes only. Delete it in final lib."""
-        return self.get
-
     def get_info(self, key):
         """Get gateway info given key."""
         if key in self._data[GATEWAY]:
             return self._data[GATEWAY][key]
         return None
+
+    def get_firmware_version(self):
+        return self.get(GATEWAY_PATH_LIST.get(FIRMWARE_VERSION))
 
     async def _update_info(self):
         """Update gateway info from Bosch device."""
