@@ -11,15 +11,15 @@ REQUIRES = [
 
 
 setup(
-    name='bosh-thermostat-http-client',
+    name='bosh-thermostat-http',
     version=VERSION,
-    description='Python API and command line tool for talking to Bosch™ Thermostat using HTTP ',
-     author='Ludovic Laurent',
+    description='Python API for talking to Bosch™ Thermostat using HTTP ',
+    author='Ludovic Laurent',
     author_email='ludovic.laurent@gmail.com',
     maintainer='Ludovic Laurent',
     maintainer_email='ludovic.laurent@gmail.com',
     url='https://github.com/moustic999/bosch-thermostat-http-client-python.git',
-    download_url='https://github.com/patvdleer/bosch-thermostat-http-client-python/archive/{}.zip'.format(VERSION),
+    download_url='https://github.com/moustic999/bosch-thermostat-http-client-python/archive/{}.zip'.format(VERSION),
     packages=["bosch_thermostat_http"],
     install_requires=REQUIRES,
     license='Apache License 2.0',
