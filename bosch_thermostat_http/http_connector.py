@@ -34,15 +34,15 @@ class HttpConnector:
                     raise Response404Error('URI not exists: {}'.
                                            format(path))
                 else:
-                    # await res.close()
                     raise ResponseError('Invalid response code: {}'.
                                         format(res.status))
+        
         except (client_exceptions.ClientError,
                 client_exceptions.ClientConnectorError,
                 TimeoutError) as err:
             raise RequestError(
-                'Error requesting data from {}: {}'.format(path, err)
-            )
+                'Error requesting data from {}: {}'.format(path, err) 
+            ) from err
 
     async def submit(self, path, data):
         """Make a put request to the API."""
