@@ -2,18 +2,22 @@
 # -*- coding:utf-8 -*-
 from setuptools import setup
 
-VERSION = '0.2.0'
+VERSION = '0.3.1'
 
 REQUIRES = [
     'pyaes>=1.6.1',
     'aiohttp'
     ]
 
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setup(
-    name='bosh-thermostat-http',
+    name='bosh-thermostat-http-client',
     version=VERSION,
-    description='Python API for talking to Bosch™ Thermostat using HTTP ',
+    description='Python API for talking to Bosch™ Heating gateway using HTTP ',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author='Ludovic Laurent',
     author_email='ludovic.laurent@gmail.com',
     maintainer='Ludovic Laurent',
