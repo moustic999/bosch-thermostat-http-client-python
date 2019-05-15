@@ -1,5 +1,6 @@
 """Gateway module connecting to Bosch thermostat."""
 import json
+import logging
 import asyncio
 
 
@@ -13,6 +14,8 @@ from .circuits import Circuits
 
 from .errors import RequestError, ResponseError, Response404Error
 from .helper import deep_into
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Gateway:
@@ -149,11 +152,13 @@ class Gateway:
                 encrypted = await self._connector.request(path)
                 result = self._encryption.decrypt(encrypted)
                 jsondata = json.loads(result)
+                _LOGGER.debug("Retrieved data for path %s from gateway: %s", 
+                              path, result)
                 return jsondata
             except json.JSONDecodeError as err:
                 raise ResponseError("Unable to decode Json response : {}".
                                     format(err))
-            except Response404Error as err:
+            except Response404Error:
                 raise ResponseError("Path does not exist : {}".format(path))
 
     async def _set(self, path, data):
