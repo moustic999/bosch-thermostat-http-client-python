@@ -2,7 +2,7 @@
 # -*- coding:utf-8 -*-
 from setuptools import setup
 
-VERSION = '0.4'
+VERSION = '0.4.3'
 
 REQUIRES = [
     'pyaes>=1.6.1',
@@ -13,7 +13,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='bosh-thermostat-http-client',
+    name='bosch-thermostat-http-client',
     version=VERSION,
     description='Python API for talking to Bosch™ Heating gateway using HTTP ',
     long_description=long_description,
@@ -26,6 +26,7 @@ setup(
     download_url='https://github.com/moustic999/bosch-thermostat-http-client-python/archive/{}.zip'.format(VERSION),
     packages=["bosch_thermostat_http"],
     install_requires=REQUIRES,
+    include_package_data = True,
     license='Apache License 2.0',
     classifiers=[
         'Development Status :: 3 - Alpha',
