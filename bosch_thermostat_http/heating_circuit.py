@@ -1,4 +1,5 @@
 """Heating Circuits module of Bosch thermostat."""
+import logging
 from .const import (SUBMIT, HC_MANUAL_ROOMSETPOINT,
                     HC_TEMPORARY_TEMPERATURE, HC_CURRENT_ROOMSETPOINT,
                     OPERATION_MODE, HC_MODE_AUTO, VALUE,
@@ -6,6 +7,8 @@ from .const import (SUBMIT, HC_MANUAL_ROOMSETPOINT,
 from .circuit import Circuit
 
 from .helper import parse_float_value
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HeatingCircuit(Circuit):
@@ -39,11 +42,15 @@ class HeatingCircuit(Circuit):
         # temp_val = temp.get(VALUE, -1)
         # if temp.get(MINVALUE, 5) < temp_val < temp.get(MAXVALUE, 30):
         #    return temp_val
+        _LOGGER.debug("Target temp is %s",
+                      self._data[HC_CURRENT_ROOMSETPOINT].get(VALUE))
         return self._data[HC_CURRENT_ROOMSETPOINT].get(VALUE)
 
     @property
     def current_temp(self):
         """Give current temperautre of Heating circuit."""
+        _LOGGER.debug("Current temp is %s",
+                      self.get_property(HC_ROOMTEMPERATURE))
         return parse_float_value(self.get_property(HC_ROOMTEMPERATURE))
 
     @property

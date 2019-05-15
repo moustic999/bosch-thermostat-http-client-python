@@ -1,6 +1,9 @@
 """Main circuit object."""
+import logging
 from .const import GET, PATH, ID, VALUE, ALLOWED_VALUES, OPERATION_MODE, SUBMIT
 from .helper import BoschSingleEntity, crawl
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class Circuit(BoschSingleEntity):
@@ -71,6 +74,7 @@ class Circuit(BoschSingleEntity):
 
     async def update(self):
         """Update info about Circuit asynchronously."""
+        _LOGGER.debug("Updating circuit %s", self.name)
         for key in self._data:
             result = await self._requests[GET](
                 self._circuits_path[key])
@@ -88,9 +92,15 @@ class Circuit(BoschSingleEntity):
 
     async def set_operation_mode(self, new_mode):
         """Set operation_mode of Heating Circuit."""
-        if (self._data[OPERATION_MODE][VALUE] != new_mode and
-                ALLOWED_VALUES in self._data[OPERATION_MODE] and
+        if (self._data[OPERATION_MODE][VALUE] == new_mode):
+            _LOGGER.warning("Trying to set mode which is already set %s",
+                            new_mode)
+        elif (ALLOWED_VALUES in self._data[OPERATION_MODE] and
                 new_mode in self._data[OPERATION_MODE][ALLOWED_VALUES]):
-            await self._requests[SUBMIT](
-                self._circuits_path[OPERATION_MODE],
-                new_mode)
+            await self._requests[SUBMIT](self._circuits_path[OPERATION_MODE],
+                                         new_mode)
+            return new_mode
+        _LOGGER.warning("You wanted to set %s, but it is not allowed %s",
+                        new_mode,
+                        self._data[OPERATION_MODE][ALLOWED_VALUES])
+        return None

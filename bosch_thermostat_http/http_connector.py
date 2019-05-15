@@ -1,9 +1,13 @@
 """HTTP connector class to Bosch thermostat."""
-from aiohttp import client_exceptions
+import logging
 from asyncio import TimeoutError
-from .const import (HTTP_HEADER)
 
-from .errors import RequestError, ResponseError, Response404Error
+from aiohttp import client_exceptions
+
+from .const import HTTP_HEADER
+from .errors import RequestError, Response404Error, ResponseError
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HttpConnector:
@@ -17,6 +21,7 @@ class HttpConnector:
 
     async def request(self, path):
         """Make a get request to the API."""
+        _LOGGER.debug("Sending request to %s", path)
         try:
             async with self._websession.get(
                     self._format_url(path),
