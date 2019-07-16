@@ -4,6 +4,8 @@ from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN,
                     SHORT, ALLOWED_VALUES, UNITS, STATE)
 
 from .errors import ResponseError, EncryptionError
+import re
+regex = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
 
 def parse_float_value(value, single_value=True, min_max_obligatory=False):
@@ -41,20 +43,35 @@ async def crawl(url, _list, deep, get, exclude=()):
         return _list
 
 
-async def deep_into(url, get, log=None):
+async def deep_into(url, _list, get):
     """Test for getting references. Used for raw scan."""
-    if log:
-        print(url)
     try:
         resp = await get(url)
-        if log:
-            print(resp)
+        new_resp = resp
+        if 'uri' in new_resp:
+            new_resp['uri'] = remove_all_ip_occurs(resp['uri'])
+        if 'id' in new_resp and new_resp['id'] == '/gateway/uuid':
+            new_resp['value'] = -1
+            new_resp['allowedValues'] = -1
+        if ('setpointProperty' in new_resp and
+                'uri' in new_resp['setpointProperty']):
+            new_resp['setpointProperty']['uri'] = remove_all_ip_occurs(
+                new_resp['setpointProperty']['uri'])
+        _list.append(resp)
         if "references" in resp:
-            for uri in resp["references"]:
-                await deep_into(uri["id"], get, log)
+            for idx, val in enumerate(resp["references"]):
+                val2 = val
+                if 'uri' in val2:
+                    val2['uri'] = remove_all_ip_occurs(val2['uri'])
+                new_resp['references'][idx] = val2
+                await deep_into(val["id"], _list, get)
     except (EncryptionError, ResponseError):
         pass
-        # print("error : {}". format(err))
+    return _list
+
+
+def remove_all_ip_occurs(data):
+    return regex.sub("http://THERMOSTAT/", data)
 
 
 def check_sensor(sensor):

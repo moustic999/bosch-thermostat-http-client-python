@@ -134,8 +134,10 @@ class Gateway:
 
     async def rawscan(self):
         """Print out all info from gateway."""
+        list = []
         for root in ROOT_PATHS:
-            await deep_into(root, self.get, True)
+            list.append(await deep_into(root, [], self.get))
+        return list
 
     async def check_connection(self):
         """Check if we are able to connect to Bosch device and return UUID."""
