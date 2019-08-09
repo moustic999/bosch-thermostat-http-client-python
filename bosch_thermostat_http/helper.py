@@ -1,28 +1,12 @@
 """Helper functions."""
 
-from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN,
-                    SHORT, ALLOWED_VALUES, UNITS, STATE)
-
-from .errors import ResponseError, EncryptionError
 import re
+
+from .const import (ALLOWED_VALUES, GET, ID, NAME, OPEN, PATH, SHORT, STATE,
+                    UNITS, VALUE, MIN, MAX, AUTO)
+from .errors import EncryptionError, ResponseError
+
 regex = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
-
-
-def parse_float_value(value, single_value=True, min_max_obligatory=False):
-    """Parse if value is between min and max."""
-    if value:
-        if STATE in value:
-            for k in value[STATE]:
-                if ((OPEN in k and k[OPEN] == value[VALUE]) or
-                        (SHORT in k and k[SHORT] == value[VALUE])):
-                    return None
-        if all(k in value for k in (VALUE, MINVALUE, MAXVALUE)):
-            if value[MINVALUE] <= value[VALUE] <= value[MAXVALUE]:
-                return value[VALUE] if single_value else value
-            return None
-        if not min_max_obligatory:
-            return value[VALUE] if single_value else value
-    return None
 
 
 async def crawl(url, _list, deep, get, exclude=()):
@@ -74,18 +58,6 @@ def remove_all_ip_occurs(data):
     return regex.sub("http://THERMOSTAT/", data)
 
 
-def check_sensor(sensor):
-    """Check if sensor is valid."""
-    if ID in sensor and VALUE in sensor:
-        if STATE in sensor:
-            for item in sensor[STATE]:
-                for key in item:
-                    if sensor[VALUE] == item[key]:
-                        return False
-        return True
-    return False
-
-
 class BoschEntities:
     """Main object to deriver sensors and circuits."""
 
@@ -115,7 +87,7 @@ class BoschEntities:
 class BoschSingleEntity:
     """Object for single sensor/circuit. Don't use it directly."""
 
-    def __init__(self, name, attr_id, restoring_data, path=None):
+    def __init__(self, name, attr_id, dict, path=None):
         """Initialize single entity."""
         self._main_data = {
             NAME: name,
@@ -124,27 +96,38 @@ class BoschSingleEntity:
         }
         self._data = {}
         self._type = None
-        self._json_scheme_ready = restoring_data
+        self.__initialize_dict(dict)
+        self._json_scheme_ready = False
+
+    def __initialize_dict(self, dictionary):
+        self._dict = dictionary
+        self._val_str = self._dict.get(VALUE, VALUE)
+        self._min_str = self._dict.get(MIN, MIN)
+        self._max_str = self._dict.get(MAX, MAX)
+        self._all_str = self._dict.get(ALLOWED_VALUES, ALLOWED_VALUES)
+        self._units_str = self._dict.get(UNITS, UNITS)
+        self._state_str = self._dict.get(STATE, STATE)
+        self._open_str = self._dict.get(OPEN, OPEN)
+        self._short_str = self._dict.get(SHORT, SHORT)
+        self._auto_str = self._dict.get(AUTO, AUTO)
 
     def process_results(self, result, key=None):
         """Convert multi-level json object to one level object."""
         data = self._data if self._type == "sensor" else self._data[key]
         if result:
-            for res_key in [VALUE, MINVALUE, MAXVALUE, ALLOWED_VALUES,
-                            UNITS, STATE]:
+            for res_key in [self._val_str, self._min_str, self._max_str,
+                            self._all_str, self._units_str, self._state_str]:
                 if res_key in result:
                     data[res_key] = result[res_key]
 
     def get_property(self, property_name):
         """Retrieve JSON with all properties: value, min, max, state etc."""
-        return self._data[property_name]
+        return self._data.get(property_name, {})
 
-    def get_value(self, property_name):
+    def get_value(self, property_name, default_value=None):
         """Retrieve only value from JSON."""
         ref = self.get_property(property_name)
-        if ref:
-            return ref.get(VALUE)
-        return None
+        return ref.get(self._val_str, default_value)
 
     @property
     def attr_id(self):

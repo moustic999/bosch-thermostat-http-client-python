@@ -1,5 +1,5 @@
 """Circuits module of Bosch thermostat."""
-from .const import DHW, HC
+from .const import DHW, HC, HEATING_CIRCUITS, DHW_CIRCUITS, MAIN_URI, DICT
 from .helper import BoschEntities
 
 
@@ -12,7 +12,8 @@ class Circuits(BoschEntities):
         :param dict requests: { GET: get function, SUBMIT: submit function}
         :param str circuit_type: is it HC or DHW
         """
-        self._circuit_type = circuit_type
+        self._circuit_type = (HEATING_CIRCUITS if circuit_type == HC else
+                              DHW_CIRCUITS)
         super().__init__(requests)
 
     @property
@@ -20,38 +21,23 @@ class Circuits(BoschEntities):
         """Get circuits."""
         return self.get_items()
 
-    async def initialize(self, circuits=None):
+    async def initialize(self, database):
         """Initialize HeatingCircuits asynchronously."""
-        restoring_data = True
-        if not circuits:
-            circuits = await self.retrieve_from_module(1,
-                                                       self._circuit_type)
-            restoring_data = False
+        uri = database[self._circuit_type][MAIN_URI]
+        circuits = await self.retrieve_from_module(1, uri)
         for circuit in circuits:
             if "references" in circuit:
-                circuit_object = self.create_circuit(circuit, restoring_data)
+                circuit_object = self.create_circuit(circuit, database)
                 if circuit_object:
-                    circuit_object.add_data(circuit['id'],
-                                            circuit['references'])
-                    if not restoring_data:
-                        await circuit_object.initialize()
-                        circuit['references'] = circuit_object.json_scheme
+                    await circuit_object.initialize()
                     self._items.append(circuit_object)
 
-    def create_circuit(self, circuit, restoring_data):
+    def create_circuit(self, circuit, database):
         """Create single circuit of given type."""
-        if self._circuit_type == DHW:
+        if self._circuit_type == DHW_CIRCUITS:
             from .dhw_circuit import DHWCircuit
-            return DHWCircuit(
-                self._requests,
-                circuit['id'],
-                restoring_data
-            )
-        if self._circuit_type == HC:
+            return DHWCircuit(self._requests, circuit['id'], database)
+        if self._circuit_type == HEATING_CIRCUITS:
             from .heating_circuit import HeatingCircuit
-            return HeatingCircuit(
-                self._requests,
-                circuit['id'],
-                restoring_data
-            )
+            return HeatingCircuit(self._requests, circuit['id'], database)
         return None

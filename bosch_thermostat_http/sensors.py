@@ -1,8 +1,7 @@
 """Sensors of Bosch thermostat."""
-from .const import (SENSORS, APPLIANCES, GET, PATH, ID,
-                    NAME, SENSORS_EXLUDE, HEATSOURCES_EXLUDE,
-                    APPLIANCES_EXLUDE, HEATSOURCES)
-from .helper import BoschSingleEntity, BoschEntities, check_sensor
+from .const import (SENSORS, GET, PATH, ID,
+                    NAME)
+from .helper import BoschSingleEntity, BoschEntities
 from .errors import ResponseError, Response404Error, SensorNoLongerAvailable
 
 
@@ -23,41 +22,29 @@ class Sensors(BoschEntities):
         """Get sensor list."""
         return self.get_items().values()
 
-    async def initialize(self, sensors=None):
+    async def initialize(self, dict, sensors=None):
         """
         Asynchronously initialize all sensors.
 
         :param sensors dict if declared then restore sensors from it.
                             If not download data from device.
         """
-        restoring_data = True
-        if not sensors:
-            sensors = (await self.retrieve_from_module(2, SENSORS,
-                                                       SENSORS_EXLUDE) +
-                       await self.retrieve_from_module(2, APPLIANCES,
-                                                       APPLIANCES_EXLUDE) +
-                       await self.retrieve_from_module(2, HEATSOURCES,
-                                                       HEATSOURCES_EXLUDE))
-            restoring_data = False
         for sensor in sensors:
-            sensor_check_status = (check_sensor(sensor)
-                                   if not restoring_data else True)
-            if sensor_check_status:
-                self.register_sensor(sensor[NAME],
-                                     sensor[ID], restoring_data)
+            self.register_sensor(sensor[NAME],
+                                 sensor[ID], dict)
 
-    def register_sensor(self, name, path, restoring_data):
+    def register_sensor(self, name, path, dict):
         """Register sensor for the module."""
         attr_id = path.split('/').pop()
         if attr_id not in self._items:
             self._items[attr_id] = Sensor(self._requests, attr_id,
-                                          name, path, restoring_data)
+                                          name, path, dict)
 
 
 class Sensor(BoschSingleEntity):
     """Single sensor object."""
 
-    def __init__(self, requests, attr_id, name, path, restoring_data):
+    def __init__(self, requests, attr_id, name, path, dict):
         """
         Single sensor init.
 
@@ -66,7 +53,7 @@ class Sensor(BoschSingleEntity):
         :param str path: path to retrieve data from sensor.
         """
         self._requests = requests
-        super().__init__(name, attr_id, restoring_data, path)
+        super().__init__(name, attr_id, dict, path)
         self._type = "sensor"
 
     @property

@@ -1,15 +1,14 @@
 """Heating Circuits module of Bosch thermostat."""
-from .const import (SUBMIT, MINVALUE, MAXVALUE, VALUE, DHW_HIGHTTEMP_LEVEL,
-                    DHW_CURRENT_SETPOINT, DHW_OWNPROGRAM, OPERATION_MODE)
+from .const import (SUBMIT, VALUE, WATER_HIGH, WATER_SETPOINT, DHW,
+                    HCPROGRAM, OWNPROGRAM, OPERATION_MODE)
 
 from .circuit import Circuit
-from .helper import parse_float_value
 
 
 class DHWCircuit(Circuit):
     """Single Heating Circuits object."""
 
-    def __init__(self, requests, attr_id, restoring_data):
+    def __init__(self, requests, attr_id, db):
         """
         Initialize single circuit.
 
@@ -17,34 +16,36 @@ class DHWCircuit(Circuit):
         :param obj submit_request: function to send data to thermostat.
         :param str hc_name: name of heating circuit.
         """
-        super().__init__(requests, attr_id, restoring_data)
-        self._type = "dhw"
+        super().__init__(requests, attr_id, db, DHW)
 
-    async def set_temperature(self, temperature):
+    def __initialize_dict(self, dictionary):
+        super().__initialize_dict()
+        self._ownprogram = self._dict.get(OWNPROGRAM, OWNPROGRAM)
+        self._hcprogram = self._dict.get(HCPROGRAM, HCPROGRAM)
+
+    async def set_temperature(self, temp):
         """Set temperature of Circuit."""
         t_temp = self.target_temperature
-        if (t_temp[MINVALUE] < temperature < t_temp[MAXVALUE] and
-                self._data[OPERATION_MODE][VALUE]):
-            if self._data[OPERATION_MODE] == DHW_OWNPROGRAM:
-                target = DHW_CURRENT_SETPOINT
-            elif self._data[OPERATION_MODE] == DHW_OWNPROGRAM:
-                target = DHW_HIGHTTEMP_LEVEL
+        op_mode = self.get_value(OPERATION_MODE)
+        if (t_temp[self._min_str] < temp < t_temp[self._max_str] and op_mode):
+            if op_mode == self._ownprogram:
+                target = WATER_SETPOINT
+            elif op_mode == self._hcprogram:
+                target = WATER_HIGH
             if target:
                 await self._requests[SUBMIT](
-                    self._circuits_path[target], temperature)
+                    self._circuits_path[target], temp)
                 return True
         return False
 
     @property
     def target_temperature(self):
         """Get target temperature of Circtuit. Temporary or Room set point."""
-        temp_levels_high = self.get_property(DHW_HIGHTTEMP_LEVEL)
-        temp = parse_float_value(temp_levels_high, False, True)
+        temp_levels_high = self.get_property(WATER_HIGH)
+        temp = self.parse_float_value(temp_levels_high, False, True)
         if temp:
-            return (temp[VALUE], temp[MINVALUE], temp[MAXVALUE])
-        setpoint_temp = self._data[DHW_CURRENT_SETPOINT].get(VALUE)
-        if setpoint_temp:
-            if all(k in temp_levels_high for k in (MINVALUE, MAXVALUE)):
-                return (setpoint_temp, temp[MINVALUE], temp[MAXVALUE])
-            return (setpoint_temp, 0, 99)
-        return (-1, 0, 99)
+            return (temp[VALUE], temp[self._min_str], temp[self._max_str])
+        setpoint_temp = self.get_value(WATER_SETPOINT, -1)
+        if all(k in temp_levels_high for k in (self._min_str, self._max_str)):
+            return (setpoint_temp, temp[self._min_str], temp[self._max_str])
+        return (setpoint_temp, 0, 99)
