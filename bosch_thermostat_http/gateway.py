@@ -10,6 +10,7 @@ from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
 from .helper import deep_into
 from .sensors import Sensors
+from .strings import Strings
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,21 +50,24 @@ class Gateway:
         }
         self._firmware_version = None
         self._db = None
+        self._str = None
 
-    async def initialize(self, db=None):
+    async def initialize(self, database=None):
         """Initialize gateway asynchronously."""
-        if not db:
-            from .db import get_firmware_uri, get_db_of_firmware
-            self._firmware_version = await self.get(get_firmware_uri())
+        from .db import get_firmware_uri, get_db_of_firmware
+        self._firmware_version = await self.get(get_firmware_uri())
+        if not database:
             self._db = get_db_of_firmware(self._firmware_version[VALUE])
         else:
             from .db import check_db
-            if check_db(db):
-                self._db = db
+            if check_db(self._firmware_version, database):
+                self._db = database
             else:
                 return False
-        if self._db and not self._data[GATEWAY]:
-            await self._update_info()
+        if self._db:
+            self._str = Strings(self._db[DICT])
+            if not self._data[GATEWAY]:
+                await self._update_info()
 
     def get_items(self, data_type):
         """Get items on types like Sensors, Heating Circuits etc."""
@@ -72,9 +76,7 @@ class Gateway:
     @property
     def database(self):
         """Retrieve db scheme."""
-        if not self._db:
-            return self._db
-        return None
+        return self._db
 
     def set_timeout(self, timeout):
         """Set timeout for API calls."""
@@ -107,7 +109,7 @@ class Gateway:
     @property
     def firmware(self):
         """Get firmware."""
-        return self._firmware_version
+        return self._firmware_version.get(self._str.val)
 
     def get_info(self, key):
         """Get gateway info given key."""
@@ -125,12 +127,14 @@ class Gateway:
     async def initialize_circuits(self, circ_type):
         """Initialize circuits objects of given type (dhw/hcs)."""
         self._data[circ_type] = Circuits(self._requests, circ_type)
-        await self._data[circ_type].initialize(self._db)
+        await self._data[circ_type].initialize(self._db, self._str)
+        return self.get_circuits(circ_type)
 
     async def initialize_sensors(self):
         """Initialize sensors objects."""
         self._data[SENSORS] = Sensors(self._requests)
-        await self._data[SENSORS].initialize(self._db[DICT], self._db[SENSORS])
+        await self._data[SENSORS].initialize(self._str, self._db[SENSORS])
+        return self.sensors
 
     async def rawscan(self):
         """Print out all info from gateway."""
@@ -139,10 +143,10 @@ class Gateway:
             list.append(await deep_into(root, [], self.get))
         return list
 
-    async def check_connection(self):
+    async def check_connection(self, database=None):
         """Check if we are able to connect to Bosch device and return UUID."""
         try:
-            await self.initialize()
+            await self.initialize(database)
             return self.get_info(UUID)
         except RequestError:
             return False

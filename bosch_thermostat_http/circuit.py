@@ -1,8 +1,8 @@
 """Main circuit object."""
 import logging
-from .const import (GET, PATH, ID, VALUE, ALLOWED_VALUES, HEATING_CIRCUITS,
+from .const import (GET, ID, HEATING_CIRCUITS,
                     DHW_CIRCUITS, HC,
-                    OPERATION_MODE, SUBMIT, DICT, REFS)
+                    OPERATION_MODE, SUBMIT, REFS)
 from .helper import BoschSingleEntity, crawl
 
 _LOGGER = logging.getLogger(__name__)
@@ -11,29 +11,21 @@ _LOGGER = logging.getLogger(__name__)
 class Circuit(BoschSingleEntity):
     """Parent object for circuit of type HC or DHW."""
 
-    def __init__(self, requests, attr_id, db, type):
+    def __init__(self, requests, attr_id, db, str_obj, _type):
         """Initialize circuit with requests and id from gateway."""
         self._circuits_path = {}
         self._references = None
         self._requests = requests
         name = attr_id.split('/').pop()
-        self._type = type
-        self._db = db[HEATING_CIRCUITS if type == HC else DHW_CIRCUITS]
-        super().__init__(name, attr_id, db[DICT])
-        self._updated_initialized = False
-    
-    def __initialize_dict(self, dictionary):
-        pass
-
+        self._type = _type
+        self._db = db[HEATING_CIRCUITS if _type == HC else DHW_CIRCUITS]
+        super().__init__(name, attr_id, str_obj)
+        
+  
     @property
     def db_json(self):
         """Give simple json scheme of circuit."""
         return self._db
-
-    @property
-    def update_initialized(self):
-        """Inform if we successfully invoked update at least one time."""
-        return self._updated_initialized
 
     @property
     def get_schedule(self):
@@ -46,6 +38,7 @@ class Circuit(BoschSingleEntity):
         for key, value in refs.items():
             uri = value[ID].format(self.name)
             result = await crawl(uri, [], 1, self._requests[GET])
+            _LOGGER.debug("INITIALIZING uri %s with result %s", uri, result)
             if result:
                 self._circuits_path[key] = uri
                 self._data[key] = {}
@@ -54,7 +47,7 @@ class Circuit(BoschSingleEntity):
     async def update(self):
         """Update info about Circuit asynchronously."""
         _LOGGER.debug("Updating circuit %s", self.name)
-        print(self._dict)
+        print(self._data)
         for key in self._data:
             result = await self._requests[GET](
                 self._circuits_path[key])
@@ -71,8 +64,8 @@ class Circuit(BoschSingleEntity):
     async def set_operation_mode(self, new_mode):
         """Set operation_mode of Heating Circuit."""
         op_mode = self.get_property(OPERATION_MODE)
-        op_mode_value = op_mode.get(self._val_str)
-        allowed_values = op_mode.get(ALLOWED_VALUES, {})
+        op_mode_value = op_mode.get(self._str.val)
+        allowed_values = op_mode.get(self._str.allowed_values, {})
         if op_mode_value == new_mode:
             _LOGGER.warning("Trying to set mode which is already set %s",
                             new_mode)
@@ -85,18 +78,23 @@ class Circuit(BoschSingleEntity):
                         new_mode, allowed_values)
         return None
 
-    def parse_float_value(self, value, single_value=True, minmax_obliged=False):
+    def parse_float_value(self, val, single_value=True, minmax_obliged=False):
         """Parse if value is between min and max."""
-        val = value.get(self._val_str, None)
-        for k in val:
-            if ((self._open_str in k and k[self._open_str] == val) or
-                    (self._short_str in k and k[self._short_str] == val)):
+        state = val.get(self._str.state, {})
+        value = val.get(self._str.val, False)
+        _min = val.get(self._str.min, -1)
+        _max = val.get(self._str.max, -1)
+        if not value:
+            return None
+        for k in state:
+            if ((self._str.open in k and k[self._str.open] == val) or
+                    (self._str.short in k and k[self._str.short] == val)):
                 return None
-            if all(k in val for k in
-                   (self._val_str, self._min_str, self._max_str)):
-                if value[self._min_str] <= val <= value[self._max_str]:
-                    return val if single_value else val
-                return None
-            if not minmax_obliged:
-                return val[self._val_str] if single_value else value
+        if all(k in val for k in
+                (self._str.val, self._str.min, self._str.max)):
+            if _min <= value <= _max:
+                return value if single_value else val
+            return None
+        if not minmax_obliged:
+            return value if single_value else val
         return None

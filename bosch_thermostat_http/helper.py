@@ -2,8 +2,8 @@
 
 import re
 
-from .const import (ALLOWED_VALUES, GET, ID, NAME, OPEN, PATH, SHORT, STATE,
-                    UNITS, VALUE, MIN, MAX, AUTO)
+from .const import (GET, ID, NAME, PATH)
+
 from .errors import EncryptionError, ResponseError
 
 regex = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
@@ -87,7 +87,7 @@ class BoschEntities:
 class BoschSingleEntity:
     """Object for single sensor/circuit. Don't use it directly."""
 
-    def __init__(self, name, attr_id, dict, path=None):
+    def __init__(self, name, attr_id, str_obj, path=None):
         """Initialize single entity."""
         self._main_data = {
             NAME: name,
@@ -96,29 +96,24 @@ class BoschSingleEntity:
         }
         self._data = {}
         self._type = None
-        self.__initialize_dict(dict)
+        self._str = str_obj
         self._json_scheme_ready = False
-
-    def __initialize_dict(self, dictionary):
-        self._dict = dictionary
-        self._val_str = self._dict.get(VALUE, VALUE)
-        self._min_str = self._dict.get(MIN, MIN)
-        self._max_str = self._dict.get(MAX, MAX)
-        self._all_str = self._dict.get(ALLOWED_VALUES, ALLOWED_VALUES)
-        self._units_str = self._dict.get(UNITS, UNITS)
-        self._state_str = self._dict.get(STATE, STATE)
-        self._open_str = self._dict.get(OPEN, OPEN)
-        self._short_str = self._dict.get(SHORT, SHORT)
-        self._auto_str = self._dict.get(AUTO, AUTO)
+        self._updated_initialized = False
 
     def process_results(self, result, key=None):
         """Convert multi-level json object to one level object."""
         data = self._data if self._type == "sensor" else self._data[key]
         if result:
-            for res_key in [self._val_str, self._min_str, self._max_str,
-                            self._all_str, self._units_str, self._state_str]:
+            for res_key in [self._str.val, self._str.min, self._str.max,
+                            self._str.allowed_values,
+                            self._str.units, self._str.units]:
                 if res_key in result:
                     data[res_key] = result[res_key]
+
+    @property
+    def update_initialized(self):
+        """Inform if we successfully invoked update at least one time."""
+        return self._updated_initialized
 
     def get_property(self, property_name):
         """Retrieve JSON with all properties: value, min, max, state etc."""
@@ -127,7 +122,7 @@ class BoschSingleEntity:
     def get_value(self, property_name, default_value=None):
         """Retrieve only value from JSON."""
         ref = self.get_property(property_name)
-        return ref.get(self._val_str, default_value)
+        return ref.get(self._str.val, default_value)
 
     @property
     def attr_id(self):
@@ -137,6 +132,10 @@ class BoschSingleEntity:
     def get_all_properties(self):
         """Retrieve all properties with value, min, max etc."""
         return self._data
+
+    @property
+    def strings(self):
+        return self._str
 
     @property
     def name(self):

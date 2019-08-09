@@ -44,7 +44,7 @@ class Sensors(BoschEntities):
 class Sensor(BoschSingleEntity):
     """Single sensor object."""
 
-    def __init__(self, requests, attr_id, name, path, dict):
+    def __init__(self, requests, attr_id, name, path, dictionary):
         """
         Single sensor init.
 
@@ -53,7 +53,7 @@ class Sensor(BoschSingleEntity):
         :param str path: path to retrieve data from sensor.
         """
         self._requests = requests
-        super().__init__(name, attr_id, dict, path)
+        super().__init__(name, attr_id, dictionary, path)
         self._type = "sensor"
 
     @property
@@ -69,6 +69,7 @@ class Sensor(BoschSingleEntity):
         try:
             result = await self._requests[GET](self._main_data[PATH])
             self.process_results(result)
+            self._updated_initialized = True
         except Response404Error:
             raise SensorNoLongerAvailable("This sensor is no available.")
         except ResponseError:

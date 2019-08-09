@@ -2,7 +2,10 @@
 import json
 import os
 
-from .const import (PATHS, GATEWAY)
+from .const import (PATHS, GATEWAY, DICT, GATEWAY, HEATING_CIRCUITS, DHW_CIRCUITS,
+    MANUAL, AUTO, MAX, MIN, UNITS, STATE, INVALID, VALUE, ALLOWED_VALUES, OWNPROGRAM, HCPROGRAM, OPEN, SHORT,
+    UUID, FIRMWARE_VERSION, HARDWARE_VERSION, SYSTEM_BRAND, SYSTEM_TYPE,
+    MAIN_URI, REFS)
 
 FILENAME = os.path.join(os.path.dirname(__file__), 'db2_prototype.json')
 
@@ -34,18 +37,15 @@ def get_db_of_firmware(firmware_version):
             return db[firmware_version]
     return None
 
-
-def bosch_sensors(firmware_version):
-    """Get bosch sensors from db.json file."""
-    db = open_json()
-    if db:
-        if firmware_version in db and SENSORS in db[firmware_version]:
-            return db[firmware_version]
-    return None
-
-def check_db(db):
-    if PATHS in db:
-        if GATEWAY in db[PATHS]:
-            if "uuid" in db[PATHS][GATEWAY]:
-                return True
-    return False
+def check_db(fw_version, db):
+    return True
+    if fw_version in db:
+        subrow = db[fw_version]
+        if DICT in subrow and GATEWAY in subrow:
+            if not all(k in subrow[DICT] for k in (MANUAL, AUTO, MAX, MIN, UNITS, STATE, INVALID, VALUE, ALLOWED_VALUES, OWNPROGRAM, HCPROGRAM, OPEN, SHORT)):
+                return False
+            if not all(k in subrow[DICT] for k in (UUID, FIRMWARE_VERSION, HARDWARE_VERSION, SYSTEM_BRAND, SYSTEM_TYPE)):
+                return False
+        else:
+            return False
+    return True

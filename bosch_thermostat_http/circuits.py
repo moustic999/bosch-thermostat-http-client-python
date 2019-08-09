@@ -21,23 +21,27 @@ class Circuits(BoschEntities):
         """Get circuits."""
         return self.get_items()
 
-    async def initialize(self, database):
+    async def initialize(self, database, str_obj):
         """Initialize HeatingCircuits asynchronously."""
         uri = database[self._circuit_type][MAIN_URI]
         circuits = await self.retrieve_from_module(1, uri)
         for circuit in circuits:
             if "references" in circuit:
-                circuit_object = self.create_circuit(circuit, database)
+                circuit_object = self.create_circuit(
+                    circuit, database, str_obj)
                 if circuit_object:
                     await circuit_object.initialize()
                     self._items.append(circuit_object)
 
-    def create_circuit(self, circuit, database):
+    def create_circuit(self, circuit, database, str_obj):
         """Create single circuit of given type."""
         if self._circuit_type == DHW_CIRCUITS:
             from .dhw_circuit import DHWCircuit
-            return DHWCircuit(self._requests, circuit['id'], database)
+            return DHWCircuit(self._requests, circuit['id'],
+                              database, str_obj)
         if self._circuit_type == HEATING_CIRCUITS:
+            print("heating circuit")
             from .heating_circuit import HeatingCircuit
-            return HeatingCircuit(self._requests, circuit['id'], database)
+            return HeatingCircuit(self._requests, circuit['id'], database,
+                                  str_obj)
         return None
