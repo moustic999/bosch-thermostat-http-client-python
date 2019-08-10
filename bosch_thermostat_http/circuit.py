@@ -1,7 +1,7 @@
 """Main circuit object."""
 import logging
 from .const import (GET, ID, HEATING_CIRCUITS,
-                    DHW_CIRCUITS, HC,
+                    DHW_CIRCUITS, HC, ROOMTEMP, WATER_TEMP,
                     OPERATION_MODE, SUBMIT, REFS)
 from .helper import BoschSingleEntity, crawl
 
@@ -18,7 +18,13 @@ class Circuit(BoschSingleEntity):
         self._requests = requests
         name = attr_id.split('/').pop()
         self._type = _type
-        self._db = db[HEATING_CIRCUITS if _type == HC else DHW_CIRCUITS]
+        if self._type == HC:
+            self._db = db[HEATING_CIRCUITS]
+            self._current_temp_prop = ROOMTEMP
+        else:
+            self._db = db[DHW_CIRCUITS]
+            self._current_temp_prop = WATER_TEMP
+            
         super().__init__(name, attr_id, str_obj)
         
   
@@ -47,7 +53,6 @@ class Circuit(BoschSingleEntity):
     async def update(self):
         """Update info about Circuit asynchronously."""
         _LOGGER.debug("Updating circuit %s", self.name)
-        print(self._data)
         for key in self._data:
             result = await self._requests[GET](
                 self._circuits_path[key])
@@ -77,6 +82,19 @@ class Circuit(BoschSingleEntity):
         _LOGGER.warning("You wanted to set %s, but it is not allowed %s",
                         new_mode, allowed_values)
         return None
+
+    @property
+    def current_temp(self):
+        """Give current temperature of circuit."""
+        _LOGGER.debug("Current temp is %s",
+                      self.get_property(self._current_temp_prop))
+        return self.parse_float_value(
+            self.get_property(self._current_temp_prop))
+
+    @property
+    def temp_units(self):
+        """Return units of temperature."""
+        return self.get_property(self._current_temp_prop).get(self._str.units)
 
     def parse_float_value(self, val, single_value=True, minmax_obliged=False):
         """Parse if value is between min and max."""

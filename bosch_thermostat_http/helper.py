@@ -23,7 +23,6 @@ async def crawl(url, _list, deep, get, exclude=()):
                         await crawl(uri["id"], _list, deep-1, get, exclude)
         return _list
     except ResponseError:
-        # print("error while retrieving url {} with error {}".format(url, err))
         return _list
 
 

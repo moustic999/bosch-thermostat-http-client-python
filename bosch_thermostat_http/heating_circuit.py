@@ -1,7 +1,7 @@
 """Heating Circuits module of Bosch thermostat."""
 import logging
 from .const import (SUBMIT, HC, ROOMSETPOINT, MANUALROOMSETPOINT,
-                    OPERATION_MODE, ROOMTEMP)
+                    OPERATION_MODE)
 from .circuit import Circuit
 
 
@@ -38,15 +38,3 @@ class HeatingCircuit(Circuit):
                       self._data.get(ROOMSETPOINT, {}).get(
                           self._str.val, None))
         return self._data.get(ROOMSETPOINT, {}).get(self._str.val, None)
-
-    @property
-    def current_temp(self):
-        """Give current temperautre of Heating circuit."""
-        _LOGGER.debug("Current temp is %s",
-                      self.get_property(ROOMTEMP))
-        return self.parse_float_value(self.get_property(ROOMTEMP))
-
-    @property
-    def temp_units(self):
-        """Return units of temperaure."""
-        return self.get_property(ROOMTEMP).get(self._str.units)

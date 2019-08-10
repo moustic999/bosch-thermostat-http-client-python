@@ -40,7 +40,6 @@ class Circuits(BoschEntities):
             return DHWCircuit(self._requests, circuit['id'],
                               database, str_obj)
         if self._circuit_type == HEATING_CIRCUITS:
-            print("heating circuit")
             from .heating_circuit import HeatingCircuit
             return HeatingCircuit(self._requests, circuit['id'], database,
                                   str_obj)

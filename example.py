@@ -32,12 +32,16 @@ async def main():
         dhws = gateway.dhw_circuits
         dhw = dhws[0]
         await dhw.update()
+        print(dhw.current_temp)
+        return
         print(dhw.get_property("operation_mode"))
         print(dhws)
         hcs = gateway.heating_circuits
         print(hcs)
         hc = hcs[0]
         await hc.update()
+        print(hc.current_temp)
+        return
         await hc.set_operation_mode("auto")
         await hc.set_temperature(20)
         await hc.update()
