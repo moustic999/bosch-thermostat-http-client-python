@@ -1,7 +1,7 @@
 """Heating Circuits module of Bosch thermostat."""
 import logging
 from .const import (SUBMIT, HC, ROOMSETPOINT, MANUALROOMSETPOINT,
-                    OPERATION_MODE)
+                    OPERATION_MODE, TEMPORARY_TEMP)
 from .circuit import Circuit
 
 
@@ -21,12 +21,18 @@ class HeatingCircuit(Circuit):
         """
         super().__init__(requests, attr_id, db, str_obj, HC)
 
-    async def set_temperature(self, temperature):
-        """Set temperature of Circuit."""
+    def get_temp_property(self):
+        """Check whith temp property. Use only for setting temp."""
         operation_mode = self.get_value(OPERATION_MODE)
         if operation_mode:
-            temp_property = (ROOMSETPOINT if operation_mode ==
-                             self._str.auto else MANUALROOMSETPOINT)
+            return (TEMPORARY_TEMP if operation_mode ==
+                    self._str.auto else MANUALROOMSETPOINT)
+        return None
+
+    async def set_temperature(self, temperature):
+        """Set temperature of Circuit."""
+        temp_property = self.get_temp_property()
+        if temp_property:
             await self._requests[SUBMIT](
                 self._circuits_path[temp_property],
                 temperature)
@@ -34,7 +40,5 @@ class HeatingCircuit(Circuit):
     @property
     def target_temperature(self):
         """Get target temperature of Circtuit. Temporary or Room set point."""
-        _LOGGER.debug("Target temp is %s",
-                      self._data.get(ROOMSETPOINT, {}).get(
-                          self._str.val, None))
-        return self._data.get(ROOMSETPOINT, {}).get(self._str.val, None)
+        _LOGGER.debug("Target temp is %s", self.get_value(ROOMSETPOINT))
+        return self.get_value(ROOMSETPOINT)

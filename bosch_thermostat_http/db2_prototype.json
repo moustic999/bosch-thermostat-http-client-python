@@ -26,7 +26,7 @@
     "heatingCircuits": {
       "mainUri": "/heatingCircuits",
       "refs": {
-        "room_temp": {
+        "current_temp": {
           "id": "/heatingCircuits/{}/roomtemperature",
           "name": "Room temperature"
         },
@@ -55,7 +55,7 @@
     "dhwCircuits": {
       "mainUri": "/dhwCircuits",
       "refs": {
-        "water_temp": {
+        "current_temp": {
           "id": "/dhwCircuits/{}/actualTemp",
           "name": "Room temperature"
         },

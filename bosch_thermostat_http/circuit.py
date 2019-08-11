@@ -1,7 +1,7 @@
 """Main circuit object."""
 import logging
-from .const import (GET, ID, HEATING_CIRCUITS,
-                    DHW_CIRCUITS, HC, ROOMTEMP, WATER_TEMP,
+from .const import (GET, ID, HEATING_CIRCUITS, 
+                    DHW_CIRCUITS, HC, CURRENT_TEMP,
                     OPERATION_MODE, SUBMIT, REFS)
 from .helper import BoschSingleEntity, crawl
 
@@ -20,11 +20,8 @@ class Circuit(BoschSingleEntity):
         self._type = _type
         if self._type == HC:
             self._db = db[HEATING_CIRCUITS]
-            self._current_temp_prop = ROOMTEMP
         else:
             self._db = db[DHW_CIRCUITS]
-            self._current_temp_prop = WATER_TEMP
-            
         super().__init__(name, attr_id, str_obj)
         
   
@@ -87,14 +84,14 @@ class Circuit(BoschSingleEntity):
     def current_temp(self):
         """Give current temperature of circuit."""
         _LOGGER.debug("Current temp is %s",
-                      self.get_property(self._current_temp_prop))
+                      self.get_property(CURRENT_TEMP))
         return self.parse_float_value(
-            self.get_property(self._current_temp_prop))
+            self.get_property(CURRENT_TEMP))
 
     @property
     def temp_units(self):
         """Return units of temperature."""
-        return self.get_property(self._current_temp_prop).get(self._str.units)
+        return self.get_property(CURRENT_TEMP).get(self._str.units)
 
     def parse_float_value(self, val, single_value=True, minmax_obliged=False):
         """Parse if value is between min and max."""
