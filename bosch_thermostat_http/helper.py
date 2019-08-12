@@ -6,7 +6,7 @@ from .const import (GET, ID, NAME, PATH)
 
 from .errors import EncryptionError, ResponseError
 
-regex = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
+http_regex = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
 
 async def crawl(url, _list, deep, get, exclude=()):
@@ -54,7 +54,8 @@ async def deep_into(url, _list, get):
 
 
 def remove_all_ip_occurs(data):
-    return regex.sub("http://THERMOSTAT/", data)
+    """Change IP to THERMOSTAT string."""
+    return http_regex.sub("http://THERMOSTAT/", data)
 
 
 class BoschEntities:

@@ -1,7 +1,6 @@
 """Main circuit object."""
 import logging
-from .const import (GET, ID, HEATING_CIRCUITS, 
-                    DHW_CIRCUITS, HC, CURRENT_TEMP,
+from .const import (GET, ID, HEATING_CIRCUITS, DHW_CIRCUITS, HC, CURRENT_TEMP,
                     OPERATION_MODE, SUBMIT, REFS)
 from .helper import BoschSingleEntity, crawl
 
@@ -23,8 +22,7 @@ class Circuit(BoschSingleEntity):
         else:
             self._db = db[DHW_CIRCUITS]
         super().__init__(name, attr_id, str_obj)
-        
-  
+
     @property
     def db_json(self):
         """Give simple json scheme of circuit."""
@@ -106,7 +104,7 @@ class Circuit(BoschSingleEntity):
                     (self._str.short in k and k[self._str.short] == val)):
                 return None
         if all(k in val for k in
-                (self._str.val, self._str.min, self._str.max)):
+               (self._str.val, self._str.min, self._str.max)):
             if _min <= value <= _max:
                 return value if single_value else val
             return None

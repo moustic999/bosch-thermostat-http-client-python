@@ -1,5 +1,5 @@
 """Circuits module of Bosch thermostat."""
-from .const import DHW, HC, HEATING_CIRCUITS, DHW_CIRCUITS, MAIN_URI, DICT
+from .const import HC, HEATING_CIRCUITS, DHW_CIRCUITS, MAIN_URI
 from .helper import BoschEntities
 
 
@@ -9,6 +9,7 @@ class Circuits(BoschEntities):
     def __init__(self, requests, circuit_type):
         """
         Initialize circuits.
+
         :param dict requests: { GET: get function, SUBMIT: submit function}
         :param str circuit_type: is it HC or DHW
         """

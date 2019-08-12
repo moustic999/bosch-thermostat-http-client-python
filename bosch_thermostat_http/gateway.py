@@ -5,7 +5,7 @@ import logging
 
 from .circuits import Circuits
 from .const import (DHW, DICT, GATEWAY, GET, HC, ROOT_PATHS, SENSORS, SUBMIT,
-                    UUID, VALUE, FIRMWARE_VERSION)
+                    UUID, VALUE)
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
 from .helper import deep_into
@@ -133,15 +133,15 @@ class Gateway:
     async def initialize_sensors(self):
         """Initialize sensors objects."""
         self._data[SENSORS] = Sensors(self._requests)
-        await self._data[SENSORS].initialize(self._str, self._db[SENSORS])
+        await self._data[SENSORS].initialize(self._db[SENSORS], self._str)
         return self.sensors
 
     async def rawscan(self):
         """Print out all info from gateway."""
-        list = []
+        rawlist = []
         for root in ROOT_PATHS:
-            list.append(await deep_into(root, [], self.get))
-        return list
+            rawlist.append(await deep_into(root, [], self.get))
+        return rawlist
 
     async def check_connection(self, database=None):
         """Check if we are able to connect to Bosch device and return UUID."""
