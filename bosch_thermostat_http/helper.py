@@ -1,28 +1,12 @@
 """Helper functions."""
 
-from .const import (GET, NAME, PATH, ID, VALUE, MINVALUE, MAXVALUE, OPEN,
-                    SHORT, ALLOWED_VALUES, UNITS, STATE)
-
-from .errors import ResponseError, EncryptionError
 import re
-regex = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
+from .const import (GET, ID, NAME, PATH)
 
-def parse_float_value(value, single_value=True, min_max_obligatory=False):
-    """Parse if value is between min and max."""
-    if value:
-        if STATE in value:
-            for k in value[STATE]:
-                if ((OPEN in k and k[OPEN] == value[VALUE]) or
-                        (SHORT in k and k[SHORT] == value[VALUE])):
-                    return None
-        if all(k in value for k in (VALUE, MINVALUE, MAXVALUE)):
-            if value[MINVALUE] <= value[VALUE] <= value[MAXVALUE]:
-                return value[VALUE] if single_value else value
-            return None
-        if not min_max_obligatory:
-            return value[VALUE] if single_value else value
-    return None
+from .errors import EncryptionError, ResponseError
+
+http_regex = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
 
 async def crawl(url, _list, deep, get, exclude=()):
@@ -39,7 +23,6 @@ async def crawl(url, _list, deep, get, exclude=()):
                         await crawl(uri["id"], _list, deep-1, get, exclude)
         return _list
     except ResponseError:
-        # print("error while retrieving url {} with error {}".format(url, err))
         return _list
 
 
@@ -71,19 +54,8 @@ async def deep_into(url, _list, get):
 
 
 def remove_all_ip_occurs(data):
-    return regex.sub("http://THERMOSTAT/", data)
-
-
-def check_sensor(sensor):
-    """Check if sensor is valid."""
-    if ID in sensor and VALUE in sensor:
-        if STATE in sensor:
-            for item in sensor[STATE]:
-                for key in item:
-                    if sensor[VALUE] == item[key]:
-                        return False
-        return True
-    return False
+    """Change IP to THERMOSTAT string."""
+    return http_regex.sub("http://THERMOSTAT/", data)
 
 
 class BoschEntities:
@@ -115,7 +87,7 @@ class BoschEntities:
 class BoschSingleEntity:
     """Object for single sensor/circuit. Don't use it directly."""
 
-    def __init__(self, name, attr_id, restoring_data, path=None):
+    def __init__(self, name, attr_id, str_obj, path=None):
         """Initialize single entity."""
         self._main_data = {
             NAME: name,
@@ -124,27 +96,33 @@ class BoschSingleEntity:
         }
         self._data = {}
         self._type = None
-        self._json_scheme_ready = restoring_data
+        self._str = str_obj
+        self._json_scheme_ready = False
+        self._updated_initialized = False
 
     def process_results(self, result, key=None):
         """Convert multi-level json object to one level object."""
         data = self._data if self._type == "sensor" else self._data[key]
         if result:
-            for res_key in [VALUE, MINVALUE, MAXVALUE, ALLOWED_VALUES,
-                            UNITS, STATE]:
+            for res_key in [self._str.val, self._str.min, self._str.max,
+                            self._str.allowed_values,
+                            self._str.units, self._str.units]:
                 if res_key in result:
                     data[res_key] = result[res_key]
 
+    @property
+    def update_initialized(self):
+        """Inform if we successfully invoked update at least one time."""
+        return self._updated_initialized
+
     def get_property(self, property_name):
         """Retrieve JSON with all properties: value, min, max, state etc."""
-        return self._data[property_name]
+        return self._data.get(property_name, {})
 
-    def get_value(self, property_name):
+    def get_value(self, property_name, default_value=None):
         """Retrieve only value from JSON."""
         ref = self.get_property(property_name)
-        if ref:
-            return ref.get(VALUE)
-        return None
+        return ref.get(self._str.val, default_value)
 
     @property
     def attr_id(self):
@@ -154,6 +132,11 @@ class BoschSingleEntity:
     def get_all_properties(self):
         """Retrieve all properties with value, min, max etc."""
         return self._data
+
+    @property
+    def strings(self):
+        """Get all strings translations."""
+        return self._str
 
     @property
     def name(self):

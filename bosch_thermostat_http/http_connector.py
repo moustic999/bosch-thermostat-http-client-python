@@ -1,7 +1,5 @@
 """HTTP connector class to Bosch thermostat."""
 import logging
-from asyncio import TimeoutError
-
 from aiohttp import client_exceptions
 
 from .const import HTTP_HEADER
@@ -41,23 +39,25 @@ class HttpConnector:
                 else:
                     raise ResponseError('Invalid response code: {}'.
                                         format(res.status))
-        
         except (client_exceptions.ClientError,
                 client_exceptions.ClientConnectorError,
                 TimeoutError) as err:
             raise RequestError(
-                'Error requesting data from {}: {}'.format(path, err) 
+                'Error requesting data from {}: {}'.format(path, err)
             ) from err
 
     async def submit(self, path, data):
         """Make a put request to the API."""
         try:
+            _LOGGER.debug("Sending request to %s", path)
             async with self._websession.put(
                     self._format_url(path),
                     data=data,
                     headers=HTTP_HEADER,
                     timeout=self._request_timeout) as req:
                 data = await req.text()
+                _LOGGER.debug("Send request returned status %s with data %s",
+                              req.status, data)
                 return data
         except (client_exceptions.ClientError, TimeoutError) as err:
             raise RequestError(
