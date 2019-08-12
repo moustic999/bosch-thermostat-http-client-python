@@ -6,8 +6,8 @@ import aiohttp
 import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import DHW, HC, OPERATION_MODE, UUID
 
-# logging.basicConfig()
-# logging.getLogger().setLevel(logging.DEBUG)
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
 
 
 async def main():
@@ -25,14 +25,18 @@ async def main():
                                 password=data[2])
         await gateway.check_connection()
         print(gateway.firmware)
-        await gateway.initialize_circuits(HC)
+        # await gateway.initialize_circuits(HC)
         # print(json.dumps(await gateway.rawscan()))
         await gateway.initialize_circuits(DHW)
-        await gateway.initialize_sensors()
+        # await gateway.initialize_sensors()
         dhws = gateway.dhw_circuits
         dhw = dhws[0]
         await dhw.update()
         print(dhw.current_temp)
+        print(dhw.target_temperature)
+        await dhw.set_temperature(50.5)
+        await dhw.update()
+        print(dhw.target_temperature)
         return
         print(dhw.get_property("operation_mode"))
         print(dhws)

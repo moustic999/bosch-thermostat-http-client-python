@@ -134,6 +134,7 @@ class BoschSingleEntity:
 
     @property
     def strings(self):
+        """Get all strings translations."""
         return self._str
 
     @property

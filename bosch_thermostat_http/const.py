@@ -24,9 +24,6 @@ MAIN_URI = "mainUri"
 """ New refs scheme. """
 OPERATION_MODE = "operation_mode"
 STATUS = "status"
-ROOMSETPOINT = "room_setpoint"
-MANUALROOMSETPOINT = "manual_room_setpoint"
-TEMPORARY_TEMP = "temporary_temp"
 AUTO = "auto"
 MANUAL = "manual"
 MAX = "max"
@@ -38,6 +35,9 @@ STATE = "state"
 OWNPROGRAM = "ownprogram"
 HCPROGRAM = "hcprogram"
 CURRENT_TEMP = "current_temp"
+AUTO_SETPOINT = "auto_setpoint"
+MANUAL_SETPOINT = "manual_setpoint"
+AUTO_SETTEMP = "auto_set_temp"
 WATER_SETPOINT = "water_setpoint"
 WATER_OFF = "water_off"
 WATER_HIGH = "water_high"
@@ -55,12 +55,6 @@ FIRMWARE_VERSION = "versionFirmware"
 HARDWARE_VERSION = "versionHardware"
 SYSTEM_BRAND = "brand"
 SYSTEM_TYPE = "systemType"
-
-
-"""
-Get/set actual mode + get allowed modes
-(manual, auto, 'Off', 'high', 'HCprogram', 'ownprogram').
-"""
 
 HTTP_HEADER = {
     'User-agent': 'TeleHeater',
