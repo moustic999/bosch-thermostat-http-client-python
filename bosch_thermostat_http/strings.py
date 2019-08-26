@@ -1,9 +1,10 @@
 """Module to control string from db json."""
+# pylint: disable=invalid-name
 
 import logging
 
 from .const import (ALLOWED_VALUES, AUTO, HCPROGRAM, MAX, MIN, OPEN, MANUAL,
-                    OWNPROGRAM, SHORT, STATE, UNITS, VALUE, INVALID)
+                    OWNPROGRAM, SHORT, STATE, UNITS, VALUE, INVALID, OFF, ON)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +27,11 @@ class Strings:
         self.short = self._dict.get(SHORT, SHORT)
         self.auto = self._dict.get(AUTO, AUTO)
         self.manual = self._dict.get(MANUAL, MANUAL)
+        self.off = self._dict.get(OFF, OFF)
+        self.on = self._dict.get(ON, ON)
         self.ownprogram = self._dict.get(OWNPROGRAM, OWNPROGRAM)
         self.hcprogram = self._dict.get(HCPROGRAM, HCPROGRAM)
         self.invalid = self._dict.get(INVALID, INVALID)
+    
+    def get(self, prop):
+        return getattr(self, prop, None)
