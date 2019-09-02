@@ -19,7 +19,7 @@ class HttpConnector:
 
     async def request(self, path):
         """Make a get request to the API."""
-        _LOGGER.debug("Sending request to %s", path)
+        _LOGGER.debug(f"Sending request to {path}")
         try:
             async with self._websession.get(
                     self._format_url(path),
@@ -28,22 +28,19 @@ class HttpConnector:
                     skip_auto_headers=['Accept-Encoding', 'Accept']) as res:
                 if res.status == 200:
                     if res.content_type != 'application/json':
-                        raise ResponseError('Invalid content type: {}'.
-                                            format(res.content_type))
+                        raise ResponseError(f"Invalid content type: {res.content_type}")
                     else:
                         data = await res.text()
                         return data
                 elif res.status == 404:
-                    raise Response404Error('URI not exists: {}'.
-                                           format(path))
+                    raise Response404Error(f"URI not exists: {path}")
                 else:
-                    raise ResponseError('Invalid response code: {}'.
-                                        format(res.status))
+                    raise ResponseError(f"Invalid response code: {res.status}")
         except (client_exceptions.ClientError,
                 client_exceptions.ClientConnectorError,
                 TimeoutError) as err:
             raise RequestError(
-                'Error requesting data from {}: {}'.format(path, err)
+                f"Error requesting data from {path}: {err}"
             ) from err
 
     async def submit(self, path, data):
@@ -56,18 +53,16 @@ class HttpConnector:
                     headers=HTTP_HEADER,
                     timeout=self._request_timeout) as req:
                 data = await req.text()
-                _LOGGER.debug("Send request returned status %s with data %s",
-                              req.status, data)
+                _LOGGER.debug(f"Send request returned status {req.status} with data {data}")
                 return data
         except (client_exceptions.ClientError, TimeoutError) as err:
             raise RequestError(
-                'Error putting data to {}, path: {}, message: {}'.
-                format(self._host, path, err)
+                f"Error putting data to {self._host}, path: {path}, message: {err}"
             )
 
     def _format_url(self, path):
         """Format URL to make requests to gateway."""
-        return 'http://{}{}'.format(self._host, path)
+        return f"http://{self._host}{path}"
 
     def set_timeout(self, timeout=10):
         """Set timeout for API calls."""

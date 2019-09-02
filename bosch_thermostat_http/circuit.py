@@ -1,7 +1,7 @@
 """Main circuit object."""
 import logging
 from .const import (GET, ID, HEATING_CIRCUITS, DHW_CIRCUITS, HC, CURRENT_TEMP,
-                    OPERATION_MODE, SUBMIT, REFS)
+                    OPERATION_MODE, SUBMIT, REFS, HA_STATES)
 from .helper import BoschSingleEntity, crawl
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,13 +33,17 @@ class Circuit(BoschSingleEntity):
         """Prepare to retrieve schedule of HC/DHW."""
         return None
 
+    @property
+    def hastates(self):
+        return self._db.get(HA_STATES, None)
+
     async def initialize(self):
         """Check each uri if return json with values."""
         refs = self._db[REFS]
         for key, value in refs.items():
             uri = value[ID].format(self.name)
             result = await crawl(uri, [], 1, self._requests[GET])
-            _LOGGER.debug("INITIALIZING uri %s with result %s", uri, result)
+            _LOGGER.debug(f"INITIALIZING uri {uri} with result {result}")
             if result:
                 self._circuits_path[key] = uri
                 self._data[key] = {}
@@ -73,6 +77,7 @@ class Circuit(BoschSingleEntity):
         if new_mode in allowed_values:
             await self._requests[SUBMIT](self._circuits_path[OPERATION_MODE],
                                          new_mode)
+            self._data[OPERATION_MODE][self._str.val] = new_mode
             return new_mode
         _LOGGER.warning("You wanted to set %s, but it is not allowed %s",
                         new_mode, allowed_values)

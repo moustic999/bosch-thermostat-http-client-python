@@ -2,8 +2,6 @@
   "versionFirmwarePath": "/gateway/versionFirmware",
   "04.06.07": {
     "dict": {
-      "manual": "manual",
-      "auto" : "auto",
       "max": "maxValue",
       "min": "minValue",
       "units": "unitOfMeasure",
@@ -11,8 +9,6 @@
       "invalid": "invalid",
       "value": "value",
       "allowedValues" : "allowedValues",
-      "ownprogram": "ownprogram",
-      "hcprogram": "hcprogram",
       "open": "open",
       "short": "short",
       "on": "on",
@@ -26,6 +22,15 @@
       "systemType": "/system/systemType"
     },
     "heatingCircuits": {
+      "hastates": {
+        "off": "off",
+        "heat": "manual",
+        "cool": null,
+        "heat_cool": null,
+        "auto": "auto",
+        "dry": null,
+        "fan_only": null
+      },
       "mainUri": "/heatingCircuits",
       "refs": {
         "current_temp": {
@@ -55,6 +60,16 @@
       }
     },
     "dhwCircuits": {
+      "hastates": {
+        "off": "Off",
+        "on": "on",
+        "eco": null,
+        "eletric": null,
+        "performance": "high",
+        "high_demand": "ownprogram",
+        "heat_pump": "HCprogram",
+        "gas": null
+      },
       "mainUri": "/dhwCircuits",
       "refs": {
         "current_temp": {
@@ -125,8 +140,6 @@
   },
   "01.10.03": {
     "dict": {
-      "manual": "manual",
-      "auto" : "auto",
       "max": "maxValue",
       "min": "minValue",
       "units": "unitOfMeasure",
@@ -134,8 +147,6 @@
       "invalid": "invalid",
       "value": "value",
       "allowedValues" : "allowedValues",
-      "ownprogram": "ownprogram",
-      "hcprogram": "hcprogram",
       "open": "open",
       "short": "short",
       "on": "on",
@@ -149,6 +160,15 @@
       "systemType": "/system/systemType"
     },
     "heatingCircuits": {
+      "hastates": {
+        "off": "night",
+        "heat": "day",
+        "cool": null,
+        "heat_cool": null,
+        "auto": "auto",
+        "dry": null,
+        "fan_only": null
+      },
       "mainUri": "/heatingCircuits",
       "refs": {
         "current_temp": {
@@ -178,6 +198,16 @@
       }
     },
     "dhwCircuits": {
+      "hastates": {
+        "off": "off",
+        "on": "on",
+        "eco": "auto",
+        "eletric": null,
+        "performance": null,
+        "high_demand": null,
+        "heat_pump": null,
+        "gas": null
+      },
       "mainUri": "/dhwCircuits",
       "refs": {
         "current_temp": {

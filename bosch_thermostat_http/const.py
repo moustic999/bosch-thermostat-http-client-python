@@ -10,6 +10,7 @@ NAME = "name"
 PATH = "path"
 ID = "id"
 REFS = "refs"
+HA_STATES = "hastates"
 
 UUID = "uuid"
 PATHS = "paths"

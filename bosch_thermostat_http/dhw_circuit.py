@@ -24,6 +24,7 @@ class DHWCircuit(Circuit):
         op_mode = self.get_value(OPERATION_MODE)
         if (min_temp < temp < max_temp and op_mode and t_temp != temp):
             await self._requests[SUBMIT](self._circuits_path[WATER_HIGH], temp)
+            self._data[WATER_HIGH][self._str.val] = temp
             return True
         return False
 

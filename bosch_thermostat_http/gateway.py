@@ -158,14 +158,12 @@ class Gateway:
                 encrypted = await self._connector.request(path)
                 result = self._encryption.decrypt(encrypted)
                 jsondata = json.loads(result)
-                _LOGGER.debug("Retrieved data for path %s from gateway: %s",
-                              path, result)
+                _LOGGER.debug(f"Retrieved data for path {path} from gateway: {result}")
                 return jsondata
             except json.JSONDecodeError as err:
-                raise ResponseError("Unable to decode Json response : {}".
-                                    format(err))
+                raise ResponseError(f"Unable to decode Json response : {err}")
             except Response404Error:
-                raise ResponseError("Path does not exist : {}".format(path))
+                raise ResponseError(f"Path does not exist : {path}")
 
     async def _set(self, path, data):
         """Send message to API with given path."""
