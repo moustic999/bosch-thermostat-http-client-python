@@ -5,7 +5,7 @@ import logging
 
 from .circuits import Circuits
 from .const import (DHW, DICT, GATEWAY, GET, HC, ROOT_PATHS, SENSORS, SUBMIT,
-                    UUID, VALUE)
+                    UUID, VALUE, MODELS, VALUES, SYSTEM_INFO, NAME)
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
 from .helper import deep_into
@@ -49,25 +49,46 @@ class Gateway:
             SUBMIT: self.set_value
         }
         self._firmware_version = None
+        self._device = None
         self._db = None
         self._str = None
 
     async def initialize(self, database=None):
         """Initialize gateway asynchronously."""
-        from .db import get_firmware_uri, get_db_of_firmware
+        from .db import get_firmware_uri, get_db_of_firmware, get_initial_db
         self._firmware_version = await self.get(get_firmware_uri())
+        initial_db = get_initial_db()
         if not database:
-            self._db = get_db_of_firmware(self._firmware_version[VALUE])
+            self._device = await self.get_device_type(initial_db)
+            self._db = get_db_of_firmware(self._device[VALUE],
+                                          self._firmware_version[VALUE])
         else:
             from .db import check_db
             if check_db(self._firmware_version, database):
                 self._db = database
             else:
                 return False
-        if self._db:
+        if not self._device:
+            self._device = await self.get_device_type(initial_db)
+        if self._db and self._device:
+            if initial_db:
+                initial_db.pop(MODELS, None)
+                self._db.update(initial_db)
             self._str = Strings(self._db[DICT])
             if not self._data[GATEWAY]:
                 await self._update_info()
+
+    async def get_device_type(self, _db):
+        system_info = await self.get(_db[GATEWAY][SYSTEM_INFO])
+        model_scheme = _db[MODELS]
+        for info in system_info.get(VALUES, []):
+            model = model_scheme.get(info.get('Id', -1))
+            if model:
+                return model
+
+    @property
+    def device_name(self):
+        return self._device[NAME]
 
     def get_items(self, data_type):
         """Get items on types like Sensors, Heating Circuits etc."""

@@ -23,8 +23,7 @@ async def main():
         data = data_file.read().splitlines()
         gateway = bosch.Gateway(session,
                                 host=data[0],
-                                access_key=data[1],
-                                password=data[2])
+                                access_key=data[1])
         await gateway.check_connection()
         print(gateway.firmware)
         print(gateway.device_name)

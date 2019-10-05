@@ -103,12 +103,17 @@ class BoschSingleEntity:
     def process_results(self, result, key=None):
         """Convert multi-level json object to one level object."""
         data = self._data if self._type == "sensor" else self._data[key]
+        updated = False
         if result:
             for res_key in [self._str.val, self._str.min, self._str.max,
                             self._str.allowed_values,
                             self._str.units, self._str.units]:
                 if res_key in result:
+                    if res_key in data and result[res_key] == data[res_key]:
+                        continue    
                     data[res_key] = result[res_key]
+                    updated = True
+        return updated
 
     @property
     def update_initialized(self):

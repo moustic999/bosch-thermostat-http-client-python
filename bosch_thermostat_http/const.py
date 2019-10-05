@@ -20,7 +20,8 @@ DHW = "dhw"
 SENSORS = "sensors"
 DICT = "dict"
 MAIN_URI = "mainUri"
-
+MODELS = "models"
+PRESETS = "presets"
 
 """ New refs scheme. """
 OPERATION_MODE = "operation_mode"
@@ -33,6 +34,7 @@ MAX = "max"
 MIN = "min"
 UNITS = "units"
 VALUE = "value"
+VALUES = "values"
 ALLOWED_VALUES = "allowedValues"
 STATE = "state"
 OWNPROGRAM = "ownprogram"
@@ -58,6 +60,7 @@ FIRMWARE_VERSION = "versionFirmware"
 HARDWARE_VERSION = "versionHardware"
 SYSTEM_BRAND = "brand"
 SYSTEM_TYPE = "systemType"
+SYSTEM_INFO = "systemInfo"
 
 HTTP_HEADER = {
     'User-agent': 'TeleHeater',
@@ -68,3 +71,5 @@ TIMEOUT = 10
 
 HEATING_CIRCUITS = "heatingCircuits"
 DHW_CIRCUITS = "dhwCircuits"
+
+RC300 = "RC300"
