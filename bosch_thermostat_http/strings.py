@@ -3,8 +3,23 @@
 
 import logging
 
-from .const import (ALLOWED_VALUES, AUTO, HCPROGRAM, MAX, MIN, OPEN, MANUAL,
-                    OWNPROGRAM, SHORT, STATE, UNITS, VALUE, INVALID, OFF, ON)
+from .const import (
+    ALLOWED_VALUES,
+    AUTO,
+    HCPROGRAM,
+    MAX,
+    MIN,
+    OPEN,
+    MANUAL,
+    OWNPROGRAM,
+    SHORT,
+    STATE,
+    UNITS,
+    VALUE,
+    INVALID,
+    OFF,
+    ON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +47,6 @@ class Strings:
         self.ownprogram = self._dict.get(OWNPROGRAM, OWNPROGRAM)
         self.hcprogram = self._dict.get(HCPROGRAM, HCPROGRAM)
         self.invalid = self._dict.get(INVALID, INVALID)
-    
+
     def get(self, prop):
         return getattr(self, prop, None)

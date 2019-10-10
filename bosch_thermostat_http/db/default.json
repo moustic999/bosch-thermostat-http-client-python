@@ -21,16 +21,16 @@
             },
             "mode_to_setpoint": {
                 "night": {
-                    "read": "setpoint1",
-                    "write": "setpoint2"
+                    "read": null,
+                    "write": "setpoint3"
                 },
                 "day": {
-                    "read": "setpoint1",
+                    "read": null,
                     "write": "setpoint2"
                 },
                 "auto":{
-                    "read": "setpoint1",
-                    "write": "setpoint3"
+                    "read": null,
+                    "write": "setpoint1"
                 }
             },
             "mainUri": "/heatingCircuits",
@@ -44,16 +44,20 @@
                     "name": "Operation mode"
                 },
                 "setpoint1": {
-                    "id": "/heatingCircuits/{}/currentRoomSetpoint",
-                    "name": "Current room setpoint"
-                },
-                "setpoint2": {
                     "id": "/heatingCircuits/{}/manualRoomSetpoint",
                     "name": "Manual room setpoint"
                 },
-                "setpoint3": {
-                    "id": "/heatingCircuits/{}/temporaryRoomSetpoint",
+                "setpoint2": {
+                    "id": "/heatingCircuits/{}/temperatureLevels/day",
                     "name": "Manual room setpoint"
+                },
+                "setpoint3": {
+                    "id": "/heatingCircuits/{}/temperatureLevels/night",
+                    "name": "Manual room setpoint"
+                },
+                "activeProgram": {
+                    "id": "/heatingCircuits/{}/activeSwitchProgram",
+                    "name": "Active Switch Program"
                 },
                 "status": {
                     "id": "/heatingCircuits/{}/status",

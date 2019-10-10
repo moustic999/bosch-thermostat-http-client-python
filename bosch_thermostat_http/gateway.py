@@ -5,7 +5,7 @@ import logging
 
 from .circuits import Circuits
 from .const import (DHW, DICT, GATEWAY, GET, HC, ROOT_PATHS, SENSORS, SUBMIT,
-                    UUID, VALUE, MODELS, VALUES, SYSTEM_INFO, NAME)
+                    UUID, VALUE, MODELS, VALUES, SYSTEM_INFO, NAME, DATE)
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
 from .helper import deep_into
@@ -79,6 +79,7 @@ class Gateway:
                 await self._update_info()
 
     async def get_device_type(self, _db):
+        """Find device model."""
         system_info = await self.get(_db[GATEWAY][SYSTEM_INFO])
         model_scheme = _db[MODELS]
         for info in system_info.get(VALUES, []):
@@ -88,11 +89,19 @@ class Gateway:
 
     @property
     def device_name(self):
+        """Device friendly name based on model."""
         return self._device[NAME]
 
     def get_items(self, data_type):
         """Get items on types like Sensors, Heating Circuits etc."""
         return self._data[data_type].get_items()
+
+    async def current_date(self):
+        """Find current datetime of gateway."""
+        response = await self.get(self._db[GATEWAY].get(DATE))
+        if VALUE in response:
+            self._data[GATEWAY][DATE] = response[VALUE]
+            return response[VALUE]
 
     @property
     def database(self):
@@ -148,7 +157,7 @@ class Gateway:
     async def initialize_circuits(self, circ_type):
         """Initialize circuits objects of given type (dhw/hcs)."""
         self._data[circ_type] = Circuits(self._requests, circ_type)
-        await self._data[circ_type].initialize(self._db, self._str)
+        await self._data[circ_type].initialize(self._db, self._str, self.current_date)
         return self.get_circuits(circ_type)
 
     async def initialize_sensors(self):
@@ -161,6 +170,24 @@ class Gateway:
         """Print out all info from gateway."""
         rawlist = []
         for root in ROOT_PATHS:
+            rawlist.append(await deep_into(root, [], self.get))
+        return rawlist
+
+    async def smallscan(self):
+        """Print out all info from gateway from HC2 only for now."""
+        rawlist = []
+        paths = [
+            "/heatingCircuits/hc2/roomtemperature",
+            "/heatingCircuits/hc2/operationMode",
+            "/heatingCircuits/hc2/currentRoomSetpoint",
+            "/heatingCircuits/hc2/manualRoomSetpoint",
+            "/heatingCircuits/hc2/temperatureRoomSetpoint",
+            "/heatingCircuits/hc2/status",
+            "/heatingCircuits/hc2/activeSwitchProgram",
+            "/heatingCircuits/hc2/temperatureLevels/day",
+            "/heatingCircuits/hc2/temperatureLevels/night"
+        ]
+        for root in paths:
             rawlist.append(await deep_into(root, [], self.get))
         return rawlist
 
@@ -179,7 +206,7 @@ class Gateway:
                 encrypted = await self._connector.request(path)
                 result = self._encryption.decrypt(encrypted)
                 jsondata = json.loads(result)
-                _LOGGER.debug(f"Retrieved data for path {path} from gateway: {result}")
+                _LOGGER.debug("Retrieved data for path %s from gateway: %s", path, result)
                 return jsondata
             except json.JSONDecodeError as err:
                 raise ResponseError(f"Unable to decode Json response : {err}")

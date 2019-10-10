@@ -2,11 +2,20 @@
 import logging
 from .const import (
     SUBMIT,
-    HC, GET,
-    AUTO_SETPOINT, AUTO, MANUAL,
+    HC,
+    GET,
+    AUTO_SETPOINT,
+    AUTO,
+    MANUAL,
     MANUAL_SETPOINT,
     OPERATION_MODE,
-    AUTO_SETTEMP, STATUS, CURRENT_TEMP, PRESETS, OFF
+    AUTO_SETTEMP,
+    STATUS,
+    CURRENT_TEMP,
+    PRESETS,
+    OFF,
+    ACTIVE_PROGRAM,
+    TEMP,
 )
 from .circuit import Circuit
 from .errors import ResponseError
@@ -20,16 +29,18 @@ UPDATE_KEYS = [
     AUTO_SETTEMP,
     MANUAL_SETPOINT,
     AUTO_SETPOINT,
+    ACTIVE_PROGRAM,
 ]
 
 MODE_TO_SETPOINT = "mode_to_setpoint"
 READ = "read"
 WRITE = "write"
 
+
 class HeatingCircuit(Circuit):
     """Single Heating Circuits object."""
 
-    def __init__(self, requests, attr_id, db, str_obj):
+    def __init__(self, requests, attr_id, db, str_obj, current_date):
         """
         Initialize heating circuit.
 
@@ -37,20 +48,27 @@ class HeatingCircuit(Circuit):
         :param obj submit_request: function to send data to thermostat.
         :param str hc_name: name of heating circuit.
         """
-        super().__init__(requests, attr_id, db, str_obj, HC)
+        super().__init__(requests, attr_id, db, str_obj, HC, current_date)
         self._presets = self._db.get(PRESETS)
         self._mode_to_setpoint = self._db.get(MODE_TO_SETPOINT)
+        self._updated_initialized = False
 
     @property
-    def temp_read(self,):
-        return self.temp_setpoint(READ)
+    def update_initialized(self):
+        return self._updated_initialized
+
+    @property
+    def temp_read(self):
+        """Get temp read property."""
+        return self._temp_setpoint(READ)
 
     @property
     def temp_write(self):
-        return self.temp_setpoint(WRITE)
+        """Get temp write property."""
+        return self._temp_setpoint(WRITE)
 
-    def temp_setpoint(self, key):
-        """Check whith temp property. Use only for setting temp. Key READ or WRITE"""
+    def _temp_setpoint(self, key):
+        """Check which temp property to use. Key READ or WRITE"""
         return self._mode_to_setpoint.get(self.current_mode, {}).get(key)
 
     async def update(self):
@@ -61,10 +79,11 @@ class HeatingCircuit(Circuit):
             if key in (AUTO, MANUAL) and self.operation_mode_type != key:
                 continue
             try:
-                result = await self._requests[GET](
-                    self._circuits_path[key])
+                result = await self._requests[GET](self._circuits_path[key])
                 if self.process_results(result, key):
                     is_updated = True
+                if key == ACTIVE_PROGRAM:
+                    await self._schedule.update_schedule(self.get_value(key))
             except ResponseError:
                 pass
         self._updated_initialized = True
@@ -72,22 +91,41 @@ class HeatingCircuit(Circuit):
 
     async def set_temperature(self, temperature):
         """Set temperature of Circuit."""
-        result = await self._requests[SUBMIT](self._circuits_path[self.temp_write],
-                                              temperature)
-        if result:
-            _LOGGER.debug("TEMP SETPOINT %s", self.temp_setpoint)
-            self._data[self.temp_read][self._str.val] = temperature
-            return True
+        target_temp = self.target_temperature
+        if target_temp and temperature != target_temp:
+            result = await self._requests[SUBMIT](
+                self._circuits_path[self.temp_write], temperature
+            )
+            if result:
+                if self.temp_read:
+                    self._data[self.temp_read][self._str.val] = temperature
+                else:
+                    self.schedule.cache_temp_for_mode(
+                        temperature,
+                        self.operation_mode_type,
+                        self.get_value(OPERATION_MODE),
+                    )
+                return True
         return False
 
     @property
     def target_temperature(self):
         """Get target temperature of Circtuit. Temporary or Room set point."""
-        _LOGGER.debug(f"Target temp {AUTO_SETPOINT} is {self.get_value(self.temp_read)} in {self.get_value(OPERATION_MODE)}")
-        return self.get_value(self.temp_read, 0)
-    
+        temp_read = self.temp_read
+        if temp_read:
+            target_temp = self.get_value(self.temp_read, 0)
+            if target_temp > 0:
+                return target_temp
+        if self.operation_mode_type == MANUAL:
+            return self.schedule.get_temp_for_mode(self.get_value(OPERATION_MODE))
+        elif self._schedule.time:
+            cache = self.schedule.get_temp_in_schedule()
+            if cache:
+                return cache.get(TEMP, 0)
+
     @property
     def operation_mode_type(self):
+        """Check if operation mode type is manual or auto."""
         if self.current_mode in self._presets.get(MANUAL):
             return MANUAL
         if self.current_mode in self._presets.get(AUTO):
@@ -95,11 +133,16 @@ class HeatingCircuit(Circuit):
 
     @property
     def hvac_modes(self):
-        return [key for key, value in self.hastates.items()
-                if value in self.available_operation_modes]
+        """Retrieve HVAC modes."""
+        return [
+            key
+            for key, value in self.hastates.items()
+            if value in self.available_operation_modes
+        ]
 
     @property
     def hvac_mode(self):
+        """Retrieve current mode in HVAC terminology."""
         for _k, _v in self.hastates.items():
             if _v == self.current_mode:
                 return _k
@@ -116,11 +159,3 @@ class HeatingCircuit(Circuit):
         if new_mode != old_mode:
             return 1
         return 0
-
-    #  def operation_list_converter(self, op_list):
-    #     return [self._hastates_inv.get(value) for value in op_list]
-
-
-
-
-        

@@ -1,5 +1,5 @@
 """Sensors of Bosch thermostat."""
-from .const import (GET, PATH, ID, NAME)
+from .const import GET, PATH, ID, NAME
 from .helper import BoschSingleEntity, BoschEntities
 from .errors import ResponseError, Response404Error, SensorNoLongerAvailable
 
@@ -29,15 +29,13 @@ class Sensors(BoschEntities):
                             If not download data from device.
         """
         for sensor in sensors:
-            self.register_sensor(sensor[NAME],
-                                 sensor[ID], str_obj)
+            self.register_sensor(sensor[NAME], sensor[ID], str_obj)
 
     def register_sensor(self, name, path, str_obj):
         """Register sensor for the module."""
-        attr_id = path.split('/').pop()
+        attr_id = path.split("/").pop()
         if attr_id not in self._items:
-            self._items[attr_id] = Sensor(self._requests, attr_id,
-                                          name, path, str_obj)
+            self._items[attr_id] = Sensor(self._requests, attr_id, name, path, str_obj)
 
 
 class Sensor(BoschSingleEntity):
@@ -58,10 +56,7 @@ class Sensor(BoschSingleEntity):
     @property
     def json_scheme(self):
         """Get json scheme of sensor."""
-        return {
-            NAME: self._main_data[NAME],
-            ID: self._main_data[ID]
-        }
+        return {NAME: self._main_data[NAME], ID: self._main_data[ID]}
 
     async def update(self):
         """Update sensor data."""

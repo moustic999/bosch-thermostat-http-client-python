@@ -19,7 +19,8 @@
         "versionHardware": "/gateway/versionHardware",
         "brand": "/system/brand",
         "systemInfo": "/system/info",
-        "systemType": "/system/systemType"
+        "systemType": "/system/systemType",
+        "dateTime": "/gateway/DateTime"
     },
     "models": {
         "76": {

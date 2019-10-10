@@ -19,7 +19,7 @@ class HttpConnector:
 
     async def request(self, path):
         """Make a get request to the API."""
-        _LOGGER.debug(f"Sending request to {path}")
+        _LOGGER.debug("Sending request to %s", path)
         try:
             async with self._websession.get(
                     self._format_url(path),
@@ -31,7 +31,7 @@ class HttpConnector:
                         raise ResponseError(f"Invalid content type: {res.content_type}")
                     else:
                         data = await res.text()
-                        _LOGGER.debug(f"Retrieve data for {path} - {data}")
+                        _LOGGER.debug("Retrieve data for %s - %s", path, data)
                         return data
                 elif res.status == 404:
                     raise Response404Error(f"URI not exists: {path}")
@@ -47,14 +47,15 @@ class HttpConnector:
     async def submit(self, path, data):
         """Make a put request to the API."""
         try:
-            _LOGGER.debug(f"Sending request to {path} with {data}")
+            _LOGGER.debug("Sending request to %s with %s", path, data)
             async with self._websession.put(
                     self._format_url(path),
                     data=data,
                     headers=HTTP_HEADER,
                     timeout=self._request_timeout) as req:
                 data = await req.text()
-                _LOGGER.debug(f"Send request returned status {req.status} with data {data}")
+                if not data and req.status == 204:
+                    return True
                 return data
         except (client_exceptions.ClientError, TimeoutError) as err:
             raise RequestError(

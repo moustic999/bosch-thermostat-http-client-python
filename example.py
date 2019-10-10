@@ -5,7 +5,7 @@ import json
 import aiohttp
 import time
 import bosch_thermostat_http as bosch
-from bosch_thermostat_http.const import DHW, HC, OPERATION_MODE, UUID
+from bosch_thermostat_http.const import DHW, HC, OPERATION_MODE, UUID, DATE
 
 #logging.basicConfig()
 #logging.getLogger().setLevel(logging.DEBUG)
@@ -37,6 +37,9 @@ async def main():
         print(hc.hvac_modes)
         print(hc.hvac_mode)
         print(hc.target_temperature)
+        print(hc.schedule)
+        print(gateway.get_info(DATE))
+        print(hc.schedule.get_temp_for_date(gateway.get_info(DATE)))
         # await hc.set_operation_mode("auto")
         return
         aa=0

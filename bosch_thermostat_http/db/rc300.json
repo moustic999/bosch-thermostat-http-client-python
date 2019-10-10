@@ -53,6 +53,10 @@
                 "status": {
                     "id": "/heatingCircuits/{}/status",
                     "name": "Heating circuit status"
+                },
+                "activeProgram": {
+                    "id": "/heatingCircuits/{}/activeSwitchProgram",
+                    "name": "Active Switch Program"
                 }
             }
         },

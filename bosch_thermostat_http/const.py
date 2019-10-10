@@ -22,6 +22,8 @@ DICT = "dict"
 MAIN_URI = "mainUri"
 MODELS = "models"
 PRESETS = "presets"
+TEMP = "temp"
+DATE = "dateTime"
 
 """ New refs scheme. """
 OPERATION_MODE = "operation_mode"
@@ -46,6 +48,13 @@ AUTO_SETTEMP = "auto_set_temp"
 WATER_SETPOINT = "water_setpoint"
 WATER_OFF = "water_off"
 WATER_HIGH = "water_high"
+ACTIVE_PROGRAM = "activeProgram"
+DAYOFWEEK = "dayOfWeek"
+MODE = "mode"
+START = "start"
+STOP = "stop"
+SETPOINT = "setpoint"
+TIME = "time"
 OPEN = "open"
 SHORT = "short"
 
@@ -73,3 +82,19 @@ HEATING_CIRCUITS = "heatingCircuits"
 DHW_CIRCUITS = "dhwCircuits"
 
 RC300 = "RC300"
+
+###SCHEDULE
+SETPOINT_PROP = "setpointProperty"
+SWITCH_POINTS = "switchPoints"
+SWITCHPROGRAM = "/heatingCircuits/{}/switchPrograms/{}"
+MIDNIGHT = 1440
+DAYS_INT = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
+DAYS = {
+    "Mo": "monday",
+    "Tu": "tuesday",
+    "We": "wednesday",
+    "Th": "thursday",
+    "Fr": "friday",
+    "Sa": "saturday",
+    "Su": "sunday",
+}

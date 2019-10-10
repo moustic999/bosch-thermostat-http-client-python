@@ -2,8 +2,9 @@
 import asyncio
 
 import aiohttp
+import json
 import bosch_thermostat_http as bosch
-from bosch_thermostat_http.const import FIRMWARE_VERSION
+from bosch_thermostat_http.const import FIRMWARE_VERSION, DATE
 # from bosch_thermostat_http.db import bosch_sensors
 
 
@@ -25,8 +26,12 @@ async def main():
         #await gateway.initialize_sensors(sensors)
         #print(gateway.sensors)
         #
-        await gateway.rawscan()
-
+        rawscan = await gateway.smallscan()
+        print(rawscan)
+        print(hc.schedule.get_temp_for_date(gateway.get_info(DATE)))
+        to_file = "kamika_raw.json"
+        with open(to_file, 'w') as logfile:
+            json.dump(rawscan, logfile, indent=4)
         await session.close()
 
 
