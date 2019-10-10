@@ -1,0 +1,142 @@
+{
+    "04.06.07": {
+        "heatingCircuits": {
+            "presets": {
+                "manual": [
+                    "manual"
+                ],
+                "auto": [
+                    "auto"
+                ]
+            },
+            "hastates": {
+                "off": "off",
+                "heat": "manual",
+                "cool": null,
+                "heat_cool": null,
+                "auto": "auto",
+                "dry": null,
+                "fan_only": null
+            },
+            "mode_to_setpoint": {
+                "manual": {
+                    "read": "setpoint2",
+                    "write": "setpoint2"
+                },
+                "auto":{
+                    "read": "setpoint1",
+                    "write": "setpoint3"
+                }
+            },
+            "mainUri": "/heatingCircuits",
+            "refs": {
+                "current_temp": {
+                    "id": "/heatingCircuits/{}/roomtemperature",
+                    "name": "Room temperature"
+                },
+                "operation_mode": {
+                    "id": "/heatingCircuits/{}/operationMode",
+                    "name": "Operation mode"
+                },
+                "setpoint1": {
+                    "id": "/heatingCircuits/{}/currentRoomSetpoint",
+                    "name": "Current room setpoint"
+                },
+                "setpoint2": {
+                    "id": "/heatingCircuits/{}/manualRoomSetpoint",
+                    "name": "Manual room setpoint"
+                },
+                "setpoint3": {
+                    "id": "/heatingCircuits/{}/temporaryRoomSetpoint",
+                    "name": "Manual room setpoint"
+                },
+                "status": {
+                    "id": "/heatingCircuits/{}/status",
+                    "name": "Heating circuit status"
+                },
+                "activeProgram": {
+                    "id": "/heatingCircuits/{}/activeSwitchProgram",
+                    "name": "Active Switch Program"
+                }
+            }
+        },
+        "dhwCircuits": {
+            "hastates": {
+                "off": "Off",
+                "on": "on",
+                "eco": null,
+                "eletric": null,
+                "performance": "high",
+                "high_demand": "ownprogram",
+                "heat_pump": "HCprogram",
+                "gas": null
+            },
+            "mainUri": "/dhwCircuits",
+            "refs": {
+                "current_temp": {
+                    "id": "/dhwCircuits/{}/actualTemp",
+                    "name": "Room temperature"
+                },
+                "operation_mode": {
+                    "id": "/dhwCircuits/{}/operationMode",
+                    "name": "Operation mode"
+                },
+                "auto_setpoint": {
+                    "id": "/dhwCircuits/{}/currentSetpoint",
+                    "name": "Water temp setpoint"
+                },
+                "water_off": {
+                    "id": "/dhwCircuits/{}/temperatureLevels/off",
+                    "name": "DHW off level"
+                },
+                "water_high": {
+                    "id": "/dhwCircuits/{}/temperatureLevels/high",
+                    "name": "DHW High level"
+                },
+                "status": {
+                    "id": "/dhwCircuits/{}/status",
+                    "name": "DHW status"
+                }
+            }
+        },
+        "sensors": [
+            {
+                "id": "/system/sensors/temperatures/outdoor_t1",
+                "name": "Outdoor temperature"
+            },
+            {
+                "id": "/system/sensors/temperatures/hotWater_t2",
+                "name": "Hotwater temp"
+            },
+            {
+                "id": "/system/sensors/temperatures/supply_t1_setpoint",
+                "name": "Supply temp setpoint"
+            },
+            {
+                "id": "/system/sensors/temperatures/supply_t1",
+                "name": "Actual supply temp"
+            },
+            {
+                "id": "/system/sensors/temperatures/return",
+                "name": "Return temp"
+            },
+            {
+                "id": "/system/healthStatus",
+                "name": "Health status"
+            },
+            {
+                "id": "/heatSources/actualPower",
+                "name": "Actual Power"
+            },
+            {
+                "id": "/heatSources/actualModulation",
+                "name": "Actual modulation"
+            },
+            {
+                "id": "/heatSources/CHpumpModulation",
+                "name": "Actual heating pump modulation"
+            }
+        ],
+        "versionFirmware": "04.06.07"
+    }
+}

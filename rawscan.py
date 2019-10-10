@@ -1,14 +1,10 @@
 """ Test script of bosch_thermostat_http. """
 import asyncio
-
 import aiohttp
-
 import json
 
 from bosch_thermostat_http.gateway import Gateway
 from bosch_thermostat_http.const import FIRMWARE_VERSION
-
-
 
 async def main():
     """
@@ -16,6 +12,7 @@ async def main():
     if you can retrieve data from your thermostat.
     """
     async with aiohttp.ClientSession() as session:
+
         data_file = open("data_file.txt", "r")
         data = data_file.read().splitlines()
         gateway = Gateway(session=session,

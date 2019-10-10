@@ -19,12 +19,11 @@ async def main():
     """
     
     async with aiohttp.ClientSession() as session:
-        data_file = open("data_file.txt", "r")
+        data_file = open("data_file_ka.txt", "r")
         data = data_file.read().splitlines()
         gateway = bosch.Gateway(session,
                                 host=data[0],
-                                access_key=data[1],
-                                password=data[2])
+                                access_key=data[1])
         await gateway.check_connection()
         print(gateway.firmware)
         print(gateway.device_name)
@@ -34,13 +33,21 @@ async def main():
         hc = hcs[1]
         time.sleep(1)
         await hc.update()
-        print(hc.hvac_modes)
-        print(hc.hvac_mode)
+        # print(hc.hvac_modes)
+        # print(hc.hvac_mode)
+        # print(hc.target_temperature)
+        await hc.set_hvac_mode("auto")
+        # await hc.update()
+        # print(hc.hvac_mode)
+        # await hc.set_temperature(21)
+        # await hc.update()
         print(hc.target_temperature)
-        print(hc.schedule)
-        print(gateway.get_info(DATE))
-        print(hc.schedule.get_temp_for_date(gateway.get_info(DATE)))
-        # await hc.set_operation_mode("auto")
+        # print(hc.schedule.get_temp_for_date(gateway.get_info(DATE)))
+        smallscan = await gateway.smallscan()
+        to_file = "kamika_raw_small.json"
+        with open(to_file, 'w') as logfile:
+            json.dump(smallscan, logfile, indent=4)
+
         return
         aa=0
         while aa < 10:
