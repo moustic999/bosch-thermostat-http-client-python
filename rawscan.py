@@ -1,12 +1,10 @@
 """ Test script of bosch_thermostat_http. """
 import asyncio
-
 import aiohttp
 import json
-import bosch_thermostat_http as bosch
-from bosch_thermostat_http.const import FIRMWARE_VERSION, DATE
-# from bosch_thermostat_http.db import bosch_sensors
 
+from bosch_thermostat_http.gateway import Gateway
+from bosch_thermostat_http.const import FIRMWARE_VERSION
 
 async def main():
     """
@@ -14,24 +12,19 @@ async def main():
     if you can retrieve data from your thermostat.
     """
     async with aiohttp.ClientSession() as session:
-        data_file = open("data_file_ka.txt", "r")
+
+        data_file = open("data_file.txt", "r")
         data = data_file.read().splitlines()
-        gateway = bosch.Gateway(session=session,
+        gateway = Gateway(session=session,
                                 host=data[0],
-                                access_key=data[1])
-                                # password=data[2])
-        await gateway.check_connection()
-        #sensors = bosch_sensors(gateway.get_info(FIRMWARE_VERSION))
-        #print(sensors)
-        #await gateway.initialize_sensors(sensors)
-        #print(gateway.sensors)
-        #
-        rawscan = await gateway.smallscan()
-        print(rawscan)
-        print(hc.schedule.get_temp_for_date(gateway.get_info(DATE)))
-        to_file = "kamika_raw.json"
-        with open(to_file, 'w') as logfile:
-            json.dump(rawscan, logfile, indent=4)
+                                access_key=data[1],
+                                password=data[2])
+        print(await gateway.check_connection())
+        
+        result = await gateway.rawscan()
+
+        print(json.dumps(result, indent=4, sort_keys=True))
+
         await session.close()
 
 
