@@ -27,6 +27,7 @@ async def main():
         await gateway.check_connection()
         print(gateway.firmware)
         print(gateway.device_name)
+        return
         await gateway.initialize_circuits(HC)
         
         hcs = gateway.heating_circuits

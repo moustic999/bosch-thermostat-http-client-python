@@ -4,7 +4,7 @@ import re
 
 from .const import GET, ID, NAME, PATH
 
-from .errors import EncryptionError, ResponseError
+from .errors import EncryptionError, ResponseError, RequestError
 
 HTTP_REGEX = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
@@ -48,7 +48,7 @@ async def deep_into(url, _list, get):
                     val2["uri"] = remove_all_ip_occurs(val2["uri"])
                 new_resp["references"][idx] = val2
                 await deep_into(val["id"], _list, get)
-    except (EncryptionError, ResponseError):
+    except (EncryptionError, ResponseError, RequestError):
         pass
     return _list
 

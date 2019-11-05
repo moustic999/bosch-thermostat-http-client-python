@@ -13,12 +13,12 @@ async def main():
     if you can retrieve data from your thermostat.
     """
     async with aiohttp.ClientSession() as session:
-        data_file = open("data_file_ka.txt", "r")
+        data_file = open("data_file.txt", "r")
         data = data_file.read().splitlines()
         gateway = bosch.Gateway(session=session,
                                 host=data[0],
-                                access_key=data[1])
-                                # password=data[2])
+                                access_key=data[1],
+                                password=data[2])
         await gateway.check_connection()
         #sensors = bosch_sensors(gateway.get_info(FIRMWARE_VERSION))
         #print(sensors)

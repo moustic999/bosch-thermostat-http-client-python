@@ -11,11 +11,9 @@ from .const import (
     SUBMIT,
     REFS,
     HA_STATES,
-    MANUAL_SETPOINT,
-    AUTO_SETPOINT,
-    ACTIVE_PROGRAM,
+    STATUS
 )
-from .helper import BoschSingleEntity, crawl
+from .helper import BoschSingleEntity
 from .errors import ResponseError
 from .schedule import Schedule
 
@@ -32,6 +30,7 @@ class Circuit(BoschSingleEntity):
         self._requests = requests
         name = attr_id.split("/").pop()
         self._type = _type
+        self._state = False
         if self._type == HC:
             self._db = db[HEATING_CIRCUITS]
         else:
@@ -59,28 +58,31 @@ class Circuit(BoschSingleEntity):
 
     @property
     def available_operation_modes(self):
+        """Get Bosch operations modes."""
         return self.get_property(OPERATION_MODE).get(self.strings.allowed_values, {})
 
     async def initialize(self):
         """Check each uri if return json with values."""
-        refs = self._db[REFS]
-        for key, value in refs.items():
+        for key, value in self._db[REFS].items():
             uri = value[ID].format(self.name)
-            result = await crawl(uri, [], 1, self._requests[GET])
-            _LOGGER.debug("INITIALIZING uri %s with result %s", uri, result)
             self._circuits_path[key] = uri
             self._data[key] = {}
         self._json_scheme_ready = True
+        await self.update_requested_key(STATUS)
 
     async def update(self):
         """Update info about Circuit asynchronously."""
         _LOGGER.debug("Updating circuit %s", self.name)
         is_updated = False
-        for key in self._data:
-            result = await self._requests[GET](self._circuits_path[key])
-            if self.process_results(result, key):
-                is_updated = True
-        self._updated_initialized = True
+        try:
+            for key in self._data:
+                result = await self._requests[GET](self._circuits_path[key])
+                if self.process_results(result, key):
+                    is_updated = True
+            self._updated_initialized = True
+            self._state = True
+        except ResponseError:
+            self._state = False
         return is_updated
 
     async def update_requested_key(self, key):
@@ -89,8 +91,9 @@ class Circuit(BoschSingleEntity):
             try:
                 result = await self._requests[GET](self._circuits_path[key])
                 self.process_results(result, key)
+                self._state = True
             except ResponseError:
-                pass
+                self._state = False
 
     async def set_operation_mode(self, new_mode):
         """Set operation_mode of Heating Circuit."""
@@ -106,6 +109,12 @@ class Circuit(BoschSingleEntity):
             new_mode,
             self.available_operation_modes,
         )
+
+    @property
+    def state(self):
+        """Retrieve state of the circuit."""
+        if self._state:
+            return self.get_value(STATUS)
 
     @property
     def current_temp(self):

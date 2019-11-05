@@ -43,8 +43,6 @@ OWNPROGRAM = "ownprogram"
 HCPROGRAM = "hcprogram"
 CURRENT_TEMP = "current_temp"
 AUTO_SETPOINT = "auto_setpoint"
-MANUAL_SETPOINT = "manual_setpoint"
-AUTO_SETTEMP = "auto_set_temp"
 WATER_SETPOINT = "water_setpoint"
 WATER_OFF = "water_off"
 WATER_HIGH = "water_high"
@@ -59,6 +57,8 @@ OPEN = "open"
 SHORT = "short"
 
 INVALID = "invalid"
+
+DEFAULT_SENSORS = "defaultSensors"
 
 ROOT_PATHS = ["/dhwCircuits", "/gateway", "/heatingCircuits",
               "/heatSources", "/notifications", "/system"]
@@ -81,6 +81,10 @@ TIMEOUT = 10
 HEATING_CIRCUITS = "heatingCircuits"
 DHW_CIRCUITS = "dhwCircuits"
 
+MODE_TO_SETPOINT = "mode_to_setpoint"
+READ = "read"
+WRITE = "write"
+
 RC300 = "RC300"
 
 ###SCHEDULE
@@ -98,3 +102,7 @@ DAYS = {
     "Sa": "saturday",
     "Su": "sunday",
 }
+
+SENSORS_LIST = ["outdoor_t1", "hotWater_t2", "supply_t1_setpoint", "supply_t1",
+                "return", "healthStatus", "actualPower", "actualModulation",
+                "CHpumpModulation"]

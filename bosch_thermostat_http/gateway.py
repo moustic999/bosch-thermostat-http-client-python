@@ -4,8 +4,25 @@ import json
 import logging
 
 from .circuits import Circuits
-from .const import (DHW, DICT, GATEWAY, GET, HC, ROOT_PATHS, SENSORS, SUBMIT,
-                    UUID, VALUE, MODELS, VALUES, SYSTEM_INFO, NAME, DATE)
+from .const import (
+    DHW,
+    DICT,
+    GATEWAY,
+    GET,
+    HC,
+    ROOT_PATHS,
+    SENSORS,
+    SUBMIT,
+    UUID,
+    VALUE,
+    MODELS,
+    VALUES,
+    SYSTEM_INFO,
+    NAME,
+    DATE,
+    FIRMWARE_VERSION,
+    DEFAULT_SENSORS,
+)
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
 from .helper import deep_into
@@ -26,66 +43,64 @@ class Gateway:
         :param password:
         :param host:
         """
-        if type(session).__name__ == 'ClientSession':
+        if type(session).__name__ == "ClientSession":
             from .http_connector import HttpConnector
+
             self._connector = HttpConnector(host, session)
         else:
             return
+        self._host = host
         self._encryption = None
         self._lock = asyncio.Lock()
         if password:
-            access_token = access_key.replace('-', '')
+            access_token = access_key.replace("-", "")
             self._encryption = Encryption(access_token, password)
         else:
             self._encryption = Encryption(access_key)
-        self._data = {
-            GATEWAY: {},
-            HC: None,
-            DHW: None,
-            SENSORS: None
-        }
-        self._requests = {
-            GET: self.get,
-            SUBMIT: self.set_value
-        }
+        self._data = {GATEWAY: {}, HC: None, DHW: None, SENSORS: None}
+        self._requests = {GET: self.get, SUBMIT: self.set_value}
         self._firmware_version = None
         self._device = None
         self._db = None
         self._str = None
+        self._initialized = None
 
-    async def initialize(self, database=None):
+    async def initialize(self):
         """Initialize gateway asynchronously."""
-        from .db import get_firmware_uri, get_db_of_firmware, get_initial_db
-        self._firmware_version = await self.get(get_firmware_uri())
+        from .db import get_db_of_firmware, get_initial_db
+
         initial_db = get_initial_db()
-        if not database:
-            self._device = await self.get_device_type(initial_db)
-            self._db = get_db_of_firmware(self._device[VALUE],
-                                          self._firmware_version[VALUE])
-        else:
-            from .db import check_db
-            if check_db(self._firmware_version, database):
-                self._db = database
-            else:
-                return False
-        if not self._device:
-            self._device = await self.get_device_type(initial_db)
+        self._str = Strings(initial_db[DICT])
+        await self._update_info(initial_db.get(GATEWAY))
+        self._firmware_version = self._data[GATEWAY].get(FIRMWARE_VERSION)
+        self._device = await self.get_device_type(initial_db)
+        self._db = get_db_of_firmware(self._device[VALUE], self.firmware)
         if self._db and self._device:
-            if initial_db:
-                initial_db.pop(MODELS, None)
-                self._db.update(initial_db)
-            self._str = Strings(self._db[DICT])
-            if not self._data[GATEWAY]:
-                await self._update_info()
+            initial_db.pop(MODELS, None)
+            self._db.update(initial_db)
+            self._initialized = True
 
     async def get_device_type(self, _db):
         """Find device model."""
-        system_info = await self.get(_db[GATEWAY][SYSTEM_INFO])
+        system_info = self._data[GATEWAY].get(SYSTEM_INFO)
         model_scheme = _db[MODELS]
-        for info in system_info.get(VALUES, []):
-            model = model_scheme.get(info.get('Id', -1))
+        for info in system_info:
+            model = model_scheme.get(info.get("Id", -1))
             if model:
                 return model
+
+    async def _update_info(self, initial_db):
+        """Update gateway info from Bosch device."""
+        for name, uri in initial_db.items():
+            response = await self.get(uri)
+            if self._str.val in response:
+                self._data[GATEWAY][name] = response[self._str.val]
+            elif name == SYSTEM_INFO:
+                self._data[GATEWAY][SYSTEM_INFO] = response.get(VALUES, [])
+
+    @property
+    def host(self):
+        return self._host
 
     @property
     def device_name(self):
@@ -99,9 +114,9 @@ class Gateway:
     async def current_date(self):
         """Find current datetime of gateway."""
         response = await self.get(self._db[GATEWAY].get(DATE))
-        if VALUE in response:
-            self._data[GATEWAY][DATE] = response[VALUE]
-            return response[VALUE]
+        val = response.get(self._str.val)
+        self._data[GATEWAY][DATE] = val
+        return val
 
     @property
     def database(self):
@@ -139,7 +154,7 @@ class Gateway:
     @property
     def firmware(self):
         """Get firmware."""
-        return self._firmware_version.get(self._str.val)
+        return self._firmware_version
 
     def get_info(self, key):
         """Get gateway info given key."""
@@ -147,23 +162,19 @@ class Gateway:
             return self._data[GATEWAY][key]
         return None
 
-    async def _update_info(self):
-        """Update gateway info from Bosch device."""
-        for name, uri in self._db[GATEWAY].items():
-            response = await self.get(uri)
-            if VALUE in response:
-                self._data[GATEWAY][name] = response[VALUE]
-
     async def initialize_circuits(self, circ_type):
         """Initialize circuits objects of given type (dhw/hcs)."""
         self._data[circ_type] = Circuits(self._requests, circ_type)
         await self._data[circ_type].initialize(self._db, self._str, self.current_date)
         return self.get_circuits(circ_type)
 
-    async def initialize_sensors(self):
+    def initialize_sensors(self, choosed_sensors=None):
         """Initialize sensors objects."""
-        self._data[SENSORS] = Sensors(self._requests)
-        await self._data[SENSORS].initialize(self._db[SENSORS], self._str)
+        if not choosed_sensors:
+            choosed_sensors = self._db.get(DEFAULT_SENSORS, [])
+        self._data[SENSORS] = Sensors(
+            self._requests, choosed_sensors, self._db[SENSORS], self._str
+        )
         return self.sensors
 
     async def rawscan(self):
@@ -177,25 +188,30 @@ class Gateway:
         """Print out all info from gateway from HC2 only for now."""
         rawlist = []
         paths = [
-            "/heatingCircuits/hc2/roomtemperature",
-            "/heatingCircuits/hc2/operationMode",
-            "/heatingCircuits/hc2/currentRoomSetpoint",
-            "/heatingCircuits/hc2/manualRoomSetpoint",
-            "/heatingCircuits/hc2/temperatureRoomSetpoint",
-            "/heatingCircuits/hc2/status",
-            "/heatingCircuits/hc2/activeSwitchProgram",
-            "/heatingCircuits/hc2/temperatureLevels/day",
-            "/heatingCircuits/hc2/temperatureLevels/night"
+            "/heatingCircuits/hc1/roomtemperature",
+            "/heatingCircuits/hc1/operationMode",
+            "/heatingCircuits/hc1/currentRoomSetpoint",
+            "/heatingCircuits/hc1/manualRoomSetpoint",
+            "/heatingCircuits/hc1/temperatureRoomSetpoint",
+            "/heatingCircuits/hc1/status",
+            "/heatingCircuits/hc1/activeSwitchProgram",
+            "/heatingCircuits/hc1/temporaryRoomSetpoint",
         ]
         for root in paths:
             rawlist.append(await deep_into(root, [], self.get))
         return rawlist
 
-    async def check_connection(self, database=None):
+    async def check_connection(self):
         """Check if we are able to connect to Bosch device and return UUID."""
         try:
-            await self.initialize(database)
-            return self.get_info(UUID)
+            if not self._initialized:
+                await self.initialize()
+            else:
+                response = await self.get(self._db[GATEWAY][UUID])
+                if self._str.val in response:
+                    self._data[GATEWAY][UUID] = response[self._str.val]
+            uuid = self.get_info(UUID)
+            return uuid
         except RequestError:
             return False
 
@@ -206,7 +222,6 @@ class Gateway:
                 encrypted = await self._connector.request(path)
                 result = self._encryption.decrypt(encrypted)
                 jsondata = json.loads(result)
-                _LOGGER.debug("Retrieved data for path %s from gateway: %s", path, result)
                 return jsondata
             except json.JSONDecodeError as err:
                 raise ResponseError(f"Unable to decode Json response : {err}")

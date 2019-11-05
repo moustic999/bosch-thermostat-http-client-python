@@ -4,37 +4,21 @@ from .const import (
     SUBMIT,
     HC,
     GET,
-    AUTO_SETPOINT,
     AUTO,
     MANUAL,
-    MANUAL_SETPOINT,
     OPERATION_MODE,
-    AUTO_SETTEMP,
-    STATUS,
-    CURRENT_TEMP,
     PRESETS,
     OFF,
     ACTIVE_PROGRAM,
     TEMP,
+    MODE_TO_SETPOINT,
+    READ,
+    WRITE,
 )
 from .circuit import Circuit
 from .errors import ResponseError
 
 _LOGGER = logging.getLogger(__name__)
-
-UPDATE_KEYS = [
-    OPERATION_MODE,
-    STATUS,
-    CURRENT_TEMP,
-    AUTO_SETTEMP,
-    MANUAL_SETPOINT,
-    AUTO_SETPOINT,
-    ACTIVE_PROGRAM,
-]
-
-MODE_TO_SETPOINT = "mode_to_setpoint"
-READ = "read"
-WRITE = "write"
 
 
 class HeatingCircuit(Circuit):
@@ -96,6 +80,7 @@ class HeatingCircuit(Circuit):
             result = await self._requests[SUBMIT](
                 self._circuits_path[self.temp_write], temperature
             )
+            _LOGGER.debug("Set temperature for HC %s with result %s", self.name, result)
             if result:
                 if self.temp_read:
                     self._data[self.temp_read][self._str.val] = temperature
@@ -117,6 +102,7 @@ class HeatingCircuit(Circuit):
             if target_temp > 0:
                 return target_temp
         if self.operation_mode_type == MANUAL:
+            ###RC300 should never reach this in MANUAL...
             return self.schedule.get_temp_for_mode(self.get_value(OPERATION_MODE))
         elif self._schedule.time:
             cache = self.schedule.get_temp_in_schedule()

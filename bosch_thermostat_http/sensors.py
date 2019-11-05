@@ -7,7 +7,7 @@ from .errors import ResponseError, Response404Error, SensorNoLongerAvailable
 class Sensors(BoschEntities):
     """Sensors object containing multiple Sensor objects."""
 
-    def __init__(self, requests):
+    def __init__(self, requests, sensors=None, sensors_db=None, str_obj=None):
         """
         Initialize sensors.
 
@@ -15,27 +15,17 @@ class Sensors(BoschEntities):
         """
         super().__init__(requests)
         self._items = {}
+        for sensor_id in sensors:
+            sensor = sensors_db.get(sensor_id)
+            if sensor and sensor_id not in self._items:
+                self._items[sensor_id] = Sensor(
+                    self._requests, sensor_id, sensor[NAME], sensor[ID], str_obj
+                )
 
     @property
     def sensors(self):
         """Get sensor list."""
         return self.get_items().values()
-
-    async def initialize(self, sensors=None, str_obj=None):
-        """
-        Asynchronously initialize all sensors.
-
-        :param sensors dict if declared then restore sensors from it.
-                            If not download data from device.
-        """
-        for sensor in sensors:
-            self.register_sensor(sensor[NAME], sensor[ID], str_obj)
-
-    def register_sensor(self, name, path, str_obj):
-        """Register sensor for the module."""
-        attr_id = path.split("/").pop()
-        if attr_id not in self._items:
-            self._items[attr_id] = Sensor(self._requests, attr_id, name, path, str_obj)
 
 
 class Sensor(BoschSingleEntity):

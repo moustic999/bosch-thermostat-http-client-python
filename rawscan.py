@@ -16,14 +16,16 @@ async def main():
         data_file = open("data_file.txt", "r")
         data = data_file.read().splitlines()
         gateway = Gateway(session=session,
-                                host=data[0],
-                                access_key=data[1],
-                                password=data[2])
+                          host=data[0],
+                          access_key=data[1],
+                          password=data[2])
         print(await gateway.check_connection())
         
         result = await gateway.rawscan()
+        with open("myjson.json", 'w') as logfile:
+                json.dump(result, logfile, indent=4)
+        # print(json.dumps(result, indent=4, sort_keys=True))
 
-        print(json.dumps(result, indent=4, sort_keys=True))
 
         await session.close()
 

@@ -1,6 +1,5 @@
 """Heating Circuits module of Bosch thermostat."""
-from .const import (SUBMIT, VALUE, WATER_HIGH, AUTO_SETPOINT, DHW,
-                    OPERATION_MODE)
+from .const import SUBMIT, VALUE, WATER_HIGH, AUTO_SETPOINT, DHW, OPERATION_MODE
 
 from .circuit import Circuit
 
@@ -22,7 +21,7 @@ class DHWCircuit(Circuit):
         """Set temperature of Circuit."""
         (t_temp, min_temp, max_temp) = self.target_temperature
         op_mode = self.get_value(OPERATION_MODE)
-        if (min_temp < temp < max_temp and op_mode and t_temp != temp):
+        if min_temp < temp < max_temp and op_mode and t_temp != temp:
             await self._requests[SUBMIT](self._circuits_path[WATER_HIGH], temp)
             self._data[WATER_HIGH][self._str.val] = temp
             return True
@@ -34,10 +33,16 @@ class DHWCircuit(Circuit):
         temp_levels_high = self.get_property(WATER_HIGH)
         temp = self.parse_float_value(temp_levels_high, False, True)
         if temp:
-            return (float(temp[VALUE]), float(temp[self._str.min]),
-                    float(temp[self._str.max]))
+            return (
+                float(temp[VALUE]),
+                float(temp[self._str.min]),
+                float(temp[self._str.max]),
+            )
         setpoint_temp = self.get_value(AUTO_SETPOINT, -1)
         if all(k in temp_levels_high for k in (self._str.min, self._str.max)):
-            return (float(setpoint_temp), float(temp[self._str.min]),
-                    float(temp[self._str.max]))
+            return (
+                float(setpoint_temp),
+                float(temp[self._str.min]),
+                float(temp[self._str.max]),
+            )
         return (setpoint_temp, 0, 99)

@@ -1,6 +1,7 @@
 """HTTP connector class to Bosch thermostat."""
 import logging
 from aiohttp import client_exceptions
+from asyncio import TimeoutError
 
 from .const import HTTP_HEADER
 from .errors import RequestError, Response404Error, ResponseError
@@ -22,12 +23,13 @@ class HttpConnector:
         _LOGGER.debug("Sending request to %s", path)
         try:
             async with self._websession.get(
-                    self._format_url(path),
-                    headers=HTTP_HEADER,
-                    timeout=self._request_timeout,
-                    skip_auto_headers=['Accept-Encoding', 'Accept']) as res:
+                self._format_url(path),
+                headers=HTTP_HEADER,
+                timeout=self._request_timeout,
+                skip_auto_headers=["Accept-Encoding", "Accept"],
+            ) as res:
                 if res.status == 200:
-                    if res.content_type != 'application/json':
+                    if res.content_type != "application/json":
                         raise ResponseError(f"Invalid content type: {res.content_type}")
                     else:
                         data = await res.text()
@@ -37,22 +39,23 @@ class HttpConnector:
                     raise Response404Error(f"URI not exists: {path}")
                 else:
                     raise ResponseError(f"Invalid response code: {res.status}")
-        except (client_exceptions.ClientError,
-                client_exceptions.ClientConnectorError,
-                TimeoutError) as err:
-            raise RequestError(
-                f"Error requesting data from {path}: {err}"
-            ) from err
+        except (
+            client_exceptions.ClientError,
+            client_exceptions.ClientConnectorError,
+            TimeoutError,
+        ) as err:
+            raise RequestError(f"Error requesting data from {path}: {err}") from err
 
     async def submit(self, path, data):
         """Make a put request to the API."""
         try:
             _LOGGER.debug("Sending request to %s with %s", path, data)
             async with self._websession.put(
-                    self._format_url(path),
-                    data=data,
-                    headers=HTTP_HEADER,
-                    timeout=self._request_timeout) as req:
+                self._format_url(path),
+                data=data,
+                headers=HTTP_HEADER,
+                timeout=self._request_timeout,
+            ) as req:
                 data = await req.text()
                 if not data and req.status == 204:
                     return True

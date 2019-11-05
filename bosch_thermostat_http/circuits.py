@@ -1,5 +1,5 @@
 """Circuits module of Bosch thermostat."""
-from .const import HC, HEATING_CIRCUITS, DHW_CIRCUITS, MAIN_URI
+from .const import HC, HEATING_CIRCUITS, DHW_CIRCUITS, MAIN_URI, ID
 from .helper import BoschEntities
 
 
@@ -13,8 +13,7 @@ class Circuits(BoschEntities):
         :param dict requests: { GET: get function, SUBMIT: submit function}
         :param str circuit_type: is it HC or DHW
         """
-        self._circuit_type = (HEATING_CIRCUITS if circuit_type == HC else
-                              DHW_CIRCUITS)
+        self._circuit_type = HEATING_CIRCUITS if circuit_type == HC else DHW_CIRCUITS
         super().__init__(requests)
 
     @property
@@ -29,19 +28,25 @@ class Circuits(BoschEntities):
         for circuit in circuits:
             if "references" in circuit:
                 circuit_object = self.create_circuit(
-                    circuit, database, str_obj, current_date)
+                    circuit, database, str_obj, current_date
+                )
                 if circuit_object:
                     await circuit_object.initialize()
-                    self._items.append(circuit_object)
+                    if circuit_object.state:
+                        self._items.append(circuit_object)
 
     def create_circuit(self, circuit, database, str_obj, current_date):
         """Create single circuit of given type."""
         if self._circuit_type == DHW_CIRCUITS:
             from .dhw_circuit import DHWCircuit
-            return DHWCircuit(self._requests, circuit['id'],
-                              database, str_obj, current_date)
+
+            return DHWCircuit(
+                self._requests, circuit[ID], database, str_obj, current_date
+            )
         if self._circuit_type == HEATING_CIRCUITS:
             from .heating_circuit import HeatingCircuit
-            return HeatingCircuit(self._requests, circuit['id'], database,
-                                  str_obj, current_date)
+
+            return HeatingCircuit(
+                self._requests, circuit[ID], database, str_obj, current_date
+            )
         return None

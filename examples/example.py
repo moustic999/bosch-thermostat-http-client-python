@@ -25,21 +25,38 @@ async def main():
                                 host=data[0],
                                 access_key=data[1],
                                 password=data[2])
-        await gateway.check_connection()
+        print(await gateway.check_connection())
+        my_sensors = [ "outdoor_t1" ]
+        options_sensors = {sensor: (True if sensor in my_sensors else False) for sensor in gateway.database["sensors"].keys() }
+        print(options_sensors)
+        return
+        db = gateway.database
+        # print(db["sensors"])
+        all_sensors = gateway.database["sensors"]
+        scheme = {sensor: bool for sensor in all_sensors.keys()}
+        print(scheme)
+        return
+        for sensor, item in db["sensors"].items():
+            name = item["name"]
+            print(f'"{sensor}": "{name}",')
+
+        for sensor, item in db["sensors"].items():
+            print(f'vol.Required("{sensor}"): bool,')
+        return
         print(gateway.firmware)
         print(gateway.device_name)
         await gateway.initialize_circuits(HC)
         
         hcs = gateway.heating_circuits
-        hc = hcs[1]
+        hc = hcs[0]
         time.sleep(1)
         await hc.update()
-        print(hc.hvac_modes)
         print(hc.hvac_mode)
         print(hc.target_temperature)
-        print(hc.schedule)
+        # print(hc.schedule)
         print(gateway.get_info(DATE))
-        print(hc.schedule.get_temp_for_date(gateway.get_info(DATE)))
+        # print(await gateway.rawscan())
+        #print(hc.schedule.get_temp_for_date(gateway.get_info(DATE)))
         # await hc.set_operation_mode("auto")
         return
         aa=0

@@ -22,9 +22,10 @@
         "systemType": "/system/systemType",
         "dateTime": "/gateway/DateTime"
     },
+    "defaultSensors": ["outdoor_t1", "hotWater_t2"],
+    "value": "ES73",
     "models": {
         "76": {
-            "value": "ES73",
             "name": "Sieger ES73",
             "type": "default"
         },
