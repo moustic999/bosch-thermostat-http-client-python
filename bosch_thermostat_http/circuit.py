@@ -220,6 +220,7 @@ class Circuit(BoschSingleEntity):
                 self.current_mode, self.operation_mode_type
             )
 
+    @property
     def min_temp(self):
         temp_read = self.temp_read
         if temp_read or self.operation_mode_type == OFF:
@@ -229,6 +230,7 @@ class Circuit(BoschSingleEntity):
                 self.current_mode, self.operation_mode_type
             )
 
+    @property
     def max_temp(self):
         temp_read = self.temp_read
         if temp_read or self.operation_mode_type == OFF:
