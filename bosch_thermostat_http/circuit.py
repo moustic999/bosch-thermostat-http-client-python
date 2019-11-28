@@ -43,6 +43,7 @@ class Circuit(BoschSingleEntity):
         self._mode_to_setpoint = self._db.get(MODE_TO_SETPOINT)
         super().__init__(name, attr_id, str_obj, requests, _type)
         self._schedule = Schedule(requests, _type, name, current_date)
+        self._target_temp = 0
         for key, value in self._db[REFS].items():
             uri = value[ID].format(self.name)
             self._data[key] = {RESULT: {}, URI: uri, TYPE: value[TYPE]}
@@ -218,15 +219,19 @@ class Circuit(BoschSingleEntity):
         """Get target temperature of Circtuit. Temporary or Room set point."""
         temp_read = self.temp_read
         if self.operation_mode_type == OFF:
-            return 0
+            self._target_temp = 0
+            return self._target_temp
         if temp_read:
             target_temp = self.get_value(self.temp_read, 0)
             if target_temp > 0:
-                return target_temp
-        else:
-            return self.schedule.get_temp_for_mode(
-                self.current_mode, self.operation_mode_type
-            )
+                self._target_temp = target_temp
+                return self._target_temp
+        target_temp = self.schedule.get_temp_for_mode(
+            self.current_mode, self.operation_mode_type
+        )
+        if target_temp > 0:
+            self._target_temp = target_temp
+        return self._target_temp
 
     @property
     def min_temp(self):

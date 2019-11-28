@@ -110,7 +110,7 @@ class Schedule:
         """This is working only in manual for RC35 where op_mode == setpoint."""
         cache = {}
         if mode_type == MANUAL:
-            return self._setpoints_temp[mode].get(VALUE)
+            return self._setpoints_temp.get(mode, {}).get(VALUE, -1)
         if self.time:
             cache = self.get_temp_in_schedule()
         return cache.get(TEMP, 0)
@@ -118,7 +118,7 @@ class Schedule:
     def get_max_temp_for_mode(self, mode, mode_type):
         cache = {}
         if mode_type == MANUAL:
-            return self._setpoints_temp[mode].get(MAX)
+            return self._setpoints_temp(mode, {}).get(MAX, -1)
         if self.time:
             cache = self.get_temp_in_schedule()
         return cache.get(MAX, 0)
@@ -126,12 +126,12 @@ class Schedule:
     def get_min_temp_for_mode(self, mode, mode_type):
         cache = {}
         if mode_type == MANUAL:
-            return self._setpoints_temp[mode].get(MIN)
+            return self._setpoints_temp(mode, {}).get(MIN, -1)
         if self.time:
             cache = self.get_temp_in_schedule()
         return cache.get(MIN, 0)
 
-    def get_setpoint_for_mode(self, mode, mode_type):
+    def get_setpoint_for_mode(self):
         cache = {}
         if self.time:
             cache = self.get_temp_in_schedule()
