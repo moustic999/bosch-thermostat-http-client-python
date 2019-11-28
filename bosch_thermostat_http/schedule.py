@@ -131,6 +131,12 @@ class Schedule:
             cache = self.get_temp_in_schedule()
         return cache.get(MIN, 0)
 
+    def get_setpoint_for_mode(self, mode, mode_type):
+        cache = {}
+        if self.time:
+            cache = self.get_temp_in_schedule()
+        return cache.get(MODE)
+
     def get_temp_in_schedule(self):
         """Find temp in schedule for current date."""
         if self._time:

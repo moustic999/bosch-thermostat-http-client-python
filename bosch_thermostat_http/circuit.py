@@ -87,7 +87,7 @@ class Circuit(BoschSingleEntity):
     @property
     def operation_mode_type(self):
         """Check if operation mode type is manual or auto."""
-        return self._mode_to_setpoint.get(self.current_mode).get(TYPE)
+        return self._mode_to_setpoint.get(self.current_mode, {}).get(TYPE)
 
     async def initialize(self):
         """Check each uri if return json with values."""
@@ -116,6 +116,14 @@ class Circuit(BoschSingleEntity):
             self._state = False
         self._update_initialized = True
         return is_updated
+
+    @property
+    def setpoint(self):
+        if self.operation_mode_type == OFF:
+            return OFF
+        if self.temp_read:
+            return self.current_mode
+        return self._schedule.get_setpoint_for_mode(self.current_mode, self.operation_mode_type)
 
     async def update_requested_key(self, key):
         """Update info about Circuit asynchronously."""
@@ -152,8 +160,8 @@ class Circuit(BoschSingleEntity):
     def current_temp(self):
         """Give current temperature of circuit."""
         _LOGGER.debug("Current temp is %s", self.get_property(CURRENT_TEMP))
-        temp = self.parse_float_value(self.get_property(CURRENT_TEMP))
-        if temp > 0 and temp < 120:
+        temp = self.get_value(CURRENT_TEMP)
+        if temp and temp > 0 and temp < 120:
             return temp
 
     @property
