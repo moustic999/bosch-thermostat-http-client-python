@@ -62,8 +62,8 @@
                 "on": "on",
                 "eco": null,
                 "eletric": null,
-                "performance": "high",
-                "high_demand": "ownprogram",
+                "performance": "ownprogram",
+                "high_demand": "high",
                 "heat_pump": "HCprogram",
                 "gas": null
             },
