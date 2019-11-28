@@ -1,6 +1,8 @@
 """Circuits module of Bosch thermostat."""
 from .const import HC, HEATING_CIRCUITS, DHW_CIRCUITS, MAIN_URI, ID
 from .helper import BoschEntities
+from .dhw_circuit import DHWCircuit
+from .heating_circuit import HeatingCircuit
 
 
 class Circuits(BoschEntities):
@@ -38,14 +40,10 @@ class Circuits(BoschEntities):
     def create_circuit(self, circuit, database, str_obj, current_date):
         """Create single circuit of given type."""
         if self._circuit_type == DHW_CIRCUITS:
-            from .dhw_circuit import DHWCircuit
-
             return DHWCircuit(
                 self._requests, circuit[ID], database, str_obj, current_date
             )
         if self._circuit_type == HEATING_CIRCUITS:
-            from .heating_circuit import HeatingCircuit
-
             return HeatingCircuit(
                 self._requests, circuit[ID], database, str_obj, current_date
             )

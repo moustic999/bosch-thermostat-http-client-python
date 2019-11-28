@@ -16,7 +16,6 @@
     "gateway": {
         "uuid": "/gateway/uuid",
         "versionFirmware": "/gateway/versionFirmware",
-        "versionHardware": "/gateway/versionHardware",
         "brand": "/system/brand",
         "systemInfo": "/system/info",
         "systemType": "/system/systemType",

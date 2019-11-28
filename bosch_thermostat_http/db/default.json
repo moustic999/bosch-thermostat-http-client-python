@@ -1,15 +1,6 @@
 {
     "01.10.03": {
         "heatingCircuits": {
-            "presets": {
-                "manual": [
-                    "night",
-                    "day"
-                ],
-                "auto": [
-                    "auto"
-                ]
-            },
             "hastates": {
                 "off": "off",
                 "heat": "day",
@@ -22,46 +13,56 @@
             "mode_to_setpoint": {
                 "night": {
                     "read": null,
-                    "write": "setpoint3"
+                    "write": "setpoint3",
+                    "type": "manual"
                 },
                 "day": {
                     "read": null,
-                    "write": "setpoint2"
+                    "write": "setpoint2",
+                    "type": "manual"
                 },
                 "auto":{
                     "read": null,
-                    "write": "setpoint1"
+                    "write": "setpoint1",
+                    "type": "auto"
                 }
             },
             "mainUri": "/heatingCircuits",
             "refs": {
                 "current_temp": {
                     "id": "/heatingCircuits/{}/roomtemperature",
-                    "name": "Room temperature"
+                    "name": "Room temperature",
+                    "type": "regular"
                 },
                 "operation_mode": {
                     "id": "/heatingCircuits/{}/operationMode",
-                    "name": "Operation mode"
+                    "name": "Operation mode",
+                    "type": "regular"
                 },
                 "setpoint1": {
                     "id": "/heatingCircuits/{}/manualRoomSetpoint",
-                    "name": "Manual room setpoint"
+                    "name": "Manual room setpoint",
+                    "type": "setpoint"
                 },
                 "setpoint2": {
                     "id": "/heatingCircuits/{}/temperatureLevels/day",
-                    "name": "Manual room setpoint"
+                    "name": "Manual room setpoint",
+                    "type": "setpoint"
                 },
                 "setpoint3": {
                     "id": "/heatingCircuits/{}/temperatureLevels/night",
-                    "name": "Manual room setpoint"
+                    "name": "Manual room setpoint",
+                    "type": "setpoint"
                 },
                 "activeProgram": {
                     "id": "/heatingCircuits/{}/activeSwitchProgram",
-                    "name": "Active Switch Program"
+                    "name": "Active Switch Program",
+                    "type": "schedule"
                 },
                 "status": {
                     "id": "/heatingCircuits/{}/status",
-                    "name": "Heating circuit status"
+                    "name": "Heating circuit status",
+                    "type": "regular"
                 }
             }
         },
@@ -80,27 +81,33 @@
             "refs": {
                 "current_temp": {
                     "id": "/dhwCircuits/{}/actualTemp",
-                    "name": "Room temperature"
+                    "name": "Room temperature",
+                    "type": "regular"
                 },
                 "operation_mode": {
                     "id": "/dhwCircuits/{}/operationMode",
-                    "name": "Operation mode"
+                    "name": "Operation mode",
+                    "type": "regular"
                 },
                 "auto_setpoint": {
                     "id": "/dhwCircuits/{}/currentSetpoint",
-                    "name": "Water temp setpoint"
+                    "name": "Water temp setpoint",
+                    "type": "regular"
                 },
                 "water_off": {
                     "id": "/dhwCircuits/{}/temperatureLevels/off",
-                    "name": "DHW off level"
+                    "name": "DHW off level",
+                    "type": "regular"
                 },
                 "water_high": {
                     "id": "/dhwCircuits/{}/temperatureLevels/on",
-                    "name": "DHW High level"
+                    "name": "DHW High level",
+                    "type": "regular"
                 },
                 "status": {
                     "id": "/dhwCircuits/{}/status",
-                    "name": "DHW status"
+                    "name": "DHW status",
+                    "type": "regular"
                 }
             }
         },
@@ -126,7 +133,7 @@
                 "name": "Return temp"
             },
             "healthStatus": {
-                "id": "/system/healthStatus",
+                "id": "/`system/healthStatus",
                 "name": "Health status"
             },
             "actualPower": {

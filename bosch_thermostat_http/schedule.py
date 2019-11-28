@@ -19,20 +19,23 @@ from .const import (
     MIDNIGHT,
     DAYS,
     DAYS_INT,
+    CIRCUIT_TYPES, ID, MAX, MIN, MAX_VALUE, MIN_VALUE, MANUAL
 )
 from .errors import ResponseError
 
 _LOGGER = logging.getLogger(__name__)
 
 
+
 class Schedule:
     """Scheduler logic."""
 
-    def __init__(self, requests, circuit_name, current_time):
+    def __init__(self, requests, circuit_type, circuit_name, current_time):
         """Initialize schedule handling of Bosch gateway."""
         self._requests = requests
         self._active_program = None
         self._schedule = None
+        self._circuit_type = CIRCUIT_TYPES[circuit_type]
         self._circuit_name = circuit_name
         self._setpoints_temp = {}
         self._active_setpoint = None
@@ -44,7 +47,7 @@ class Schedule:
         """Update schedule from Bosch gateway."""
         self._active_program = active_program
         self._active_program_uri = SWITCHPROGRAM.format(
-            self._circuit_name, active_program
+            self._circuit_type, self._circuit_name, active_program
         )
         try:
             self._time = await self._time_retrieve()
@@ -75,10 +78,14 @@ class Schedule:
     async def _get_setpoint_temp(self, setpointProperty, setpoint):
         """Download temp for setpoint."""
         try:
-            result = await self._requests[GET](f'{setpointProperty["id"]}/{setpoint}')
+            result = await self._requests[GET](f'{setpointProperty[ID]}/{setpoint}')
         except ResponseError:
             pass
-        return result.get(VALUE, 0)
+        return {
+            VALUE: result.get(VALUE, 0),
+            MAX: result.get(MAX_VALUE, 0),
+            MIN: result.get(MIN_VALUE, 0)
+        }
 
     async def _retrieve_schedule(self, switchPoints, setpointProperty):
         """Convert Bosch schedule to dict format."""
@@ -99,9 +106,30 @@ class Schedule:
             )
         return schedule
 
-    def get_temp_for_mode(self, mode):
+    def get_temp_for_mode(self, mode, mode_type):
         """This is working only in manual for RC35 where op_mode == setpoint."""
-        return self._setpoints_temp.get(mode, 0)
+        cache = {}
+        if mode_type == MANUAL:
+            return self._setpoints_temp[mode].get(VALUE)
+        if self.time:
+            cache = self.get_temp_in_schedule()
+        return cache.get(TEMP, 0)
+
+    def get_max_temp_for_mode(self, mode, mode_type):
+        cache = {}
+        if mode_type == MANUAL:
+            return self._setpoints_temp[mode].get(MAX)
+        if self.time:
+            cache = self.get_temp_in_schedule()
+        return cache.get(MAX, 0)
+
+    def get_min_temp_for_mode(self, mode, mode_type):
+        cache = {}
+        if mode_type == MANUAL:
+            return self._setpoints_temp[mode].get(MIN)
+        if self.time:
+            cache = self.get_temp_in_schedule()
+        return cache.get(MIN, 0)
 
     def get_temp_in_schedule(self):
         """Find temp in schedule for current date."""
@@ -114,7 +142,9 @@ class Schedule:
                     if mins > setpoint[START] and mins < setpoint[STOP]:
                         return {
                             MODE: setpoint[MODE],
-                            TEMP: self._setpoints_temp[setpoint[MODE]],
+                            TEMP: self._setpoints_temp[setpoint[MODE]][VALUE],
+                            MAX: self._setpoints_temp[setpoint[MODE]][MAX],
+                            MIN: self._setpoints_temp[setpoint[MODE]][MIN]
                         }
 
     def _get_minutes_since_midnight(self, date):

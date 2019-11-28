@@ -2,9 +2,9 @@
 
 import re
 
-from .const import GET, ID, NAME, PATH
+from .const import GET, ID, NAME, PATH, RESULT, TYPE, REGULAR, URI
 
-from .errors import EncryptionError, ResponseError, RequestError
+from .errors import EncryptionError, ResponseError, RequestError, Response404Error
 
 HTTP_REGEX = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
@@ -78,27 +78,23 @@ class BoschEntities:
         """Get items."""
         return self._items
 
-    async def update_all(self):
-        """Update all heating circuits."""
-        for item in self._items:
-            await item.update()
-
 
 class BoschSingleEntity:
     """Object for single sensor/circuit. Don't use it directly."""
 
-    def __init__(self, name, attr_id, str_obj, path=None):
+    def __init__(self, name, attr_id, str_obj, requests, _type, path=None):
         """Initialize single entity."""
+        self._requests = requests
         self._main_data = {NAME: name, ID: attr_id, PATH: path}
         self._data = {}
-        self._type = None
+        self._type = _type
         self._str = str_obj
-        self._json_scheme_ready = False
-        self._updated_initialized = False
+        self._update_initialized = False
+        self._state = False
 
     def process_results(self, result, key=None):
         """Convert multi-level json object to one level object."""
-        data = self._data if self._type == "sensor" else self._data[key]
+        data = self._data[key][RESULT]
         updated = False
         if result:
             for res_key in [
@@ -119,11 +115,11 @@ class BoschSingleEntity:
     @property
     def update_initialized(self):
         """Inform if we successfully invoked update at least one time."""
-        return self._updated_initialized
+        return self._update_initialized
 
     def get_property(self, property_name):
         """Retrieve JSON with all properties: value, min, max, state etc."""
-        return self._data.get(property_name, {})
+        return self._data.get(property_name, {}).get(RESULT, {})
 
     def get_value(self, property_name, default_value=None):
         """Retrieve only value from JSON."""
@@ -134,10 +130,6 @@ class BoschSingleEntity:
     def attr_id(self):
         """Get ID of the entity."""
         return self._main_data[ID]
-
-    def get_all_properties(self):
-        """Retrieve all properties with value, min, max etc."""
-        return self._data
 
     @property
     def strings(self):
@@ -150,11 +142,22 @@ class BoschSingleEntity:
         return self._main_data[NAME]
 
     @property
-    def json_scheme_ready(self):
-        """Is Bosch entity restored from scheme."""
-        return self._json_scheme_ready
-
-    @property
     def path(self):
         """Get path of Bosch API which entity is using for data."""
         return self._main_data[PATH]
+
+    async def update(self):
+        """Update info about Circuit asynchronously."""
+        is_updated = False
+        try:
+            for key, item in self._data.items():
+                if item[TYPE] == REGULAR:
+                    result = await self._requests[GET](item[URI])
+                    if self.process_results(result, key):
+                        is_updated = True
+            if is_updated:
+                self._updated_initialized = True
+            self._state = True
+        except (ResponseError, Response404Error):
+            self._state = False
+        return is_updated

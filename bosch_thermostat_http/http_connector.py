@@ -3,7 +3,7 @@ import logging
 from aiohttp import client_exceptions
 from asyncio import TimeoutError
 
-from .const import HTTP_HEADER
+from .const import HTTP_HEADER, CLOSE, KEEP_ALIVE, CONNECTION
 from .errors import RequestError, Response404Error, ResponseError
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,10 +21,12 @@ class HttpConnector:
     async def request(self, path):
         """Make a get request to the API."""
         _LOGGER.debug("Sending request to %s", path)
+        http_header = HTTP_HEADER
+        http_header[CONNECTION] = KEEP_ALIVE
         try:
             async with self._websession.get(
                 self._format_url(path),
-                headers=HTTP_HEADER,
+                headers=http_header,
                 timeout=self._request_timeout,
                 skip_auto_headers=["Accept-Encoding", "Accept"],
             ) as res:
@@ -44,7 +46,7 @@ class HttpConnector:
             client_exceptions.ClientConnectorError,
             TimeoutError,
         ) as err:
-            raise RequestError(f"Error requesting data from {path}: {err}") from err
+            raise RequestError(f"Error requesting data from {path}: {err}")
 
     async def submit(self, path, data):
         """Make a put request to the API."""

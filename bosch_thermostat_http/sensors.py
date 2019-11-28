@@ -1,7 +1,6 @@
 """Sensors of Bosch thermostat."""
-from .const import GET, PATH, ID, NAME
+from .const import ID, NAME, RESULT, URI, TYPE, REGULAR, SENSOR
 from .helper import BoschSingleEntity, BoschEntities
-from .errors import ResponseError, Response404Error, SensorNoLongerAvailable
 
 
 class Sensors(BoschEntities):
@@ -39,22 +38,9 @@ class Sensor(BoschSingleEntity):
         :param str name: name of the sensors
         :param str path: path to retrieve data from sensor.
         """
-        self._requests = requests
-        super().__init__(name, attr_id, str_obj, path)
-        self._type = "sensor"
+        super().__init__(name, attr_id, str_obj, requests, SENSOR, path)
+        self._data = {attr_id: {RESULT: {}, URI: path, TYPE: REGULAR}}
 
-    @property
-    def json_scheme(self):
-        """Get json scheme of sensor."""
-        return {NAME: self._main_data[NAME], ID: self._main_data[ID]}
-
-    async def update(self):
-        """Update sensor data."""
-        try:
-            result = await self._requests[GET](self._main_data[PATH])
-            self.process_results(result)
-            self._updated_initialized = True
-        except Response404Error:
-            raise SensorNoLongerAvailable("This sensor is no available.")
-        except ResponseError:
-            self._data = None
+    def get_all_properties(self):
+        """Retrieve all properties with value, min, max etc."""
+        return self._data[self.attr_id].get(RESULT)

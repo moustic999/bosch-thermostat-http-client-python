@@ -20,8 +20,7 @@ from .const import (
     SYSTEM_INFO,
     NAME,
     DATE,
-    FIRMWARE_VERSION,
-    DEFAULT_SENSORS,
+    FIRMWARE_VERSION, REFS, ID, HEATING_CIRCUITS, DHW_CIRCUITS
 )
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
@@ -74,7 +73,7 @@ class Gateway:
         await self._update_info(initial_db.get(GATEWAY))
         self._firmware_version = self._data[GATEWAY].get(FIRMWARE_VERSION)
         self._device = await self.get_device_type(initial_db)
-        self._db = get_db_of_firmware(self._device[VALUE], self.firmware)
+        self._db = get_db_of_firmware(self._device[VALUE], self._firmware_version)
         if self._db and self._device:
             initial_db.pop(MODELS, None)
             self._db.update(initial_db)
@@ -171,7 +170,7 @@ class Gateway:
     def initialize_sensors(self, choosed_sensors=None):
         """Initialize sensors objects."""
         if not choosed_sensors:
-            choosed_sensors = self._db.get(DEFAULT_SENSORS, [])
+            choosed_sensors = self._db.get(SENSORS)
         self._data[SENSORS] = Sensors(
             self._requests, choosed_sensors, self._db[SENSORS], self._str
         )
@@ -184,21 +183,14 @@ class Gateway:
             rawlist.append(await deep_into(root, [], self.get))
         return rawlist
 
-    async def smallscan(self):
-        """Print out all info from gateway from HC2 only for now."""
+    async def smallscan(self, _type=HEATING_CIRCUITS):
+        """Print out all info from gateway from HC1 or DHW1 only for now."""
+        refs = self._db.get(_type).get(REFS)
+        format_string = "hc1" if _type == HEATING_CIRCUITS else "dhw1"
         rawlist = []
-        paths = [
-            "/heatingCircuits/hc1/roomtemperature",
-            "/heatingCircuits/hc1/operationMode",
-            "/heatingCircuits/hc1/currentRoomSetpoint",
-            "/heatingCircuits/hc1/manualRoomSetpoint",
-            "/heatingCircuits/hc1/temperatureRoomSetpoint",
-            "/heatingCircuits/hc1/status",
-            "/heatingCircuits/hc1/activeSwitchProgram",
-            "/heatingCircuits/hc1/temporaryRoomSetpoint",
-        ]
-        for root in paths:
-            rawlist.append(await deep_into(root, [], self.get))
+        for item in refs.values():
+            uri = item[ID].format(format_string)
+            rawlist.append(await deep_into(uri, [], self.get))
         return rawlist
 
     async def check_connection(self):
@@ -212,7 +204,8 @@ class Gateway:
                     self._data[GATEWAY][UUID] = response[self._str.val]
             uuid = self.get_info(UUID)
             return uuid
-        except RequestError:
+        except RequestError as err:
+            _LOGGER.debug("Couldn't connect to gateway %s", err)
             return False
 
     async def get(self, path):

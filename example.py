@@ -5,10 +5,10 @@ import json
 import aiohttp
 import time
 import bosch_thermostat_http as bosch
-from bosch_thermostat_http.const import DHW, HC, OPERATION_MODE, UUID, DATE
+from bosch_thermostat_http.const import DHW, HC, OPERATION_MODE, UUID, DATE, DHW_CIRCUITS
 
-#logging.basicConfig()
-#logging.getLogger().setLevel(logging.DEBUG)
+# logging.basicConfig()
+# logging.getLogger().setLevel(logging.DEBUG)
 
 
 
@@ -26,33 +26,36 @@ async def main():
                                 access_key=data[1],
                                 password=data[2])
         print(await gateway.check_connection())
-        my_sensors = [ "outdoor_t1" ]
-        options_sensors = {sensor: (True if sensor in my_sensors else False) for sensor in gateway.database["sensors"].keys() }
-        print(options_sensors)
-        return
-        db = gateway.database
-        # print(db["sensors"])
-        all_sensors = gateway.database["sensors"]
-        scheme = {sensor: bool for sensor in all_sensors.keys()}
-        print(scheme)
-        return
-        for sensor, item in db["sensors"].items():
-            name = item["name"]
-            print(f'"{sensor}": "{name}",')
+        await gateway.initialize_circuits(DHW)
+        # small = await gateway.smallscan(DHW_CIRCUITS)
+#        myjson = json.loads(small)
+        # print(small)
+        # return
+        # sensors = gateway.initialize_sensors()
+        # for sensor in sensors:
+        #     await sensor.update()
+        #     print(sensor.get_all_properties())
 
-        for sensor, item in db["sensors"].items():
-            print(f'vol.Required("{sensor}"): bool,')
+        # hcs = gateway.heating_circuits
+        # hc = hcs[0]
+        # time.sleep(1)
+        # await hc.update()
+        # print(hc.hvac_mode)
+        # print(hc.target_temperature)
+        # print(await hc.set_temperature(10.0))
+        # print("ustawiona!")
+        dhws = gateway.dhw_circuits
+        dhw = dhws[0]
+        await dhw.update()
+        print("START1")
+        print(dhw.target_temperature)
         return
-        print(gateway.firmware)
-        print(gateway.device_name)
-        await gateway.initialize_circuits(HC)
-        
-        hcs = gateway.heating_circuits
-        hc = hcs[0]
-        time.sleep(1)
-        await hc.update()
-        print(hc.hvac_mode)
-        print(hc.target_temperature)
+        print("START2")
+        print(dhw.current_mode)
+        # await dhw.set_temperature(52.0)
+        print("START3")
+        print(dhw.target_temperature)
+        return
         # print(hc.schedule)
         print(gateway.get_info(DATE))
         # print(await gateway.rawscan())
@@ -77,4 +80,5 @@ async def main():
 
         # print(gateway.get_property(TYPE_INFO, UUID))
         await session.close()
+
 asyncio.get_event_loop().run_until_complete(main())

@@ -1,14 +1,6 @@
 {
     "04.06.07": {
         "heatingCircuits": {
-            "presets": {
-                "manual": [
-                    "manual"
-                ],
-                "auto": [
-                    "auto"
-                ]
-            },
             "hastates": {
                 "off": "off",
                 "heat": "manual",
@@ -21,38 +13,46 @@
             "mode_to_setpoint": {
                 "manual": {
                     "read": "setpoint1",
-                    "write": "setpoint1"
+                    "write": "setpoint1",
+                    "type": "manual"
                 },
                 "auto":{
                     "read": "setpoint2",
-                    "write": "setpoint2"
+                    "write": "setpoint2",
+                    "type": "auto"
                 }
             },
             "mainUri": "/heatingCircuits",
             "refs": {
                 "current_temp": {
                     "id": "/heatingCircuits/{}/roomtemperature",
-                    "name": "Room temperature"
+                    "name": "Room temperature",
+                    "type": "regular"
                 },
                 "operation_mode": {
                     "id": "/heatingCircuits/{}/operationMode",
-                    "name": "Operation mode"
+                    "name": "Operation mode",
+                    "type": "regular"
                 },
                 "setpoint1": {
                     "id": "/heatingCircuits/{}/manualRoomSetpoint",
-                    "name": "Manual room setpoint"
+                    "name": "Manual room setpoint",
+                    "type": "setpoint"
                 },
                 "setpoint2": {
                     "id": "/heatingCircuits/{}/temporaryRoomSetpoint",
-                    "name": "Temporary room setpoint"
+                    "name": "Temporary room setpoint",
+                    "type": "setpoint"
                 },
                 "status": {
                     "id": "/heatingCircuits/{}/status",
-                    "name": "Heating circuit status"
+                    "name": "Heating circuit status",
+                    "type": "regular"
                 },
                 "activeProgram": {
                     "id": "/heatingCircuits/{}/activeSwitchProgram",
-                    "name": "Active Switch Program"
+                    "name": "Active Switch Program",
+                    "type": "activeProgram"
                 }
             }
         },
@@ -67,31 +67,64 @@
                 "heat_pump": "HCprogram",
                 "gas": null
             },
+            "mode_to_setpoint": {
+                "HCprogram": {
+                    "read": "setpoint1",
+                    "write": null,
+                    "type": "manual"
+                },
+                "Off": {
+                    "read": "setpoint2",
+                    "write": null,
+                    "type": "off"
+                },
+                "ownprogram": {
+                    "read": null,
+                    "write": "setpoint3",
+                    "type": "auto"
+                },
+                "high": {
+                    "read": "setpoint3",
+                    "write": "setpoint3",
+                    "type": "manual"
+                }
+            },
             "mainUri": "/dhwCircuits",
             "refs": {
                 "current_temp": {
                     "id": "/dhwCircuits/{}/actualTemp",
-                    "name": "Room temperature"
+                    "name": "Room temperature",
+                    "type": "regular"
                 },
                 "operation_mode": {
                     "id": "/dhwCircuits/{}/operationMode",
-                    "name": "Operation mode"
+                    "name": "Operation mode",
+                    "type": "regular"
                 },
-                "auto_setpoint": {
+                "setpoint1": {
                     "id": "/dhwCircuits/{}/currentSetpoint",
-                    "name": "Water temp setpoint"
+                    "name": "Water temp setpoint",
+                    "type": "setpoint"
                 },
-                "water_off": {
+                "setpoint2": {
                     "id": "/dhwCircuits/{}/temperatureLevels/off",
-                    "name": "DHW off level"
+                    "name": "DHW off level",
+                    "type": "setpoint"
                 },
-                "water_high": {
+                "setpoint3": {
                     "id": "/dhwCircuits/{}/temperatureLevels/high",
-                    "name": "DHW High level"
+                    "name": "DHW High level",
+                    "type": "setpoint"
                 },
                 "status": {
                     "id": "/dhwCircuits/{}/status",
-                    "name": "DHW status"
+                    "name": "DHW status",
+                    "type": "regular"
+                },
+                "activeProgram": {
+                    "id": "/dhwCircuits/{}/switchPrograms",
+                    "name": "Active Switch Program",
+                    "type": "activeProgram"
                 }
             }
         },
