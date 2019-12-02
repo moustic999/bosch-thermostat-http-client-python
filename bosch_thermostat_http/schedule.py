@@ -26,7 +26,6 @@ from .errors import ResponseError
 _LOGGER = logging.getLogger(__name__)
 
 
-
 class Schedule:
     """Scheduler logic."""
 
@@ -75,22 +74,23 @@ class Schedule:
         if active_setpoint in self._setpoints_temp:
             self._setpoints_temp[active_setpoint] = temp
 
-    async def _get_setpoint_temp(self, setpointProperty, setpoint):
+    async def _get_setpoint_temp(self, setpoint_property, setpoint):
         """Download temp for setpoint."""
         try:
-            result = await self._requests[GET](f'{setpointProperty[ID]}/{setpoint}')
+            result = await self._requests[GET](f'{setpoint_property[ID]}/{setpoint}')
         except ResponseError:
             pass
         return {
+            MODE: setpoint,
             VALUE: result.get(VALUE, 0),
             MAX: result.get(MAX_VALUE, 0),
             MIN: result.get(MIN_VALUE, 0)
         }
 
-    async def _retrieve_schedule(self, switchPoints, setpointProperty):
+    async def _retrieve_schedule(self, switch_points, setpoint_property):
         """Convert Bosch schedule to dict format."""
         schedule = {k: [] for k in DAYS.values()}
-        for switch in switchPoints:
+        for switch in switch_points:
             if switch[SETPOINT] not in self._setpoints_temp:
                 self._setpoints_temp[switch[SETPOINT]] = 0
             day = DAYS[switch[DAYOFWEEK]]
@@ -102,7 +102,7 @@ class Schedule:
                 current_day[-2][STOP] = switch[TIME] - 1
         for setpoint in self._setpoints_temp:
             self._setpoints_temp[setpoint] = await self._get_setpoint_temp(
-                setpointProperty, setpoint
+                setpoint_property, setpoint
             )
         return schedule
 
@@ -118,7 +118,7 @@ class Schedule:
     def get_max_temp_for_mode(self, mode, mode_type):
         cache = {}
         if mode_type == MANUAL:
-            return self._setpoints_temp(mode, {}).get(MAX, -1)
+            return self._setpoints_temp.get(mode, {}).get(MAX, -1)
         if self.time:
             cache = self.get_temp_in_schedule()
         return cache.get(MAX, 0)
@@ -126,13 +126,15 @@ class Schedule:
     def get_min_temp_for_mode(self, mode, mode_type):
         cache = {}
         if mode_type == MANUAL:
-            return self._setpoints_temp(mode, {}).get(MIN, -1)
+            return self._setpoints_temp.get(mode, {}).get(MIN, -1)
         if self.time:
             cache = self.get_temp_in_schedule()
         return cache.get(MIN, 0)
 
-    def get_setpoint_for_mode(self):
+    def get_setpoint_for_mode(self, mode, mode_type):
         cache = {}
+        if mode_type == MANUAL:
+            return self._setpoints_temp.get(mode, {}).get(MODE, -1)
         if self.time:
             cache = self.get_temp_in_schedule()
         return cache.get(MODE)
@@ -158,4 +160,3 @@ class Schedule:
         return (
             date - date.replace(hour=0, minute=0, second=0, microsecond=0)
         ).total_seconds() / 60
-

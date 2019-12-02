@@ -1,8 +1,14 @@
 """Circuits module of Bosch thermostat."""
-from .const import HC, HEATING_CIRCUITS, DHW_CIRCUITS, MAIN_URI, ID
+from .const import HC, MAIN_URI, ID, DHW, HEATING_CIRCUITS, DHW_CIRCUITS
 from .helper import BoschEntities
-from .dhw_circuit import DHWCircuit
-from .heating_circuit import HeatingCircuit
+from .circuit import Circuit
+
+CIRCUITS_TYPE = [HC, DHW]
+
+CIRCUITS_DB = {
+    HC: HEATING_CIRCUITS,
+    DHW: DHW_CIRCUITS
+}
 
 
 class Circuits(BoschEntities):
@@ -15,7 +21,7 @@ class Circuits(BoschEntities):
         :param dict requests: { GET: get function, SUBMIT: submit function}
         :param str circuit_type: is it HC or DHW
         """
-        self._circuit_type = HEATING_CIRCUITS if circuit_type == HC else DHW_CIRCUITS
+        self._circuit_type = circuit_type if circuit_type in CIRCUITS_TYPE else None
         super().__init__(requests)
 
     @property
@@ -25,7 +31,10 @@ class Circuits(BoschEntities):
 
     async def initialize(self, database, str_obj, current_date):
         """Initialize HeatingCircuits asynchronously."""
-        uri = database[self._circuit_type][MAIN_URI]
+        if not self._circuit_type:
+            return None
+        db_prefix = CIRCUITS_DB[self._circuit_type]
+        uri = database[db_prefix][MAIN_URI]
         circuits = await self.retrieve_from_module(1, uri)
         for circuit in circuits:
             if "references" in circuit:
@@ -39,12 +48,7 @@ class Circuits(BoschEntities):
 
     def create_circuit(self, circuit, database, str_obj, current_date):
         """Create single circuit of given type."""
-        if self._circuit_type == DHW_CIRCUITS:
-            return DHWCircuit(
-                self._requests, circuit[ID], database, str_obj, current_date
-            )
-        if self._circuit_type == HEATING_CIRCUITS:
-            return HeatingCircuit(
-                self._requests, circuit[ID], database, str_obj, current_date
-            )
+        if self._circuit_type:
+            return Circuit(self._requests, circuit[ID],
+                           database, str_obj, self._circuit_type, current_date)
         return None

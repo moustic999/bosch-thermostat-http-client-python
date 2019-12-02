@@ -20,7 +20,7 @@ from .const import (
     SYSTEM_INFO,
     NAME,
     DATE,
-    FIRMWARE_VERSION, REFS, ID, HEATING_CIRCUITS, DHW_CIRCUITS
+    FIRMWARE_VERSION, REFS, ID
 )
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
@@ -183,10 +183,10 @@ class Gateway:
             rawlist.append(await deep_into(root, [], self.get))
         return rawlist
 
-    async def smallscan(self, _type=HEATING_CIRCUITS):
+    async def smallscan(self, _type=HC):
         """Print out all info from gateway from HC1 or DHW1 only for now."""
         refs = self._db.get(_type).get(REFS)
-        format_string = "hc1" if _type == HEATING_CIRCUITS else "dhw1"
+        format_string = "hc1" if _type == HC else "dhw1"
         rawlist = []
         for item in refs.values():
             uri = item[ID].format(format_string)

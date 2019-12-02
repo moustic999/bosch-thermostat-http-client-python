@@ -12,8 +12,6 @@ from .const import (
     TYPE,
     URI,
     REGULAR,
-    MANUAL,
-    TEMP,
     RESULT,
     OFF,
     CIRCUIT_TYPES,
@@ -21,8 +19,6 @@ from .const import (
     READ,
     WRITE,
     MODE_TO_SETPOINT,
-    MIN,
-    MAX,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
 )
@@ -151,6 +147,18 @@ class Circuit(BoschSingleEntity):
             self.available_operation_modes,
         )
 
+    async def set_ha_mode(self, ha_mode):
+        """Helper to set operation mode."""
+        c_temp_read = self.temp_read
+        c_temp_write = self.temp_write
+        old_mode = self.current_mode
+        new_mode = await self.set_operation_mode(self._hastates.get(ha_mode))
+        if (self.temp_read != c_temp_read) or (self.temp_write != c_temp_write):
+            return 2
+        if new_mode != old_mode:
+            return 1
+        return 0
+
     @property
     def state(self):
         """Retrieve state of the circuit."""
@@ -169,27 +177,6 @@ class Circuit(BoschSingleEntity):
     def temp_units(self):
         """Return units of temperature."""
         return self.get_property(CURRENT_TEMP).get(self._str.units)
-
-    def parse_float_value(self, val, single_value=True, minmax_obliged=False):
-        """Parse if value is between min and max."""
-        state = val.get(self._str.state, {})
-        value = val.get(self._str.val, False)
-        _min = val.get(self._str.min, -1)
-        _max = val.get(self._str.max, -1)
-        if not value:
-            return None
-        for k in state:
-            if (self._str.open in k and k[self._str.open] == val) or (
-                self._str.short in k and k[self._str.short] == val
-            ):
-                return None
-        if all(k in val for k in (self._str.val, self._str.min, self._str.max)):
-            if _min <= value <= _max:
-                return value if single_value else val
-            return None
-        if not minmax_obliged:
-            return value if single_value else val
-        return None
 
     @property
     def ha_modes(self):
@@ -253,3 +240,25 @@ class Circuit(BoschSingleEntity):
                 self.current_mode, self.operation_mode_type
             )
 
+    async def set_temperature(self, temperature):
+        """Set temperature of Circuit."""
+        target_temp = self.target_temperature
+        if (target_temp
+                and self.min_temp < temperature < self.max_temp
+                and target_temp != temperature
+                and self.temp_write):
+            result = await self._requests[SUBMIT](
+                self._data[self.temp_write][URI], temperature
+            )
+            _LOGGER.debug("Set temperature for %s with result %s", self.name, result)
+            if result:
+                if self.temp_read:
+                    self._data[self.temp_read][RESULT][self._str.val] = temperature
+                else:
+                    self.schedule.cache_temp_for_mode(
+                        temperature,
+                        self.operation_mode_type,
+                        self.current_mode,
+                    )
+                return True
+        return False
