@@ -57,7 +57,7 @@
                 "activeProgram": {
                     "id": "/heatingCircuits/{}/activeSwitchProgram",
                     "name": "Active Switch Program",
-                    "type": "schedule"
+                    "type": "activeProgram"
                 },
                 "status": {
                     "id": "/heatingCircuits/{}/status",
@@ -70,12 +70,29 @@
             "hastates": {
                 "off": "off",
                 "on": "on",
-                "eco": "auto",
+                "eco": null,
                 "eletric": null,
-                "performance": null,
+                "performance": "auto",
                 "high_demand": null,
                 "heat_pump": null,
                 "gas": null
+            },
+            "mode_to_setpoint": {
+                "on": {
+                    "read": "setpoint2",
+                    "write": "setpoint2",
+                    "type": "manual"
+                },
+                "off": {
+                    "read": "setpoint1",
+                    "write": null,
+                    "type": "off"
+                },
+                "auto": {
+                    "read": null,
+                    "write": "setpoint2",
+                    "type": "auto"
+                }
             },
             "mainUri": "/dhwCircuits",
             "refs": {
@@ -89,25 +106,25 @@
                     "name": "Operation mode",
                     "type": "regular"
                 },
-                "auto_setpoint": {
-                    "id": "/dhwCircuits/{}/currentSetpoint",
-                    "name": "Water temp setpoint",
-                    "type": "regular"
-                },
-                "water_off": {
+                "setpoint1": {
                     "id": "/dhwCircuits/{}/temperatureLevels/off",
                     "name": "DHW off level",
-                    "type": "regular"
+                    "type": "setpoint"
                 },
-                "water_high": {
+                "setpoint2": {
                     "id": "/dhwCircuits/{}/temperatureLevels/on",
                     "name": "DHW High level",
-                    "type": "regular"
+                    "type": "setpoint"
                 },
                 "status": {
                     "id": "/dhwCircuits/{}/status",
                     "name": "DHW status",
                     "type": "regular"
+                },
+                "activeProgram": {
+                    "id": "/dhwCircuits/{}/activeSwitchProgram",
+                    "name": "Active Switch Program",
+                    "type": "activeProgram"
                 }
             }
         },

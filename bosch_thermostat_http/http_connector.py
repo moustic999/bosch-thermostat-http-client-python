@@ -1,9 +1,9 @@
 """HTTP connector class to Bosch thermostat."""
 import logging
+from asyncio import TimeoutError as AsyncTimeout
 from aiohttp import client_exceptions
-from asyncio import TimeoutError
 
-from .const import HTTP_HEADER, CLOSE, KEEP_ALIVE, CONNECTION
+from .const import HTTP_HEADER, KEEP_ALIVE, CONNECTION
 from .errors import RequestError, Response404Error, ResponseError
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class HttpConnector:
         except (
             client_exceptions.ClientError,
             client_exceptions.ClientConnectorError,
-            TimeoutError,
+            AsyncTimeout,
         ) as err:
             raise RequestError(f"Error requesting data from {path}: {err}")
 
@@ -62,7 +62,7 @@ class HttpConnector:
                 if not data and req.status == 204:
                     return True
                 return data
-        except (client_exceptions.ClientError, TimeoutError) as err:
+        except (client_exceptions.ClientError, AsyncTimeout) as err:
             raise RequestError(
                 f"Error putting data to {self._host}, path: {path}, message: {err}"
             )

@@ -7,16 +7,11 @@ from .const import RC300
 MAINPATH = os.path.join(os.path.dirname(__file__), "db")
 FILENAME = os.path.join(MAINPATH, "db.json")
 
-DATA = "data"
-FIRMWARE_URI = "versionFirmwarePath"
-SYSTEM_INFO_URI = "systemInfo"
-SENSORS = "sensors"
-
 
 def open_json(file):
     """Open json file."""
-    with open(file, "r") as f:
-        datastore = json.load(f)
+    with open(file, "r") as db_file:
+        datastore = json.load(db_file)
         return datastore
     return None
 

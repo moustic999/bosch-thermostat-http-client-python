@@ -56,10 +56,12 @@ class Circuit(BoschSingleEntity):
 
     @property
     def _hastates(self):
+        """Get dictionary which converts Bosch states to HA States."""
         return self._db.get(HA_STATES, None)
 
     @property
     def current_mode(self):
+        """Retrieve current mode of Circuit."""
         return self.get_value(OPERATION_MODE)
 
     @property
@@ -116,6 +118,10 @@ class Circuit(BoschSingleEntity):
 
     @property
     def setpoint(self):
+        """
+        Retrieve setpoint in which is currently Circuit.
+        Might be equal to operation_mode, might me taken from schedule.
+        """
         if self.operation_mode_type == OFF:
             return OFF
         if self.temp_read:
@@ -196,6 +202,11 @@ class Circuit(BoschSingleEntity):
         return OFF
 
     def get_activeswitchprogram(self, result=None):
+        """
+        Retrieve active program from thermostat.
+        If ActiveSwitch program is not present
+        then take first one from the list from result.
+        """
         active_program = self.get_value(ACTIVE_PROGRAM)
         if active_program:
             return active_program
@@ -222,6 +233,7 @@ class Circuit(BoschSingleEntity):
 
     @property
     def min_temp(self):
+        """Retrieve minimum temperature."""
         temp_read = self.temp_read
         if temp_read or self.operation_mode_type == OFF:
             return DEFAULT_MIN_TEMP
@@ -232,6 +244,7 @@ class Circuit(BoschSingleEntity):
 
     @property
     def max_temp(self):
+        """Retrieve maximum temperature."""
         temp_read = self.temp_read
         if temp_read or self.operation_mode_type == OFF:
             return DEFAULT_MAX_TEMP

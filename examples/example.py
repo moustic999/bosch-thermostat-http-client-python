@@ -26,7 +26,7 @@ async def main():
                                 access_key=data[1],
                                 password=data[2])
         print(await gateway.check_connection())
-        await gateway.initialize_circuits(HC)
+        await gateway.initialize_circuits(DHW)
         # small = await gateway.smallscan(DHW_CIRCUITS)
 #        myjson = json.loads(small)
         # print(small)
@@ -36,27 +36,28 @@ async def main():
         #     await sensor.update()
         #     print(sensor.get_all_properties())
 
-        hcs = gateway.heating_circuits
-        hc = hcs[0]
-        time.sleep(1)
-        await hc.update()
-        await hc.set_ha_mode("auto") #MEANS AUTO
-        await hc.update()
-        time.sleep(4)
-        print("hvac mode", hc.ha_mode)
-        print("target temp ->", hc.target_temperature)
-        await hc.set_ha_mode("heat") #MEANS MANUAL
-        print("target in manual", hc.target_temperature)
-        print("ha mode in manual", hc.ha_mode)
-        await hc.update()
-        print("target after update", hc.target_temperature)
-        print("ha mode", hc.ha_mode)
+        # dhws = gateway.heating_circuits
+        # dhw = hcs[0]
+        # time.sleep(1)
+        # await hc.update()
+#        await hc.set_ha_mode("auto") #MEANS AUTO
+ #       await hc.update()
+        # time.sleep(4)
+        # print("hvac mode", hc.ha_mode)
+        # print("target temp ->", hc.target_temperature)
+        # return
+        # await hc.set_ha_mode("heat") #MEANS MANUAL
+        # print("target in manual", hc.target_temperature)
+        # print("ha mode in manual", hc.ha_mode)
+        # await hc.update()
+        # print("target after update", hc.target_temperature)
+        # print("ha mode", hc.ha_mode)
 
-        await hc.set_ha_mode("auto") #MEANS AUTO
-        print("target after auto without update", hc.target_temperature)
-        print("ha mode", hc.ha_mode)
+        # await hc.set_ha_mode("auto") #MEANS AUTO
+        # print("target after auto without update", hc.target_temperature)
+        # print("ha mode", hc.ha_mode)
 
-        return
+        # return
         # print(await hc.set_temperature(10.0))
         # print("ustawiona!")
         dhws = gateway.dhw_circuits
@@ -64,10 +65,12 @@ async def main():
         await dhw.update()
         print("START1")
         print(dhw.target_temperature)
-        return
+        # await dhw.set_temperature(53.0)
         print("START2")
         print(dhw.current_mode)
-        # await dhw.set_temperature(52.0)
+        print(dhw.target_temperature)
+        
+        return
         print("START3")
         print(dhw.target_temperature)
         return

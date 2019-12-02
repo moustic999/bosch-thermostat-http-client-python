@@ -72,7 +72,7 @@ class Schedule:
         if mode_type == AUTO:
             active_setpoint = self.get_temp_in_schedule()[MODE]
         if active_setpoint in self._setpoints_temp:
-            self._setpoints_temp[active_setpoint] = temp
+            self._setpoints_temp[active_setpoint][VALUE] = temp
 
     async def _get_setpoint_temp(self, setpoint_property, setpoint):
         """Download temp for setpoint."""
@@ -116,6 +116,7 @@ class Schedule:
         return cache.get(TEMP, 0)
 
     def get_max_temp_for_mode(self, mode, mode_type):
+        """Get max temp for mode in schedule."""
         cache = {}
         if mode_type == MANUAL:
             return self._setpoints_temp.get(mode, {}).get(MAX, -1)
@@ -124,6 +125,7 @@ class Schedule:
         return cache.get(MAX, 0)
 
     def get_min_temp_for_mode(self, mode, mode_type):
+        """Get min temp for mode in schedule."""
         cache = {}
         if mode_type == MANUAL:
             return self._setpoints_temp.get(mode, {}).get(MIN, -1)
@@ -132,6 +134,7 @@ class Schedule:
         return cache.get(MIN, 0)
 
     def get_setpoint_for_mode(self, mode, mode_type):
+        """Get setpoints for mode."""
         cache = {}
         if mode_type == MANUAL:
             return self._setpoints_temp.get(mode, {}).get(MODE, -1)

@@ -2,7 +2,8 @@
 import asyncio
 import json
 import logging
-
+from .http_connector import HttpConnector
+from .db import get_db_of_firmware, get_initial_db
 from .circuits import Circuits
 from .const import (
     DHW,
@@ -20,7 +21,9 @@ from .const import (
     SYSTEM_INFO,
     NAME,
     DATE,
-    FIRMWARE_VERSION, REFS, ID
+    FIRMWARE_VERSION,
+    REFS,
+    ID,
 )
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
@@ -43,8 +46,6 @@ class Gateway:
         :param host:
         """
         if type(session).__name__ == "ClientSession":
-            from .http_connector import HttpConnector
-
             self._connector = HttpConnector(host, session)
         else:
             return
@@ -66,8 +67,6 @@ class Gateway:
 
     async def initialize(self):
         """Initialize gateway asynchronously."""
-        from .db import get_db_of_firmware, get_initial_db
-
         initial_db = get_initial_db()
         self._str = Strings(initial_db[DICT])
         await self._update_info(initial_db.get(GATEWAY))
@@ -99,6 +98,7 @@ class Gateway:
 
     @property
     def host(self):
+        """Return host of Bosch gateway. Either IP or hostname."""
         return self._host
 
     @property

@@ -1,14 +1,7 @@
 """Circuits module of Bosch thermostat."""
-from .const import HC, MAIN_URI, ID, DHW, HEATING_CIRCUITS, DHW_CIRCUITS
+from .const import MAIN_URI, ID, CIRCUIT_TYPES
 from .helper import BoschEntities
 from .circuit import Circuit
-
-CIRCUITS_TYPE = [HC, DHW]
-
-CIRCUITS_DB = {
-    HC: HEATING_CIRCUITS,
-    DHW: DHW_CIRCUITS
-}
 
 
 class Circuits(BoschEntities):
@@ -21,7 +14,7 @@ class Circuits(BoschEntities):
         :param dict requests: { GET: get function, SUBMIT: submit function}
         :param str circuit_type: is it HC or DHW
         """
-        self._circuit_type = circuit_type if circuit_type in CIRCUITS_TYPE else None
+        self._circuit_type = circuit_type if circuit_type in CIRCUIT_TYPES.keys() else None
         super().__init__(requests)
 
     @property
@@ -33,7 +26,7 @@ class Circuits(BoschEntities):
         """Initialize HeatingCircuits asynchronously."""
         if not self._circuit_type:
             return None
-        db_prefix = CIRCUITS_DB[self._circuit_type]
+        db_prefix = CIRCUIT_TYPES[self._circuit_type]
         uri = database[db_prefix][MAIN_URI]
         circuits = await self.retrieve_from_module(1, uri)
         for circuit in circuits:

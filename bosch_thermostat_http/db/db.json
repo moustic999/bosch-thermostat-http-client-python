@@ -7,11 +7,9 @@
         "state": "state",
         "invalid": "invalid",
         "value": "value",
-        "defaultowedValues": "allowedValues",
+        "allowedValues": "allowedValues",
         "open": "open",
-        "short": "short",
-        "on": "on",
-        "off": "off"
+        "short": "short"
     },
     "gateway": {
         "uuid": "/gateway/uuid",
