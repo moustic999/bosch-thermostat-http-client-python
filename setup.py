@@ -26,7 +26,7 @@ setup(
     maintainer='Ludovic Laurent',
     maintainer_email='ludovic.laurent@gmail.com',
     url='https://github.com/moustic999/bosch-thermostat-http-client-python.git',
-    download_url='https://github.com/moustic999/bosch-thermostat-http-client-python/archive/{}.zip'.format(VERSION),
+    download_url='https://github.com/moustic999/bosch-thermostat-http-client-python/archive/{}.zip'.format(__version__),
     packages=["bosch_thermostat_http"],
     install_requires=REQUIRES,
     include_package_data=True,
