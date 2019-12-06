@@ -2,19 +2,22 @@
 # -*- coding:utf-8 -*-
 from setuptools import setup
 
-VERSION = '0.5.2'
+with open("bosch_thermostat_http/version.py") as f:
+    exec(f.read())
+
 
 REQUIRES = [
     'pyaes>=1.6.1',
-    'aiohttp'
-    ]
+    'aiohttp',
+    "click>=7"
+]
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
     name='bosch-thermostat-http-client',
-    version=VERSION,
+    version=__version__,  # type: ignore # noqa: F821,
     description='Python API for talking to Bosch™ Heating gateway using HTTP ',
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -41,4 +44,9 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7'
     ],
+    entry_points={
+        "console_scripts": [
+            "bosch_scan=bosch_thermostat_http.bosch_rawscan_cli:cli"
+        ]
+    }
 )

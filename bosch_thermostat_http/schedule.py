@@ -17,13 +17,19 @@ from .const import (
     SWITCH_POINTS,
     SWITCHPROGRAM,
     MIDNIGHT,
-    DAYS,
-    DAYS_INT,
+    DAYS, DAYS_INT,
+    DAYS_INDEXES, DAYS_INV,
     CIRCUIT_TYPES, ID, MAX, MIN, MAX_VALUE, MIN_VALUE, MANUAL
 )
 from .errors import ResponseError
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def sort_switchpoints(dic):
+    day = dic[DAYOFWEEK]
+    return (DAYS_INT.index(day), dic[TIME])
+
 
 
 class Schedule:
@@ -33,10 +39,10 @@ class Schedule:
         """Initialize schedule handling of Bosch gateway."""
         self._requests = requests
         self._active_program = None
-        self._schedule = None
         self._circuit_type = CIRCUIT_TYPES[circuit_type]
         self._circuit_name = circuit_name
         self._setpoints_temp = {}
+        self._switch_points = None
         self._active_setpoint = None
         self._active_program_uri = None
         self._time = None
@@ -51,9 +57,50 @@ class Schedule:
         try:
             self._time = await self._time_retrieve()
             result = await self._requests[GET](self._active_program_uri)
-            self._schedule = await self._retrieve_schedule(
+            await self._parse_schedule(
                 result.get(SWITCH_POINTS), result.get(SETPOINT_PROP)
             )
+        except ResponseError:
+            pass
+
+    async def update_schedule_test(self, result, time):
+        """Test function to do. Update schedule from Bosch gateway."""
+        self._time = time
+        self._switch_points = result.get(SWITCH_POINTS)
+    
+    def schedule_test(self):
+        try:
+            switch_points = self._switch_points.copy()
+            added = {'dayOfWeek': 'We', 'setpoint': 'night', 'time': 120}
+            bosch_date = datetime.strptime(self._time, "%Y-%m-%dT%H:%M:%S")
+            day_of_week = DAYS_INT[bosch_date.weekday()]
+            mins = self._get_minutes_since_midnight(bosch_date)
+            print(day_of_week)
+            added = {'dayOfWeek': day_of_week, 'setpoint': '', 'time': mins}
+            switch_points.append(added)
+            switch_points.sort(key=sort_switchpoints)
+            i = switch_points.index(added)
+            _prev = switch_points[i - 1]
+            _next = switch_points[i + 1]
+
+            def calcMinsInWeek(_setpoint):
+                # print(DAYS_INT[_setpoint[DAYOFWEEK]])
+                return (DAYS_INT.index(_setpoint[DAYOFWEEK]) + 1) * _setpoint[TIME]
+            _mins_current = calcMinsInWeek(added)
+            _mins_prev = calcMinsInWeek(_prev)
+            _mins_next = calcMinsInWeek(_next)
+            print(added)
+            print(_prev)
+            print(_mins_prev)
+            print(_next)
+            print(_mins_next)
+            print("_mins_curr", _mins_current)
+            print("_mins", (_mins_current - _mins_prev))
+            print("self", self._switch_points)
+            if _mins_current >= _mins_next:
+                return _next
+            print(_prev, "prev")
+            return _prev
         except ResponseError:
             pass
 
@@ -87,24 +134,15 @@ class Schedule:
             MIN: result.get(MIN_VALUE, 0)
         }
 
-    async def _retrieve_schedule(self, switch_points, setpoint_property):
+    async def _parse_schedule(self, switch_points, setpoint_property):
         """Convert Bosch schedule to dict format."""
-        schedule = {k: [] for k in DAYS.values()}
         for switch in switch_points:
-            if switch[SETPOINT] not in self._setpoints_temp:
-                self._setpoints_temp[switch[SETPOINT]] = 0
-            day = DAYS[switch[DAYOFWEEK]]
-            current_day = schedule[day]
-            current_day.append(
-                {MODE: switch[SETPOINT], START: switch[TIME], STOP: MIDNIGHT}
-            )
-            if len(current_day) > 1:
-                current_day[-2][STOP] = switch[TIME] - 1
-        for setpoint in self._setpoints_temp:
-            self._setpoints_temp[setpoint] = await self._get_setpoint_temp(
-                setpoint_property, setpoint
-            )
-        return schedule
+            setpoint = switch[SETPOINT]
+            if setpoint not in self._setpoints_temp:
+                self._setpoints_temp[setpoint] = await self._get_setpoint_temp(
+                    setpoint_property, setpoint
+                )
+        self._switch_points = switch_points
 
     def get_temp_for_mode(self, mode, mode_type):
         """This is working only in manual for RC35 where op_mode == setpoint."""
@@ -112,6 +150,7 @@ class Schedule:
         if mode_type == MANUAL:
             return self._setpoints_temp.get(mode, {}).get(VALUE, -1)
         if self.time:
+            print("getin in schedule")
             cache = self.get_temp_in_schedule()
         return cache.get(TEMP, 0)
 
@@ -146,20 +185,26 @@ class Schedule:
         """Find temp in schedule for current date."""
         if self._time:
             bosch_date = datetime.strptime(self._time, "%Y-%m-%dT%H:%M:%S")
-            day_of_week = DAYS[DAYS_INT[bosch_date.weekday()]]
-            if self._schedule and day_of_week in self._schedule:
-                mins = self._get_minutes_since_midnight(bosch_date)
-                for setpoint in self._schedule[day_of_week]:
-                    if mins > setpoint[START] and mins < setpoint[STOP]:
-                        return {
-                            MODE: setpoint[MODE],
-                            TEMP: self._setpoints_temp[setpoint[MODE]][VALUE],
-                            MAX: self._setpoints_temp[setpoint[MODE]][MAX],
-                            MIN: self._setpoints_temp[setpoint[MODE]][MIN]
-                        }
+            day_of_week = DAYS_INT[bosch_date.weekday()]
+            if self._switch_points:
+                switch_points = self._switch_points.copy()
+                current_setpoint = {
+                    DAYOFWEEK: day_of_week,
+                    SETPOINT: '',
+                    TIME: self._get_minutes_since_midnight(bosch_date)
+                }
+                switch_points.append(current_setpoint)
+                switch_points.sort(key=sort_switchpoints)
+                _prev_setpoint = switch_points[switch_points.index(current_setpoint) - 1][SETPOINT]
+                return {
+                    MODE: _prev_setpoint,
+                    TEMP: self._setpoints_temp[_prev_setpoint][VALUE],
+                    MAX: self._setpoints_temp[_prev_setpoint][MAX],
+                    MIN: self._setpoints_temp[_prev_setpoint][MIN]
+                }
 
     def _get_minutes_since_midnight(self, date):
         """Retrieve minutes since midnight."""
-        return (
+        return int((
             date - date.replace(hour=0, minute=0, second=0, microsecond=0)
-        ).total_seconds() / 60
+        ).total_seconds() / 60.0)

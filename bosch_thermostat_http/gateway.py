@@ -24,6 +24,8 @@ from .const import (
     FIRMWARE_VERSION,
     REFS,
     ID,
+    HEATING_CIRCUITS,
+    DHW_CIRCUITS
 )
 from .encryption import Encryption
 from .errors import RequestError, Response404Error, ResponseError
@@ -155,6 +157,10 @@ class Gateway:
         """Get firmware."""
         return self._firmware_version
 
+    @property
+    def uuid(self):
+        return self.get_info(UUID)
+
     def get_info(self, key):
         """Get gateway info given key."""
         if key in self._data[GATEWAY]:
@@ -185,8 +191,15 @@ class Gateway:
 
     async def smallscan(self, _type=HC):
         """Print out all info from gateway from HC1 or DHW1 only for now."""
-        refs = self._db.get(_type).get(REFS)
-        format_string = "hc1" if _type == HC else "dhw1"
+        if _type == HC:
+            refs = self._db.get(HEATING_CIRCUITS).get(REFS)
+            format_string = "hc1"
+        elif _type == DHW:
+            refs = self._db.get(DHW_CIRCUITS).get(REFS)
+            format_string = "dhw1"
+        else:
+            refs = self._db.get(SENSORS)
+            format_string = ""
         rawlist = []
         for item in refs.values():
             uri = item[ID].format(format_string)

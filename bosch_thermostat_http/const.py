@@ -99,7 +99,6 @@ SETPOINT_PROP = "setpointProperty"
 SWITCH_POINTS = "switchPoints"
 SWITCHPROGRAM = "/{}/{}/switchPrograms/{}"
 MIDNIGHT = 1440
-DAYS_INT = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
 DAYS = {
     "Mo": "monday",
     "Tu": "tuesday",
@@ -109,6 +108,10 @@ DAYS = {
     "Sa": "saturday",
     "Su": "sunday",
 }
+DAYS_INT = [k for k in DAYS.keys()]
+DAYS_INDEXES = [k for k in DAYS.values()]
+DAYS_INV = [{v: k for k, v in DAYS.items()}]
+
 
 SENSORS_LIST = ["outdoor_t1", "hotWater_t2", "supply_t1_setpoint", "supply_t1",
                 "return", "healthStatus", "actualPower", "actualModulation",

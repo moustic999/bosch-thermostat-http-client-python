@@ -150,7 +150,7 @@
                 "name": "Return temp"
             },
             "healthStatus": {
-                "id": "/`system/healthStatus",
+                "id": "/system/healthStatus",
                 "name": "Health status"
             },
             "actualPower": {
