@@ -153,13 +153,11 @@ class BoschSingleEntity:
             for key, item in self._data.items():
                 if item[TYPE] == REGULAR:
                     result = await self._requests[GET](item[URI])
-                    print(self.name, "o ja", result)
                     if self.process_results(result, key):
                         is_updated = True
             if is_updated:
                 self._updated_initialized = True
             self._state = True
         except (ResponseError, Response404Error):
-            print("Erorr", self.name)
             self._state = False
         return is_updated

@@ -150,7 +150,6 @@ class Schedule:
         if mode_type == MANUAL:
             return self._setpoints_temp.get(mode, {}).get(VALUE, -1)
         if self.time:
-            print("getin in schedule")
             cache = self.get_temp_in_schedule()
         return cache.get(TEMP, 0)
 

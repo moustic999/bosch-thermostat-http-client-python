@@ -174,7 +174,7 @@ class Circuit(BoschSingleEntity):
     @property
     def current_temp(self):
         """Give current temperature of circuit."""
-        _LOGGER.debug("Current temp is %s", self.get_property(CURRENT_TEMP))
+        _LOGGER.debug("Current temp of %s is %s", self.name, self.get_property(CURRENT_TEMP))
         temp = self.get_value(CURRENT_TEMP)
         if temp and temp > 0 and temp < 120:
             return temp
@@ -227,7 +227,7 @@ class Circuit(BoschSingleEntity):
         target_temp = self.schedule.get_temp_for_mode(
             self.current_mode, self.operation_mode_type
         )
-        if target_temp > 0:
+        if target_temp >= 0:
             self._target_temp = target_temp
         return self._target_temp
 
