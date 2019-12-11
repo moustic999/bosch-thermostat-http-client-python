@@ -23,7 +23,7 @@ from .const import (
     DEFAULT_MIN_TEMP,
 )
 from .helper import BoschSingleEntity
-from .errors import ResponseError, RequestError
+from .exceptions import DeviceException
 from .schedule import Schedule
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,13 +32,13 @@ _LOGGER = logging.getLogger(__name__)
 class Circuit(BoschSingleEntity):
     """Parent object for circuit of type HC or DHW."""
 
-    def __init__(self, requests, attr_id, db, str_obj, _type, current_date):
-        """Initialize circuit with requests and id from gateway."""
+    def __init__(self, connector, attr_id, db, str_obj, _type, current_date):
+        """Initialize circuit with get, put and id from gateway."""
         name = attr_id.split("/").pop()
         self._db = db[CIRCUIT_TYPES[_type]]
         self._mode_to_setpoint = self._db.get(MODE_TO_SETPOINT)
-        super().__init__(name, attr_id, str_obj, requests, _type)
-        self._schedule = Schedule(requests, _type, name, current_date)
+        super().__init__(name, attr_id, str_obj, connector, _type)
+        self._schedule = Schedule(connector, _type, name, current_date)
         self._target_temp = 0
         for key, value in self._db[REFS].items():
             uri = value[ID].format(self.name)
@@ -99,7 +99,7 @@ class Circuit(BoschSingleEntity):
         try:
             for key, item in self._data.items():
                 if item[TYPE] in (REGULAR, ACTIVE_PROGRAM):
-                    result = await self._requests[GET](item[URI])
+                    result = await self._connector.get(item[URI])
                     if self.process_results(result, key):
                         is_updated = True
                 if item[TYPE] == ACTIVE_PROGRAM:
@@ -107,11 +107,11 @@ class Circuit(BoschSingleEntity):
                     await self._schedule.update_schedule(active_program)
             temp_read = self.temp_read
             if temp_read:
-                result = await self._requests[GET](self._data[temp_read][URI])
+                result = await self._connector.get(self._data[temp_read][URI])
                 if self.process_results(result, temp_read):
                     is_updated = True
             self._state = True
-        except (RequestError, ResponseError):
+        except (DeviceException):
             self._state = False
         self._update_initialized = True
         return is_updated
@@ -132,10 +132,10 @@ class Circuit(BoschSingleEntity):
         """Update info about Circuit asynchronously."""
         if key in self._data:
             try:
-                result = await self._requests[GET](self._data[key][URI])
+                result = await self._connector.get(self._data[key][URI])
                 self.process_results(result, key)
                 self._state = True
-            except ResponseError:
+            except DeviceException:
                 self._state = False
 
     async def set_operation_mode(self, new_mode):
@@ -144,7 +144,7 @@ class Circuit(BoschSingleEntity):
             _LOGGER.warning("Trying to set mode which is already set %s", new_mode)
             return None
         if new_mode in self.available_operation_modes:
-            await self._requests[SUBMIT](self._data[OPERATION_MODE][URI], new_mode)
+            await self._connector.put(self._data[OPERATION_MODE][URI], new_mode)
             self._data[OPERATION_MODE][RESULT][self._str.val] = new_mode
             return new_mode
         _LOGGER.warning(
@@ -260,7 +260,7 @@ class Circuit(BoschSingleEntity):
                 and self.min_temp < temperature < self.max_temp
                 and target_temp != temperature
                 and self.temp_write):
-            result = await self._requests[SUBMIT](
+            result = await self._connector.put(
                 self._data[self.temp_write][URI], temperature
             )
             _LOGGER.debug("Set temperature for %s with result %s", self.name, result)

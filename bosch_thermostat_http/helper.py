@@ -4,7 +4,7 @@ import re
 
 from .const import GET, ID, NAME, PATH, RESULT, TYPE, REGULAR, URI
 
-from .errors import EncryptionError, ResponseError, RequestError, Response404Error
+from .exceptions import DeviceException, EncryptionException
 
 HTTP_REGEX = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
@@ -22,7 +22,7 @@ async def crawl(url, _list, deep, get, exclude=()):
                     if "id" in uri and deep > 0:
                         await crawl(uri["id"], _list, deep - 1, get, exclude)
         return _list
-    except ResponseError:
+    except DeviceException:
         return _list
 
 
@@ -48,7 +48,7 @@ async def deep_into(url, _list, get):
                     val2["uri"] = remove_all_ip_occurs(val2["uri"])
                 new_resp["references"][idx] = val2
                 await deep_into(val["id"], _list, get)
-    except (EncryptionError, ResponseError, RequestError):
+    except (DeviceException, EncryptionException):
         pass
     return _list
 
@@ -61,18 +61,18 @@ def remove_all_ip_occurs(data):
 class BoschEntities:
     """Main object to deriver sensors and circuits."""
 
-    def __init__(self, requests):
+    def __init__(self, get):
         """
         Initiazlie Bosch entities.
 
         :param dic requests: { GET: get function, SUBMIT: submit function}
         """
         self._items = []
-        self._requests = requests
+        self._get = get
 
     async def retrieve_from_module(self, deep, path, exclude=()):
         """Retrieve all json objects with simple values."""
-        return await crawl(path, [], deep, self._requests[GET], exclude)
+        return await crawl(path, [], deep, self._get, exclude)
 
     def get_items(self):
         """Get items."""
@@ -82,9 +82,9 @@ class BoschEntities:
 class BoschSingleEntity:
     """Object for single sensor/circuit. Don't use it directly."""
 
-    def __init__(self, name, attr_id, str_obj, requests, _type, path=None):
+    def __init__(self, name, attr_id, str_obj, connector, _type, path=None):
         """Initialize single entity."""
-        self._requests = requests
+        self._connector = connector
         self._main_data = {NAME: name, ID: attr_id, PATH: path}
         self._data = {}
         self._type = _type
@@ -152,12 +152,12 @@ class BoschSingleEntity:
         try:
             for key, item in self._data.items():
                 if item[TYPE] == REGULAR:
-                    result = await self._requests[GET](item[URI])
+                    result = await self._connector.get(item[URI])
                     if self.process_results(result, key):
                         is_updated = True
             if is_updated:
                 self._updated_initialized = True
             self._state = True
-        except (ResponseError, Response404Error):
+        except (DeviceException):
             self._state = False
         return is_updated

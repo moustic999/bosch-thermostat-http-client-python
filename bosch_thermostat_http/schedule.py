@@ -21,7 +21,7 @@ from .const import (
     DAYS_INDEXES, DAYS_INV,
     CIRCUIT_TYPES, ID, MAX, MIN, MAX_VALUE, MIN_VALUE, MANUAL
 )
-from .errors import ResponseError
+from .exceptions import DeviceException
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +35,9 @@ def sort_switchpoints(dic):
 class Schedule:
     """Scheduler logic."""
 
-    def __init__(self, requests, circuit_type, circuit_name, current_time):
+    def __init__(self, connector, circuit_type, circuit_name, current_time):
         """Initialize schedule handling of Bosch gateway."""
-        self._requests = requests
+        self._connector = connector
         self._active_program = None
         self._circuit_type = CIRCUIT_TYPES[circuit_type]
         self._circuit_name = circuit_name
@@ -56,11 +56,11 @@ class Schedule:
         )
         try:
             self._time = await self._time_retrieve()
-            result = await self._requests[GET](self._active_program_uri)
+            result = await self._connector.get(self._active_program_uri)
             await self._parse_schedule(
                 result.get(SWITCH_POINTS), result.get(SETPOINT_PROP)
             )
-        except ResponseError:
+        except DeviceException:
             pass
 
     async def update_schedule_test(self, result, time):
@@ -101,7 +101,7 @@ class Schedule:
                 return _next
             print(_prev, "prev")
             return _prev
-        except ResponseError:
+        except DeviceException:
             pass
 
     @property
@@ -124,8 +124,8 @@ class Schedule:
     async def _get_setpoint_temp(self, setpoint_property, setpoint):
         """Download temp for setpoint."""
         try:
-            result = await self._requests[GET](f'{setpoint_property[ID]}/{setpoint}')
-        except ResponseError:
+            result = await self._connector.get(f'{setpoint_property[ID]}/{setpoint}')
+        except DeviceException:
             pass
         return {
             MODE: setpoint,

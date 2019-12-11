@@ -2,11 +2,12 @@
 import base64
 import hashlib
 import binascii
+import json
 
 from pyaes import PADDING_NONE, AESModeOfOperationECB, Decrypter, Encrypter
 
 from .const import BS, MAGIC
-from .errors import EncryptionError
+from .exceptions import EncryptionException, DeviceException
 
 
 class Encryption:
@@ -34,6 +35,14 @@ class Encryption:
     def key(self):
         """Return key to store in config entry."""
         return self._saved_key
+
+    def json_encrypt(self, raw):
+        try:
+            if raw:
+                return json.loads(self.decrypt(raw))
+            return None
+        except json.JSONDecodeError:
+            raise DeviceException(f"Unable to decode Json response.")
 
     def encrypt(self, raw):
         """Encrypt raw message."""
@@ -64,7 +73,7 @@ class Encryption:
                 return decrypted.decode("utf8").rstrip(chr(0))
             return "{}"
         except Exception as err:
-            raise EncryptionError(f"Unable to decrypt: {err}")
+            raise EncryptionException(f"Unable to decrypt: {err}")
 
     def _pad(self, _s):
         """Pad of encryption."""

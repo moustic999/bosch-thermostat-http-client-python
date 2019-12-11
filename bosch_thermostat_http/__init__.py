@@ -2,5 +2,5 @@
 
 name = "bosch_thermostat_http"
 
-from .errors import *
+from .exceptions import *
 from .gateway import Gateway

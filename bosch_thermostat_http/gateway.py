@@ -1,9 +1,8 @@
 """Gateway module connecting to Bosch thermostat."""
-import asyncio
-import json
+
 import logging
 from .http_connector import HttpConnector
-from .db import get_db_of_firmware, get_initial_db
+from .db import get_db_of_firmware, get_initial_db, get_custom_db
 from .circuits import Circuits
 from .const import (
     DHW,
@@ -28,7 +27,7 @@ from .const import (
     DHW_CIRCUITS
 )
 from .encryption import Encryption
-from .errors import RequestError, Response404Error, ResponseError
+from .exceptions import DeviceException
 from .helper import deep_into
 from .sensors import Sensors
 from .strings import Strings
@@ -47,20 +46,17 @@ class Gateway:
         :param password:
         :param host:
         """
-        if type(session).__name__ == "ClientSession":
-            self._connector = HttpConnector(host, session)
-        else:
-            return
         self._host = host
-        self._encryption = None
-        self._lock = asyncio.Lock()
         if password:
             access_token = access_key.replace("-", "")
-            self._encryption = Encryption(access_token, password)
+            _encryption = Encryption(access_token, password)
         else:
-            self._encryption = Encryption(access_key)
+            _encryption = Encryption(access_key)
+        if type(session).__name__ == "ClientSession":
+            self._connector = HttpConnector(host, session, _encryption)
+        else:
+            return
         self._data = {GATEWAY: {}, HC: None, DHW: None, SENSORS: None}
-        self._requests = {GET: self.get, SUBMIT: self.set_value}
         self._firmware_version = None
         self._device = None
         self._db = None
@@ -74,8 +70,18 @@ class Gateway:
         await self._update_info(initial_db.get(GATEWAY))
         self._firmware_version = self._data[GATEWAY].get(FIRMWARE_VERSION)
         self._device = await self.get_device_type(initial_db)
-        self._db = get_db_of_firmware(self._device[VALUE], self._firmware_version)
-        if self._db and self._device:
+        if self._device and VALUE in self._device:
+            self._db = get_db_of_firmware(self._device[VALUE], self._firmware_version)
+            if self._db:
+                initial_db.pop(MODELS, None)
+                self._db.update(initial_db)
+                self._initialized = True
+
+    def custom_initialize(self, extra_db):
+        "Custom initialization of component"
+        if self._firmware_version:
+            self._db = get_custom_db(self._firmware_version, extra_db)
+            initial_db = get_initial_db()
             initial_db.pop(MODELS, None)
             self._db.update(initial_db)
             self._initialized = True
@@ -92,7 +98,7 @@ class Gateway:
     async def _update_info(self, initial_db):
         """Update gateway info from Bosch device."""
         for name, uri in initial_db.items():
-            response = await self.get(uri)
+            response = await self._connector.get(uri)
             if self._str.val in response:
                 self._data[GATEWAY][name] = response[self._str.val]
             elif name == SYSTEM_INFO:
@@ -106,7 +112,8 @@ class Gateway:
     @property
     def device_name(self):
         """Device friendly name based on model."""
-        return self._device[NAME]
+        if self._device:
+            return self._device.get(NAME)
 
     def get_items(self, data_type):
         """Get items on types like Sensors, Heating Circuits etc."""
@@ -114,7 +121,7 @@ class Gateway:
 
     async def current_date(self):
         """Find current datetime of gateway."""
-        response = await self.get(self._db[GATEWAY].get(DATE))
+        response = await self._connector.get(self._db[GATEWAY].get(DATE))
         val = response.get(self._str.val)
         self._data[GATEWAY][DATE] = val
         return val
@@ -131,7 +138,7 @@ class Gateway:
     @property
     def access_key(self):
         """Return key to store in config entry."""
-        return self._encryption.key
+        return self._connector.encryption_key
 
     @property
     def heating_circuits(self):
@@ -169,7 +176,7 @@ class Gateway:
 
     async def initialize_circuits(self, circ_type):
         """Initialize circuits objects of given type (dhw/hcs)."""
-        self._data[circ_type] = Circuits(self._requests, circ_type)
+        self._data[circ_type] = Circuits(self._connector, circ_type)
         await self._data[circ_type].initialize(self._db, self._str, self.current_date)
         return self.get_circuits(circ_type)
 
@@ -178,7 +185,7 @@ class Gateway:
         if not choosed_sensors:
             choosed_sensors = self._db.get(SENSORS)
         self._data[SENSORS] = Sensors(
-            self._requests, choosed_sensors, self._db[SENSORS], self._str
+            self._connector, choosed_sensors, self._db[SENSORS], self._str
         )
         return self.sensors
 
@@ -186,7 +193,7 @@ class Gateway:
         """Print out all info from gateway."""
         rawlist = []
         for root in ROOT_PATHS:
-            rawlist.append(await deep_into(root, [], self.get))
+            rawlist.append(await deep_into(root, [], self._connector.get))
         return rawlist
 
     async def smallscan(self, _type=HC):
@@ -203,7 +210,7 @@ class Gateway:
         rawlist = []
         for item in refs.values():
             uri = item[ID].format(format_string)
-            rawlist.append(await deep_into(uri, [], self.get))
+            rawlist.append(await deep_into(uri, [], self._connector.get))
         return rawlist
 
     async def check_connection(self):
@@ -212,37 +219,11 @@ class Gateway:
             if not self._initialized:
                 await self.initialize()
             else:
-                response = await self.get(self._db[GATEWAY][UUID])
+                response = await self._connector.get(self._db[GATEWAY][UUID])
                 if self._str.val in response:
                     self._data[GATEWAY][UUID] = response[self._str.val]
             uuid = self.get_info(UUID)
             return uuid
-        except RequestError as err:
-            _LOGGER.debug("Couldn't connect to gateway %s", err)
+        except DeviceException as err:
+            _LOGGER.debug("check_connection: %s", err)
             return False
-
-    async def get(self, path):
-        """Get message from API with given path."""
-        async with self._lock:
-            try:
-                encrypted = await self._connector.request(path)
-                result = self._encryption.decrypt(encrypted)
-                jsondata = json.loads(result)
-                return jsondata
-            except json.JSONDecodeError as err:
-                raise ResponseError(f"Unable to decode Json response : {err}")
-            except Response404Error:
-                raise ResponseError(f"Path does not exist : {path}")
-
-    async def _set(self, path, data):
-        """Send message to API with given path."""
-        async with self._lock:
-            encrypted = self._encryption.encrypt(data)
-            result = await self._connector.submit(path, encrypted)
-            return result
-
-    async def set_value(self, path, value):
-        """Set value for thermostat."""
-        data = json.dumps({"value": value})
-        result = await self._set(path, data)
-        return result

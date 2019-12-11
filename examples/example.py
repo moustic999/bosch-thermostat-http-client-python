@@ -7,8 +7,8 @@ import time
 import bosch_thermostat_http as bosch
 from bosch_thermostat_http.const import DHW, HC, OPERATION_MODE, UUID, DATE, DHW_CIRCUITS
 
-# logging.basicConfig()
-# logging.getLogger().setLevel(logging.DEBUG)
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
 
 
 
@@ -26,6 +26,7 @@ async def main():
                                 access_key=data[1],
                                 password=data[2])
         print(await gateway.check_connection())
+        # return
         await gateway.initialize_circuits(HC)
 
         # small = await gateway.smallscan(DHW_CIRCUITS)
@@ -48,7 +49,8 @@ async def main():
         print("target temp ->", hc.target_temperature)
         return
         # return
-        # await hc.set_ha_mode("heat") #MEANS MANUAL
+        await hc.set_ha_mode("auto") #MEANS MANUAL
+        return
         # print("target in manual", hc.target_temperature)
         # print("ha mode in manual", hc.ha_mode)
         # await hc.update()

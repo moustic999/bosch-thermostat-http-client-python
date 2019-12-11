@@ -7,15 +7,17 @@ from .circuit import Circuit
 class Circuits(BoschEntities):
     """Circuits main object containing multiple Circuit objects."""
 
-    def __init__(self, requests, circuit_type):
+    def __init__(self, connector, circuit_type):
         """
         Initialize circuits.
 
-        :param dict requests: { GET: get function, SUBMIT: submit function}
+        :param obj get -> get function
+        :param obj put -> put http function
         :param str circuit_type: is it HC or DHW
         """
         self._circuit_type = circuit_type if circuit_type in CIRCUIT_TYPES.keys() else None
-        super().__init__(requests)
+        self._connector = connector
+        super().__init__(connector.get)
 
     @property
     def circuits(self):
@@ -27,6 +29,8 @@ class Circuits(BoschEntities):
         if not self._circuit_type:
             return None
         db_prefix = CIRCUIT_TYPES[self._circuit_type]
+        if db_prefix not in database:
+            return None
         uri = database[db_prefix][MAIN_URI]
         circuits = await self.retrieve_from_module(1, uri)
         for circuit in circuits:
@@ -42,6 +46,6 @@ class Circuits(BoschEntities):
     def create_circuit(self, circuit, database, str_obj, current_date):
         """Create single circuit of given type."""
         if self._circuit_type:
-            return Circuit(self._requests, circuit[ID],
+            return Circuit(self._connector, circuit[ID],
                            database, str_obj, self._circuit_type, current_date)
         return None

@@ -30,3 +30,11 @@ def get_db_of_firmware(device_type, firmware_version):
         if firmware_version in _db:
             return _db[firmware_version]
     return None
+
+
+def get_custom_db(firmware_version, _db):
+    """Get db of device if yours doesn't exists."""
+    if _db:
+        if firmware_version in _db:
+            return _db[firmware_version]
+    return None

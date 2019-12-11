@@ -72,11 +72,13 @@ USER_AGENT = "User-agent"
 CONNECTION = "Connection"
 TELEHEATER = "TeleHeater"
 KEEP_ALIVE = "keep-alive"
+CONENT_TYPE = "Content-Type"
+APP_JSON = "application/json"
 
 HTTP_HEADER = {
     USER_AGENT: TELEHEATER,
     CONNECTION: KEEP_ALIVE,
-    "Content-Type": "application/json"
+    CONENT_TYPE: APP_JSON
 }
 
 TIMEOUT = 10
