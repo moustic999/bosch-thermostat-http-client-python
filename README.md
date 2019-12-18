@@ -57,3 +57,23 @@ Options:
   --help                          Show this message and exit.
 
 ```
+
+# Examples 
+
+SENSORS:
+```
+bosch_examples sensors --help
+bosch_examples sensors --ip {IP} --token {TOKEN} --password {PASS} -s outdoor_t1
+```
+
+DHW:
+```
+bosch_examples dhw --help
+bosch_examples dhw --ip {IP} --token {TOKEN} --password {PASS} -t --op_modes --setpoints -m
+```
+
+HC:
+```
+bosch_examples hc --help
+bosch_examples hc --ip {IP} --token {TOKEN} --password {PASS} -t --op_modes --setpoints -m
+```

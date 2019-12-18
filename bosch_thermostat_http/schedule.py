@@ -67,6 +67,11 @@ class Schedule:
         """Test function to do. Update schedule from Bosch gateway."""
         self._time = time
         self._switch_points = result.get(SWITCH_POINTS)
+
+    @property
+    def setpoints(self):
+        """Retrieve json setpoints."""
+        return self._setpoints_temp
     
     def schedule_test(self):
         try:
@@ -125,7 +130,8 @@ class Schedule:
         """Download temp for setpoint."""
         try:
             result = await self._connector.get(f'{setpoint_property[ID]}/{setpoint}')
-        except DeviceException:
+        except DeviceException as err:
+            _LOGGER.debug("Bug %s", err)
             pass
         return {
             MODE: setpoint,

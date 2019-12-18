@@ -156,7 +156,7 @@ class BoschSingleEntity:
                     if self.process_results(result, key):
                         is_updated = True
             if is_updated:
-                self._updated_initialized = True
+                self._update_initialized = True
             self._state = True
         except (DeviceException):
             self._state = False

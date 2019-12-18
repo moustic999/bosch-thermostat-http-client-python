@@ -1,11 +1,9 @@
 """Main circuit object."""
 import logging
 from .const import (
-    GET,
     ID,
     CURRENT_TEMP,
     OPERATION_MODE,
-    SUBMIT,
     REFS,
     HA_STATES,
     STATUS,
@@ -21,6 +19,7 @@ from .const import (
     MODE_TO_SETPOINT,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    REFERENCES,
 )
 from .helper import BoschSingleEntity
 from .exceptions import DeviceException
@@ -104,7 +103,8 @@ class Circuit(BoschSingleEntity):
                         is_updated = True
                 if item[TYPE] == ACTIVE_PROGRAM:
                     active_program = self.get_activeswitchprogram(result)
-                    await self._schedule.update_schedule(active_program)
+                    if active_program:
+                        await self._schedule.update_schedule(active_program)
             temp_read = self.temp_read
             if temp_read:
                 result = await self._connector.get(self._data[temp_read][URI])
@@ -210,7 +210,10 @@ class Circuit(BoschSingleEntity):
         active_program = self.get_value(ACTIVE_PROGRAM)
         if active_program:
             return active_program
-        return result["references"][0][ID].split("/")[-1]
+        try:
+            return result["references"][0][ID].split("/")[-1]
+        except IndexError:
+            return None
 
     @property
     def target_temperature(self):

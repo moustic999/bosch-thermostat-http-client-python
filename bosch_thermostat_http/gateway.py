@@ -8,11 +8,9 @@ from .const import (
     DHW,
     DICT,
     GATEWAY,
-    GET,
     HC,
     ROOT_PATHS,
     SENSORS,
-    SUBMIT,
     UUID,
     VALUE,
     MODELS,
@@ -90,19 +88,24 @@ class Gateway:
         """Find device model."""
         system_info = self._data[GATEWAY].get(SYSTEM_INFO)
         model_scheme = _db[MODELS]
-        for info in system_info:
-            model = model_scheme.get(info.get("Id", -1))
-            if model:
-                return model
+        if system_info:
+            for info in system_info:
+                model = model_scheme.get(info.get("Id", -1))
+                if model:
+                    return model
 
     async def _update_info(self, initial_db):
         """Update gateway info from Bosch device."""
         for name, uri in initial_db.items():
-            response = await self._connector.get(uri)
-            if self._str.val in response:
-                self._data[GATEWAY][name] = response[self._str.val]
-            elif name == SYSTEM_INFO:
-                self._data[GATEWAY][SYSTEM_INFO] = response.get(VALUES, [])
+            try:
+                response = await self._connector.get(uri)
+                if self._str.val in response:
+                    self._data[GATEWAY][name] = response[self._str.val]
+                elif name == SYSTEM_INFO:
+                    self._data[GATEWAY][SYSTEM_INFO] = response.get(VALUES, [])
+            except DeviceException as err:
+                _LOGGER.debug("Can't fetch data for update_info %s", err)
+                pass
 
     @property
     def host(self):
@@ -222,8 +225,8 @@ class Gateway:
                 response = await self._connector.get(self._db[GATEWAY][UUID])
                 if self._str.val in response:
                     self._data[GATEWAY][UUID] = response[self._str.val]
-            uuid = self.get_info(UUID)
-            return uuid
         except DeviceException as err:
-            _LOGGER.debug("check_connection: %s", err)
-            return False
+            _LOGGER.debug("Failed to check_connection: %s", err)
+        uuid = self.get_info(UUID)
+        return uuid
+

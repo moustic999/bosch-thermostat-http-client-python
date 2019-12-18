@@ -40,9 +40,9 @@ async def cli(ctx, ip: str, token: str, password: str, output: str, stdout: int,
         gateway = bosch.Gateway(
             session=session, host=ip, access_key=token, password=password
         )
-        _LOGGER.info("Trying to connect to gateway.")
+        _LOGGER.debug("Trying to connect to gateway.")
         if await gateway.check_connection():
-            _LOGGER.debug("Successfully connected to gateway. Found UUID: %s", gateway.uuid)
+            _LOGGER.info("Successfully connected to gateway. Found UUID: %s", gateway.uuid)
             if smallscan:
                 result = await gateway.smallscan(smallscan)
                 out_file = output if output else f"smallscan_{gateway.uuid}.json"

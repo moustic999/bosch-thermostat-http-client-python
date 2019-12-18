@@ -27,7 +27,7 @@ async def main():
                                 password=data[2])
         print(await gateway.check_connection())
         # return
-        await gateway.initialize_circuits(HC)
+        await gateway.initialize_circuits(DHW)
 
         # small = await gateway.smallscan(DHW_CIRCUITS)
 #        myjson = json.loads(small)
@@ -38,18 +38,18 @@ async def main():
         #     await sensor.update()
         #     print(sensor.get_all_properties())
 
-        hcs = gateway.heating_circuits
-        hc = hcs[0]
+        dhws = gateway.dhw_circuits
+        dhw = dhws[0]
         time.sleep(1)
-        await hc.update()
+        await dhw.update()
 #        await hc.set_ha_mode("auto") #MEANS AUTO
  #       await hc.update()
         # time.sleep(4)
-        print("hvac mode", hc.ha_mode)
-        print("target temp ->", hc.target_temperature)
-        return
+        print("hvac mode", dhw.ha_mode)
+        print("target temp ->", dhw.target_temperature)
         # return
-        await hc.set_ha_mode("auto") #MEANS MANUAL
+        # return
+        await dhw.set_ha_mode("performance") #MEANS MANUAL
         return
         # print("target in manual", hc.target_temperature)
         # print("ha mode in manual", hc.ha_mode)

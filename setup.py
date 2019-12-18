@@ -46,7 +46,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "bosch_scan=bosch_thermostat_http.bosch_rawscan_cli:cli"
+            "bosch_scan=bosch_thermostat_http.bosch_rawscan_cli:cli",
+            "bosch_examples=bosch_thermostat_http.bosch_examples:cli"
         ]
     }
 )
