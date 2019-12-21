@@ -19,7 +19,6 @@
         "systemType": "/system/systemType",
         "dateTime": "/gateway/DateTime"
     },
-    "defaultSensors": ["outdoor_t1", "hotWater_t2"],
     "models": {
         "76": {
             "value": "ES73",

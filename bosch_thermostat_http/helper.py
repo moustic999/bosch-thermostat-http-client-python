@@ -1,10 +1,12 @@
 """Helper functions."""
 
 import re
-
-from .const import GET, ID, NAME, PATH, RESULT, TYPE, REGULAR, URI
+import logging
+from .const import ID, NAME, PATH, RESULT, TYPE, REGULAR, URI
 
 from .exceptions import DeviceException, EncryptionException
+
+_LOGGER = logging.getLogger(__name__)
 
 HTTP_REGEX = re.compile("http://\\d+\\.\\d+\\.\\d+\\.\\d+/", re.IGNORECASE)
 
@@ -91,6 +93,7 @@ class BoschSingleEntity:
         self._str = str_obj
         self._update_initialized = False
         self._state = False
+        self._extra_message = "Waiting to fetch data"
 
     def process_results(self, result, key=None):
         """Convert multi-level json object to one level object."""
@@ -111,6 +114,11 @@ class BoschSingleEntity:
                     data[res_key] = result[res_key]
                     updated = True
         return updated
+
+    @property
+    def state_message(self):
+        """Get text state of device"""
+        return self._extra_message
 
     @property
     def update_initialized(self):
@@ -155,9 +163,11 @@ class BoschSingleEntity:
                     result = await self._connector.get(item[URI])
                     if self.process_results(result, key):
                         is_updated = True
-            if is_updated:
-                self._update_initialized = True
             self._state = True
-        except (DeviceException):
+        except DeviceException as err:
+            _LOGGER.error(f"Can't update data for {self.name} with message: {err}")
+            self._extra_message = f"Can't update data. Error: {err}"
             self._state = False
+        if is_updated:
+            self._update_initialized = True
         return is_updated

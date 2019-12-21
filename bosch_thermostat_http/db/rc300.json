@@ -70,7 +70,7 @@
             "mode_to_setpoint": {
                 "HCprogram": {
                     "read": "setpoint1",
-                    "write": null,
+                    "write": "setpoint3",
                     "type": "manual"
                 },
                 "Off": {

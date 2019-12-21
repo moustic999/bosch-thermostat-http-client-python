@@ -111,9 +111,11 @@ class Circuit(BoschSingleEntity):
                 if self.process_results(result, temp_read):
                     is_updated = True
             self._state = True
-        except (DeviceException):
+        except DeviceException as err:
             self._state = False
-        self._update_initialized = True
+            self._extra_message = f"Can't update data. Error: {err}"
+        if is_updated:
+            self._update_initialized = True
         return is_updated
 
     @property

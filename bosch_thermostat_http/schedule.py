@@ -132,6 +132,12 @@ class Schedule:
             result = await self._connector.get(f'{setpoint_property[ID]}/{setpoint}')
         except DeviceException as err:
             _LOGGER.debug("Bug %s", err)
+            if setpoint == 'on':
+                setpoint = 'high'
+                try:
+                    result = await self._connector.get(f'{setpoint_property[ID]}/{setpoint}')
+                except DeviceException:
+                    pass
             pass
         return {
             MODE: setpoint,
