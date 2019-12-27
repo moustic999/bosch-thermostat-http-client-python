@@ -44,6 +44,7 @@ VALUES = "values"
 ALLOWED_VALUES = "allowedValues"
 STATE = "state"
 CURRENT_TEMP = "current_temp"
+CURRENT_SETPOINT = "current_setpoint"
 ACTIVE_PROGRAM = "activeProgram"
 DAYOFWEEK = "dayOfWeek"
 MODE = "mode"
@@ -56,7 +57,7 @@ SHORT = "short"
 INVALID = "invalid"
 
 ROOT_PATHS = ["/dhwCircuits", "/gateway", "/heatingCircuits",
-              "/heatSources", "/notifications", "/system"]
+              "/heatSources", "/notifications", "/system", "/solarCircuits"]
 
 """ Section of gateway info consts. """
 
@@ -68,6 +69,10 @@ RESULT = "result"  # to not mismarch with value
 SYSTEM_BRAND = "brand"
 SYSTEM_TYPE = "systemType"
 SYSTEM_INFO = "systemInfo"
+SYSTEM_BUS = "systemBus"
+CAN = "CAN"
+EMS = "EMS"
+DEFAULT = "default"
 
 USER_AGENT = "User-agent"
 CONNECTION = "Connection"

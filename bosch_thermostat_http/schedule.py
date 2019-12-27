@@ -3,11 +3,8 @@ import logging
 from datetime import datetime
 
 from .const import (
-    GET,
     DAYOFWEEK,
     MODE,
-    START,
-    STOP,
     SETPOINT,
     TIME,
     VALUE,
@@ -16,10 +13,9 @@ from .const import (
     SETPOINT_PROP,
     SWITCH_POINTS,
     SWITCHPROGRAM,
-    MIDNIGHT,
-    DAYS, DAYS_INT,
-    DAYS_INDEXES, DAYS_INV,
-    CIRCUIT_TYPES, ID, MAX, MIN, MAX_VALUE, MIN_VALUE, MANUAL
+    DAYS_INT,
+    CIRCUIT_TYPES, ID, MAX, MIN, MAX_VALUE, MIN_VALUE, MANUAL,
+    ON, CAN, URI
 )
 from .exceptions import DeviceException
 
@@ -31,11 +27,10 @@ def sort_switchpoints(dic):
     return (DAYS_INT.index(day), dic[TIME])
 
 
-
 class Schedule:
     """Scheduler logic."""
 
-    def __init__(self, connector, circuit_type, circuit_name, current_time):
+    def __init__(self, connector, circuit_type, circuit_name, current_time, str_obj, bus_type):
         """Initialize schedule handling of Bosch gateway."""
         self._connector = connector
         self._active_program = None
@@ -47,6 +42,8 @@ class Schedule:
         self._active_program_uri = None
         self._time = None
         self._time_retrieve = current_time
+        self._str_obj = str_obj
+        self._bus_type = bus_type
 
     async def update_schedule(self, active_program):
         """Update schedule from Bosch gateway."""
@@ -72,42 +69,6 @@ class Schedule:
     def setpoints(self):
         """Retrieve json setpoints."""
         return self._setpoints_temp
-    
-    def schedule_test(self):
-        try:
-            switch_points = self._switch_points.copy()
-            added = {'dayOfWeek': 'We', 'setpoint': 'night', 'time': 120}
-            bosch_date = datetime.strptime(self._time, "%Y-%m-%dT%H:%M:%S")
-            day_of_week = DAYS_INT[bosch_date.weekday()]
-            mins = self._get_minutes_since_midnight(bosch_date)
-            print(day_of_week)
-            added = {'dayOfWeek': day_of_week, 'setpoint': '', 'time': mins}
-            switch_points.append(added)
-            switch_points.sort(key=sort_switchpoints)
-            i = switch_points.index(added)
-            _prev = switch_points[i - 1]
-            _next = switch_points[i + 1]
-
-            def calcMinsInWeek(_setpoint):
-                # print(DAYS_INT[_setpoint[DAYOFWEEK]])
-                return (DAYS_INT.index(_setpoint[DAYOFWEEK]) + 1) * _setpoint[TIME]
-            _mins_current = calcMinsInWeek(added)
-            _mins_prev = calcMinsInWeek(_prev)
-            _mins_next = calcMinsInWeek(_next)
-            print(added)
-            print(_prev)
-            print(_mins_prev)
-            print(_next)
-            print(_mins_next)
-            print("_mins_curr", _mins_current)
-            print("_mins", (_mins_current - _mins_prev))
-            print("self", self._switch_points)
-            if _mins_current >= _mins_next:
-                return _next
-            print(_prev, "prev")
-            return _prev
-        except DeviceException:
-            pass
 
     @property
     def time(self):
@@ -129,10 +90,14 @@ class Schedule:
     async def _get_setpoint_temp(self, setpoint_property, setpoint):
         """Download temp for setpoint."""
         try:
-            result = await self._connector.get(f'{setpoint_property[ID]}/{setpoint}')
+            uri = f'{setpoint_property[ID]}/{setpoint}'
+            result = await self._connector.get(uri)
+            if self._bus_type == CAN and result.get(VALUE, 0) == 1:
+                uri = f'/{self._circuit_type}/{self._circuit_name}/currentSetpoint'
+                result = await self._connector.get(uri)
         except DeviceException as err:
             _LOGGER.debug("Bug %s", err)
-            if setpoint == 'on':
+            if setpoint == ON and self._bus_type != CAN:
                 setpoint = 'high'
                 try:
                     result = await self._connector.get(f'{setpoint_property[ID]}/{setpoint}')
@@ -143,7 +108,8 @@ class Schedule:
             MODE: setpoint,
             VALUE: result.get(VALUE, 0),
             MAX: result.get(MAX_VALUE, 0),
-            MIN: result.get(MIN_VALUE, 0)
+            MIN: result.get(MIN_VALUE, 0),
+            URI: uri
         }
 
     async def _parse_schedule(self, switch_points, setpoint_property):
@@ -190,7 +156,18 @@ class Schedule:
             return self._setpoints_temp.get(mode, {}).get(MODE, -1)
         if self.time:
             cache = self.get_temp_in_schedule()
+            if self._bus_type == CAN and cache.get(MODE) == ON:
+                return "currentSetpoint"
         return cache.get(MODE)
+
+    def get_uri_setpoint_for_mode(self, mode, mode_type):
+        """Get setpoints for mode."""
+        cache = {}
+        if mode_type == MANUAL:
+            return self._setpoints_temp.get(mode, {}).get(URI, -1)
+        if self.time:
+            cache = self.get_temp_in_schedule()
+        return cache.get(URI)
 
     def get_temp_in_schedule(self):
         """Find temp in schedule for current date."""
@@ -211,7 +188,8 @@ class Schedule:
                     MODE: _prev_setpoint,
                     TEMP: self._setpoints_temp[_prev_setpoint][VALUE],
                     MAX: self._setpoints_temp[_prev_setpoint][MAX],
-                    MIN: self._setpoints_temp[_prev_setpoint][MIN]
+                    MIN: self._setpoints_temp[_prev_setpoint][MIN],
+                    URI: self._setpoints_temp[_prev_setpoint][URI],
                 }
 
     def _get_minutes_since_midnight(self, date):

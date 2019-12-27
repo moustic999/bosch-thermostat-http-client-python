@@ -14,12 +14,13 @@ from .const import (
     OFF,
     CIRCUIT_TYPES,
     ACTIVE_PROGRAM,
-    READ,
-    WRITE,
     MODE_TO_SETPOINT,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
-    REFERENCES,
+    MAIN_URI,
+    SETPOINT,
+    MANUAL,
+    AUTO
 )
 from .helper import BoschSingleEntity
 from .exceptions import DeviceException
@@ -31,16 +32,18 @@ _LOGGER = logging.getLogger(__name__)
 class Circuit(BoschSingleEntity):
     """Parent object for circuit of type HC or DHW."""
 
-    def __init__(self, connector, attr_id, db, str_obj, _type, current_date):
+    def __init__(self, connector, attr_id, db, str_obj, _type, bus_type, current_date):
         """Initialize circuit with get, put and id from gateway."""
         name = attr_id.split("/").pop()
         self._db = db[CIRCUIT_TYPES[_type]]
+        self._bus_type = bus_type
         self._mode_to_setpoint = self._db.get(MODE_TO_SETPOINT)
         super().__init__(name, attr_id, str_obj, connector, _type)
-        self._schedule = Schedule(connector, _type, name, current_date)
+        self._schedule = Schedule(connector, _type, name, current_date, str_obj, bus_type)
         self._target_temp = 0
+        self._main_uri = f"{self._db[MAIN_URI]}/{self.name}"
         for key, value in self._db[REFS].items():
-            uri = value[ID].format(self.name)
+            uri = f"{self._main_uri}/{value[ID]}"
             self._data[key] = {RESULT: {}, URI: uri, TYPE: value[TYPE]}
 
     @property
@@ -64,18 +67,9 @@ class Circuit(BoschSingleEntity):
         return self.get_value(OPERATION_MODE)
 
     @property
-    def temp_read(self):
-        """Get temp read property."""
-        return self._temp_setpoint(READ)
-
-    @property
-    def temp_write(self):
-        """Get temp write property."""
-        return self._temp_setpoint(WRITE)
-
-    def _temp_setpoint(self, key):
+    def _temp_setpoint(self):
         """Check which temp property to use. Key READ or WRITE"""
-        return self._mode_to_setpoint.get(self.current_mode, {}).get(key)
+        return self._mode_to_setpoint.get(self.current_mode, {}).get(SETPOINT)
 
     @property
     def available_operation_modes(self):
@@ -105,10 +99,9 @@ class Circuit(BoschSingleEntity):
                     active_program = self.get_activeswitchprogram(result)
                     if active_program:
                         await self._schedule.update_schedule(active_program)
-            temp_read = self.temp_read
-            if temp_read:
-                result = await self._connector.get(self._data[temp_read][URI])
-                if self.process_results(result, temp_read):
+            if self._temp_setpoint:
+                result = await self._connector.get(self._data[self._temp_setpoint][URI])
+                if self.process_results(result, self._temp_setpoint):
                     is_updated = True
             self._state = True
         except DeviceException as err:
@@ -126,7 +119,7 @@ class Circuit(BoschSingleEntity):
         """
         if self.operation_mode_type == OFF:
             return OFF
-        if self.temp_read:
+        if self.operation_mode_type == MANUAL:
             return self.current_mode
         return self._schedule.get_setpoint_for_mode(self.current_mode, self.operation_mode_type)
 
@@ -157,13 +150,22 @@ class Circuit(BoschSingleEntity):
 
     async def set_ha_mode(self, ha_mode):
         """Helper to set operation mode."""
-        c_temp_read = self.temp_read
-        c_temp_write = self.temp_write
+        old_setpoint = self._temp_setpoint
         old_mode = self.current_mode
         new_mode = await self.set_operation_mode(self._hastates.get(ha_mode))
-        if (self.temp_read != c_temp_read) or (self.temp_write != c_temp_write):
-            return 2
-        if new_mode != old_mode:
+        different_mode = new_mode != old_mode
+        try:
+            if (different_mode
+                    and old_setpoint != self._temp_setpoint
+                    and self.operation_mode_type == MANUAL):
+                temp = self.get_value(self._temp_setpoint, 0)
+                if temp == 0:
+                    result = await self._connector.get(self._data[self._temp_setpoint][URI])
+                    self.process_results(result, self._temp_setpoint)
+        except DeviceException as err:
+            _LOGGER.debug(f"Can't update data for mode {new_mode}. Error: {err}")
+            pass
+        if different_mode:
             return 1
         return 0
 
@@ -220,12 +222,11 @@ class Circuit(BoschSingleEntity):
     @property
     def target_temperature(self):
         """Get target temperature of Circtuit. Temporary or Room set point."""
-        temp_read = self.temp_read
         if self.operation_mode_type == OFF:
             self._target_temp = 0
             return self._target_temp
-        if temp_read:
-            target_temp = self.get_value(self.temp_read, 0)
+        if self._temp_setpoint:
+            target_temp = self.get_value(self._temp_setpoint, 0)
             if target_temp > 0:
                 self._target_temp = target_temp
                 return self._target_temp
@@ -239,8 +240,7 @@ class Circuit(BoschSingleEntity):
     @property
     def min_temp(self):
         """Retrieve minimum temperature."""
-        temp_read = self.temp_read
-        if temp_read or self.operation_mode_type == OFF:
+        if self.operation_mode_type == OFF:
             return DEFAULT_MIN_TEMP
         else:
             return self.schedule.get_min_temp_for_mode(
@@ -250,8 +250,7 @@ class Circuit(BoschSingleEntity):
     @property
     def max_temp(self):
         """Retrieve maximum temperature."""
-        temp_read = self.temp_read
-        if temp_read or self.operation_mode_type == OFF:
+        if self.operation_mode_type == OFF:
             return DEFAULT_MAX_TEMP
         else:
             return self.schedule.get_max_temp_for_mode(
@@ -261,17 +260,27 @@ class Circuit(BoschSingleEntity):
     async def set_temperature(self, temperature):
         """Set temperature of Circuit."""
         target_temp = self.target_temperature
-        if (target_temp
-                and self.min_temp < temperature < self.max_temp
-                and target_temp != temperature
-                and self.temp_write):
+        if self.operation_mode_type == OFF:
+            _LOGGER.debug("Not setting temp. Mode is off")
+            return False
+        if (
+            self.min_temp < temperature < self.max_temp
+            and target_temp != temperature
+        ):
+            if self._temp_setpoint:
+                target_uri = self._data[self._temp_setpoint][URI]
+            elif self.operation_mode_type == AUTO:
+                target_uri = self.schedule.get_uri_setpoint_for_mode(self.current_mode, self.operation_mode_type)
+            else:
+                _LOGGER.debug("Not setting temp. Don't know how")
+                return False
             result = await self._connector.put(
-                self._data[self.temp_write][URI], temperature
+                target_uri, temperature
             )
             _LOGGER.debug("Set temperature for %s with result %s", self.name, result)
             if result:
-                if self.temp_read:
-                    self._data[self.temp_read][RESULT][self._str.val] = temperature
+                if self._temp_setpoint:
+                    self._data[self._temp_setpoint][RESULT][self._str.val] = temperature
                 else:
                     self.schedule.cache_temp_for_mode(
                         temperature,
@@ -279,4 +288,5 @@ class Circuit(BoschSingleEntity):
                         self.current_mode,
                     )
                 return True
+        _LOGGER.debug("Setting temperature not allowed in this mode.")
         return False

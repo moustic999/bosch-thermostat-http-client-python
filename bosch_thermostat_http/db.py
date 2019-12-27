@@ -2,7 +2,7 @@
 import json
 import os
 
-from .const import RC300
+from .const import RC300, CAN, DEFAULT
 
 MAINPATH = os.path.join(os.path.dirname(__file__), "db")
 FILENAME = os.path.join(MAINPATH, "db.json")
@@ -21,9 +21,16 @@ def get_initial_db():
     return open_json(FILENAME)
 
 
+DEVICE_TYPES = {
+    RC300: "rc300.json",
+    DEFAULT: "default.json",
+    CAN: "can.json"
+}
+
+
 def get_db_of_firmware(device_type, firmware_version):
     """Get db of specific device."""
-    filename = "rc300.json" if device_type == RC300 else "default.json"
+    filename = DEVICE_TYPES[device_type]
     filepath = os.path.join(MAINPATH, filename)
     _db = open_json(filepath)
     if _db:

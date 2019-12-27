@@ -13,6 +13,7 @@
     },
     "gateway": {
         "uuid": "/gateway/uuid",
+        "systemBus": "/system/bus",
         "versionFirmware": "/gateway/versionFirmware",
         "brand": "/system/brand",
         "systemInfo": "/system/info",
@@ -54,6 +55,11 @@
             "value": "RC300",
             "name": "RC300/RC310/Nefit Moduline 3000",
             "type": "RC300"
+        },
+        "CAN": {
+            "value": "CAN",
+            "name": "iCom_low_CAN_v1 CAN",
+            "type": "CAN"
         }
     }
 }

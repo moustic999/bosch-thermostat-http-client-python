@@ -7,7 +7,7 @@ from .circuit import Circuit
 class Circuits(BoschEntities):
     """Circuits main object containing multiple Circuit objects."""
 
-    def __init__(self, connector, circuit_type):
+    def __init__(self, connector, circuit_type, bus_type):
         """
         Initialize circuits.
 
@@ -17,6 +17,7 @@ class Circuits(BoschEntities):
         """
         self._circuit_type = circuit_type if circuit_type in CIRCUIT_TYPES.keys() else None
         self._connector = connector
+        self._bus_type = bus_type
         super().__init__(connector.get)
 
     @property
@@ -47,5 +48,6 @@ class Circuits(BoschEntities):
         """Create single circuit of given type."""
         if self._circuit_type:
             return Circuit(self._connector, circuit[ID],
-                           database, str_obj, self._circuit_type, current_date)
+                           database, str_obj, self._circuit_type,
+                           self._bus_type, current_date)
         return None

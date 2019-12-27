@@ -95,6 +95,11 @@ class BoschSingleEntity:
         self._state = False
         self._extra_message = "Waiting to fetch data"
 
+    @property
+    def connector(self):
+        """Retrieve connector."""
+        return self._connector
+
     def process_results(self, result, key=None):
         """Convert multi-level json object to one level object."""
         data = self._data[key][RESULT]

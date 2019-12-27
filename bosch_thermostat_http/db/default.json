@@ -12,55 +12,47 @@
             },
             "mode_to_setpoint": {
                 "night": {
-                    "read": null,
-                    "write": "setpoint3",
+                    "setpoint": "setpoint2",
                     "type": "manual"
                 },
                 "day": {
-                    "read": null,
-                    "write": "setpoint2",
+                    "setpoint": "setpoint1",
                     "type": "manual"
                 },
                 "auto":{
-                    "read": null,
-                    "write": "setpoint1",
+                    "setpoint": null,
                     "type": "auto"
                 }
             },
             "mainUri": "/heatingCircuits",
             "refs": {
                 "current_temp": {
-                    "id": "/heatingCircuits/{}/roomtemperature",
+                    "id": "roomtemperature",
                     "name": "Room temperature",
                     "type": "regular"
                 },
                 "operation_mode": {
-                    "id": "/heatingCircuits/{}/operationMode",
+                    "id": "operationMode",
                     "name": "Operation mode",
                     "type": "regular"
                 },
                 "setpoint1": {
-                    "id": "/heatingCircuits/{}/manualRoomSetpoint",
+                    "id": "temperatureLevels/day",
                     "name": "Manual room setpoint",
                     "type": "setpoint"
                 },
                 "setpoint2": {
-                    "id": "/heatingCircuits/{}/temperatureLevels/day",
-                    "name": "Manual room setpoint",
-                    "type": "setpoint"
-                },
-                "setpoint3": {
-                    "id": "/heatingCircuits/{}/temperatureLevels/night",
+                    "id": "temperatureLevels/night",
                     "name": "Manual room setpoint",
                     "type": "setpoint"
                 },
                 "activeProgram": {
-                    "id": "/heatingCircuits/{}/activeSwitchProgram",
+                    "id": "activeSwitchProgram",
                     "name": "Active Switch Program",
                     "type": "activeProgram"
                 },
                 "status": {
-                    "id": "/heatingCircuits/{}/status",
+                    "id": "status",
                     "name": "Heating circuit status",
                     "type": "regular"
                 }
@@ -79,50 +71,47 @@
             },
             "mode_to_setpoint": {
                 "on": {
-                    "read": "setpoint2",
-                    "write": "setpoint2",
+                    "setpoint": "setpoint2",
                     "type": "manual"
                 },
                 "off": {
-                    "read": "setpoint1",
-                    "write": null,
+                    "setpoint": null,
                     "type": "off"
                 },
                 "auto": {
-                    "read": null,
-                    "write": "setpoint2",
+                    "setpoint": null,
                     "type": "auto"
                 }
             },
             "mainUri": "/dhwCircuits",
             "refs": {
                 "current_temp": {
-                    "id": "/dhwCircuits/{}/actualTemp",
+                    "id": "actualTemp",
                     "name": "Room temperature",
                     "type": "regular"
                 },
                 "operation_mode": {
-                    "id": "/dhwCircuits/{}/operationMode",
+                    "id": "operationMode",
                     "name": "Operation mode",
                     "type": "regular"
                 },
                 "setpoint1": {
-                    "id": "/dhwCircuits/{}/temperatureLevels/off",
+                    "id": "temperatureLevels/off",
                     "name": "DHW off level",
                     "type": "setpoint"
                 },
                 "setpoint2": {
-                    "id": "/dhwCircuits/{}/temperatureLevels/on",
+                    "id": "temperatureLevels/on",
                     "name": "DHW High level",
                     "type": "setpoint"
                 },
                 "status": {
-                    "id": "/dhwCircuits/{}/status",
+                    "id": "status",
                     "name": "DHW status",
                     "type": "regular"
                 },
                 "activeProgram": {
-                    "id": "/dhwCircuits/{}/activeSwitchProgram",
+                    "id": "activeSwitchProgram",
                     "name": "Active Switch Program",
                     "type": "activeProgram"
                 }

@@ -47,9 +47,10 @@ async def main():
         # time.sleep(4)
         print("hvac mode", dhw.ha_mode)
         print("target temp ->", dhw.target_temperature)
+        await dhw.set_temperature(53.0)
         # return
         # return
-        await dhw.set_ha_mode("performance") #MEANS MANUAL
+        # await dhw.set_ha_mode("performance") #MEANS MANUAL
         return
         # print("target in manual", hc.target_temperature)
         # print("ha mode in manual", hc.ha_mode)
@@ -69,7 +70,6 @@ async def main():
         await dhw.update()
         print("START1")
         print(dhw.target_temperature)
-        # await dhw.set_temperature(53.0)
         print("START2")
         print(dhw.current_mode)
         print(dhw.target_temperature)

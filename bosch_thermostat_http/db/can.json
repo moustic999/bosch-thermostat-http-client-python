@@ -1,22 +1,26 @@
 {
-    "04.06.07": {
+    "01.06.02": {
         "heatingCircuits": {
             "hastates": {
-                "off": "off",
-                "heat": "manual",
+                "off": "heating_off",
+                "heat": "exception",
                 "cool": null,
-                "heat_cool": null,
-                "auto": "auto",
+                "heat_cool": "normal",
+                "auto": "automatic",
                 "dry": null,
                 "fan_only": null
             },
             "mode_to_setpoint": {
-                "manual": {
+                "exception": {
                     "setpoint": "setpoint1",
                     "type": "manual"
                 },
-                "auto":{
+                "normal": {
                     "setpoint": "setpoint2",
+                    "type": "manual"
+                },
+                "automatic": {
+                    "setpoint": null,
                     "type": "auto"
                 }
             },
@@ -33,12 +37,12 @@
                     "type": "regular"
                 },
                 "setpoint1": {
-                    "id": "manualRoomSetpoint",
+                    "id": "temperatureLevels/exception",
                     "name": "Manual room setpoint",
                     "type": "setpoint"
                 },
                 "setpoint2": {
-                    "id": "temporaryRoomSetpoint",
+                    "id": "temperatureLevels/normal",
                     "name": "Temporary room setpoint",
                     "type": "setpoint"
                 },
@@ -56,30 +60,26 @@
         },
         "dhwCircuits": {
             "hastates": {
-                "off": "Off",
-                "on": "on",
+                "off": "Always_Off",
+                "on": "Always_On",
                 "eco": null,
                 "eletric": null,
-                "performance": "ownprogram",
-                "high_demand": "high",
-                "heat_pump": "HCprogram",
+                "performance": "Automatic",
+                "high_demand": null,
+                "heat_pump": null,
                 "gas": null
             },
             "mode_to_setpoint": {
-                "HCprogram": {
-                    "setpoint": "setpoint3",
-                    "type": "manual"
-                },
-                "Off": {
-                    "setpoint": null,
-                    "type": "off"
-                },
-                "ownprogram": {
+                "Automatic": {
                     "setpoint": null,
                     "type": "auto"
                 },
-                "high": {
-                    "setpoint": "setpoint3",
+                "Always_Off": {
+                    "setpoint": null,
+                    "type": "off"
+                },
+                "Always_On": {
+                    "setpoint": "setpoint1",
                     "type": "manual"
                 }
             },
@@ -97,17 +97,7 @@
                 },
                 "setpoint1": {
                     "id": "currentSetpoint",
-                    "name": "Water temp setpoint",
-                    "type": "setpoint"
-                },
-                "setpoint2": {
-                    "id": "temperatureLevels/off",
-                    "name": "DHW off level",
-                    "type": "setpoint"
-                },
-                "setpoint3": {
-                    "id": "temperatureLevels/high",
-                    "name": "DHW High level",
+                    "name": "DHW on level",
                     "type": "setpoint"
                 },
                 "status": {
@@ -116,7 +106,7 @@
                     "type": "regular"
                 },
                 "activeProgram": {
-                    "id": "switchPrograms",
+                    "id": "activeDhwTimeProgram",
                     "name": "Active Switch Program",
                     "type": "activeProgram"
                 }
@@ -176,6 +166,6 @@
                 "name": "System pressure"
             }
         },
-        "versionFirmware": "04.06.07"
+        "versionFirmware": "01.06.02"
     }
 }

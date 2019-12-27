@@ -22,7 +22,10 @@ from .const import (
     REFS,
     ID,
     HEATING_CIRCUITS,
-    DHW_CIRCUITS
+    DHW_CIRCUITS,
+    SYSTEM_BUS,
+    CAN,
+    EMS
 )
 from .encryption import Encryption
 from .exceptions import DeviceException
@@ -60,6 +63,7 @@ class Gateway:
         self._db = None
         self._str = None
         self._initialized = None
+        self._bus_type = None
 
     async def initialize(self):
         """Initialize gateway asynchronously."""
@@ -86,8 +90,13 @@ class Gateway:
 
     async def get_device_type(self, _db):
         """Find device model."""
-        system_info = self._data[GATEWAY].get(SYSTEM_INFO)
+        system_bus = self._data[GATEWAY].get(SYSTEM_BUS)
         model_scheme = _db[MODELS]
+        if system_bus == CAN:
+            self._bus_type = CAN
+            return model_scheme.get(CAN)
+        self._bus_type = EMS
+        system_info = self._data[GATEWAY].get(SYSTEM_INFO)
         if system_info:
             for info in system_info:
                 model = model_scheme.get(info.get("Id", -1))
@@ -179,7 +188,7 @@ class Gateway:
 
     async def initialize_circuits(self, circ_type):
         """Initialize circuits objects of given type (dhw/hcs)."""
-        self._data[circ_type] = Circuits(self._connector, circ_type)
+        self._data[circ_type] = Circuits(self._connector, circ_type, self._bus_type)
         await self._data[circ_type].initialize(self._db, self._str, self.current_date)
         return self.get_circuits(circ_type)
 
