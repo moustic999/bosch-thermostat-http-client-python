@@ -52,5 +52,5 @@ class Circuits(BoschEntities):
         elif self._circuit_type == SC:
             return BasicCircuit(self._connector, circuit[ID],
                                 database, str_obj, self._circuit_type,
-                                self._bus_type, current_date)
+                                self._bus_type)
         return None
