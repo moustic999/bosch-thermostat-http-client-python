@@ -38,9 +38,9 @@ class Sensor(BoschSingleEntity):
         :param str name: name of the sensors
         :param str path: path to retrieve data from sensor.
         """
-        super().__init__(name, attr_id, str_obj, connector, SENSOR, path)
+        super().__init__(name, connector, attr_id, SENSOR, str_obj, path)
         self._data = {attr_id: {RESULT: {}, URI: path, TYPE: REGULAR}}
 
-    def get_all_properties(self):
+    def get_all_values(self):
         """Retrieve all properties with value, min, max etc."""
         return self._data[self.attr_id].get(RESULT)

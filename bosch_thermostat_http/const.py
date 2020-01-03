@@ -18,10 +18,10 @@ UUID = "uuid"
 GATEWAY = "gateway"
 HC = "hc"
 DHW = "dhw"
+SC = "sc"
 SENSORS = "sensors"
 SENSOR = "sensor"
 DICT = "dict"
-MAIN_URI = "mainUri"
 MODELS = "models"
 # PRESETS = "presets"
 TEMP = "temp"
@@ -56,6 +56,7 @@ OPEN = "open"
 SHORT = "short"
 INVALID = "invalid"
 
+CIRCUITS = "circuits"
 ROOT_PATHS = ["/dhwCircuits", "/gateway", "/heatingCircuits",
               "/heatSources", "/notifications", "/system", "/solarCircuits"]
 
@@ -91,9 +92,11 @@ TIMEOUT = 10
 
 HEATING_CIRCUITS = "heatingCircuits"
 DHW_CIRCUITS = "dhwCircuits"
+SOLAR_CIRCUITS = "solarCircuits"
 CIRCUIT_TYPES = {
     HC: HEATING_CIRCUITS,
-    DHW: DHW_CIRCUITS
+    DHW: DHW_CIRCUITS,
+    SC: SOLAR_CIRCUITS
 }
 
 MODE_TO_SETPOINT = "mode_to_setpoint"

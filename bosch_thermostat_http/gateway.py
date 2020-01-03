@@ -9,6 +9,7 @@ from .const import (
     DICT,
     GATEWAY,
     HC,
+    SC,
     ROOT_PATHS,
     SENSORS,
     UUID,
@@ -25,7 +26,9 @@ from .const import (
     DHW_CIRCUITS,
     SYSTEM_BUS,
     CAN,
-    EMS
+    EMS,
+    CIRCUITS,
+    CIRCUIT_TYPES
 )
 from .encryption import Encryption
 from .exceptions import DeviceException
@@ -167,6 +170,11 @@ class Gateway:
         return self._data[DHW].circuits
 
     @property
+    def solar_circuits(self):
+        """Get solar circuits."""
+        return self._data[SC].circuits
+
+    @property
     def sensors(self):
         """Get sensors list."""
         return self._data[SENSORS].sensors
@@ -185,6 +193,18 @@ class Gateway:
         if key in self._data[GATEWAY]:
             return self._data[GATEWAY][key]
         return None
+
+    async def get_capabilities(self):
+        supported = []
+        for circuit in CIRCUIT_TYPES.keys():
+            try:
+                circuit_object = await self.initialize_circuits(circuit)
+                if circuit_object:
+                    supported.append(circuit)
+            except DeviceException as err:
+                _LOGGER.debug("Circuit %s not found. Skipping it. %s", circuit, err)
+                pass
+        return supported
 
     async def initialize_circuits(self, circ_type):
         """Initialize circuits objects of given type (dhw/hcs)."""

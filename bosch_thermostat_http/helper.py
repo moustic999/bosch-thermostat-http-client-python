@@ -84,7 +84,7 @@ class BoschEntities:
 class BoschSingleEntity:
     """Object for single sensor/circuit. Don't use it directly."""
 
-    def __init__(self, name, attr_id, str_obj, connector, _type, path=None):
+    def __init__(self, name, connector, attr_id, _type, str_obj, path=None):
         """Initialize single entity."""
         self._connector = connector
         self._main_data = {NAME: name, ID: attr_id, PATH: path}
@@ -138,6 +138,14 @@ class BoschSingleEntity:
         """Retrieve only value from JSON."""
         ref = self.get_property(property_name)
         return ref.get(self._str.val, default_value)
+
+    @property
+    def get_all_properties(self):
+        return self._data.keys()
+
+    @property
+    def get_data(self):
+        return self._data
 
     @property
     def attr_id(self):

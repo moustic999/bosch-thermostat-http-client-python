@@ -17,7 +17,6 @@ from .const import (
     MODE_TO_SETPOINT,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
-    MAIN_URI,
     SETPOINT,
     MANUAL,
     AUTO
@@ -29,19 +28,15 @@ from .schedule import Schedule
 _LOGGER = logging.getLogger(__name__)
 
 
-class Circuit(BoschSingleEntity):
-    """Parent object for circuit of type HC or DHW."""
+class BasicCircuit(BoschSingleEntity):
 
-    def __init__(self, connector, attr_id, db, str_obj, _type, bus_type, current_date):
-        """Initialize circuit with get, put and id from gateway."""
+    def __init__(self, connector, attr_id, db, str_obj, _type, bus_type):
+        """Basic circuit init."""
         name = attr_id.split("/").pop()
         self._db = db[CIRCUIT_TYPES[_type]]
         self._bus_type = bus_type
-        self._mode_to_setpoint = self._db.get(MODE_TO_SETPOINT)
-        super().__init__(name, attr_id, str_obj, connector, _type)
-        self._schedule = Schedule(connector, _type, name, current_date, str_obj, bus_type)
-        self._target_temp = 0
-        self._main_uri = f"{self._db[MAIN_URI]}/{self.name}"
+        super().__init__(name, connector, attr_id, _type, str_obj)
+        self._main_uri = f"/{CIRCUIT_TYPES[_type]}/{self.name}"
         for key, value in self._db[REFS].items():
             uri = f"{self._main_uri}/{value[ID]}"
             self._data[key] = {RESULT: {}, URI: uri, TYPE: value[TYPE]}
@@ -50,6 +45,37 @@ class Circuit(BoschSingleEntity):
     def db_json(self):
         """Give simple json scheme of circuit."""
         return self._db
+
+    async def update_requested_key(self, key):
+        """Update info about Circuit asynchronously."""
+        if key in self._data:
+            try:
+                result = await self._connector.get(self._data[key][URI])
+                self.process_results(result, key)
+                self._state = True
+            except DeviceException:
+                self._state = False
+
+    @property
+    def state(self):
+        """Retrieve state of the circuit."""
+        if self._state:
+            return self.get_value(STATUS)
+
+    async def initialize(self):
+        """Check each uri if return json with values."""
+        await self.update_requested_key(STATUS)
+
+
+class Circuit(BasicCircuit):
+    """Parent object for circuit of type HC or DHW."""
+
+    def __init__(self, connector, attr_id, db, str_obj, _type, bus_type, current_date):
+        """Initialize circuit with get, put and id from gateway."""
+        super().__init__(connector, attr_id, db, str_obj, _type, bus_type)
+        self._mode_to_setpoint = self._db.get(MODE_TO_SETPOINT)
+        self._schedule = Schedule(connector, _type, self.name, current_date, str_obj, bus_type)
+        self._target_temp = 0
 
     @property
     def schedule(self):
@@ -81,36 +107,6 @@ class Circuit(BoschSingleEntity):
         """Check if operation mode type is manual or auto."""
         return self._mode_to_setpoint.get(self.current_mode, {}).get(TYPE)
 
-    async def initialize(self):
-        """Check each uri if return json with values."""
-        await self.update_requested_key(STATUS)
-
-    async def update(self):
-        """Update info about Circuit asynchronously."""
-        _LOGGER.debug("Updating HC %s", self.name)
-        is_updated = False
-        try:
-            for key, item in self._data.items():
-                if item[TYPE] in (REGULAR, ACTIVE_PROGRAM):
-                    result = await self._connector.get(item[URI])
-                    if self.process_results(result, key):
-                        is_updated = True
-                if item[TYPE] == ACTIVE_PROGRAM:
-                    active_program = self.get_activeswitchprogram(result)
-                    if active_program:
-                        await self._schedule.update_schedule(active_program)
-            if self._temp_setpoint:
-                result = await self._connector.get(self._data[self._temp_setpoint][URI])
-                if self.process_results(result, self._temp_setpoint):
-                    is_updated = True
-            self._state = True
-        except DeviceException as err:
-            self._state = False
-            self._extra_message = f"Can't update data. Error: {err}"
-        if is_updated:
-            self._update_initialized = True
-        return is_updated
-
     @property
     def setpoint(self):
         """
@@ -122,16 +118,6 @@ class Circuit(BoschSingleEntity):
         if self.operation_mode_type == MANUAL:
             return self.current_mode
         return self._schedule.get_setpoint_for_mode(self.current_mode, self.operation_mode_type)
-
-    async def update_requested_key(self, key):
-        """Update info about Circuit asynchronously."""
-        if key in self._data:
-            try:
-                result = await self._connector.get(self._data[key][URI])
-                self.process_results(result, key)
-                self._state = True
-            except DeviceException:
-                self._state = False
 
     async def set_operation_mode(self, new_mode):
         """Set operation_mode of Heating Circuit."""
@@ -169,11 +155,6 @@ class Circuit(BoschSingleEntity):
             return 1
         return 0
 
-    @property
-    def state(self):
-        """Retrieve state of the circuit."""
-        if self._state:
-            return self.get_value(STATUS)
 
     @property
     def current_temp(self):
@@ -290,3 +271,29 @@ class Circuit(BoschSingleEntity):
                 return True
         _LOGGER.debug("Setting temperature not allowed in this mode.")
         return False
+
+    async def update(self):
+        """Update info about Circuit asynchronously."""
+        _LOGGER.debug("Updating circuit %s", self.name)
+        is_updated = False
+        try:
+            for key, item in self._data.items():
+                if item[TYPE] in (REGULAR, ACTIVE_PROGRAM):
+                    result = await self._connector.get(item[URI])
+                    if self.process_results(result, key):
+                        is_updated = True
+                if item[TYPE] == ACTIVE_PROGRAM:
+                    active_program = self.get_activeswitchprogram(result)
+                    if active_program:
+                        await self._schedule.update_schedule(active_program)
+            if self._temp_setpoint:
+                result = await self._connector.get(self._data[self._temp_setpoint][URI])
+                if self.process_results(result, self._temp_setpoint):
+                    is_updated = True
+            self._state = True
+        except DeviceException as err:
+            self._state = False
+            self._extra_message = f"Can't update data. Error: {err}"
+        if is_updated:
+            self._update_initialized = True
+        return is_updated

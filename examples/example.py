@@ -36,7 +36,7 @@ async def main():
         # sensors = gateway.initialize_sensors()
         # for sensor in sensors:
         #     await sensor.update()
-        #     print(sensor.get_all_properties())
+        #     print(sensor.get_all_values())
 
         dhws = gateway.dhw_circuits
         dhw = dhws[0]

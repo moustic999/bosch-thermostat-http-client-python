@@ -24,7 +24,6 @@
                     "type": "auto"
                 }
             },
-            "mainUri": "/heatingCircuits",
             "refs": {
                 "current_temp": {
                     "id": "roomtemperature",
@@ -83,7 +82,6 @@
                     "type": "auto"
                 }
             },
-            "mainUri": "/dhwCircuits",
             "refs": {
                 "current_temp": {
                     "id": "actualTemp",

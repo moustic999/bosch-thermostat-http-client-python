@@ -20,7 +20,6 @@
                     "type": "auto"
                 }
             },
-            "mainUri": "/heatingCircuits",
             "refs": {
                 "current_temp": {
                     "id": "roomtemperature",
@@ -83,7 +82,6 @@
                     "type": "manual"
                 }
             },
-            "mainUri": "/dhwCircuits",
             "refs": {
                 "current_temp": {
                     "id": "actualTemp",
@@ -119,6 +117,40 @@
                     "id": "switchPrograms",
                     "name": "Active Switch Program",
                     "type": "activeProgram"
+                }
+            }
+        },
+        "solarCircuits": {
+            "refs": {
+                "collectorTemperature": {
+                    "id": "collectorTemperature",
+                    "name": "collectorTemperature",
+                    "type": "regular"
+                },
+                "dhwTankTemperature": {
+                    "id": "dhwTankTemperature",
+                    "name": "dhwTankTemperature",
+                    "type": "regular"
+                },
+                "solarYield": {
+                    "id": "solarYield",
+                    "name": "solarYield",
+                    "type": "regular"
+                },
+                "pumpModulation": {
+                    "id": "pumpModulation",
+                    "name": "pumpModulation",
+                    "type": "regular"
+                },
+                "actuatorStatus": {
+                    "id": "actuatorStatus",
+                    "name": "actuatorStatus",
+                    "type": "regular"
+                },
+                "status": {
+                    "id": "status",
+                    "name": "status",
+                    "type": "regular"
                 }
             }
         },
@@ -174,6 +206,18 @@
             "systemPressure": {
                 "id": "/heatSources/systemPressure",
                 "name": "System pressure"
+            },
+            "burnerPowerSetpoint": {
+                "id": "/heatSources/burnerPowerSetpoint",
+                "name": "burner Power Setpoint"
+            },
+            "flameStatus": {
+                "id": "/heatSources/flameStatus",
+                "name": "flameStatus"
+            },
+            "numberOfStarts": {
+                "id": "/heatSources/numberOfStarts",
+                "name": "numberOfStarts"
             }
         },
         "versionFirmware": "04.06.07"
