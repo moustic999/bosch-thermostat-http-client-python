@@ -11,7 +11,6 @@ logging.basicConfig()
 logging.getLogger().setLevel(logging.DEBUG)
 
 
-
 async def main():
     """
     Provide data_file.txt with ip, access_key, password and check
@@ -36,7 +35,6 @@ async def main():
         # sensors = gateway.initialize_sensors()
         # for sensor in sensors:
         #     await sensor.update()
-        #     print(sensor.get_all_values())
 
         dhws = gateway.dhw_circuits
         dhw = dhws[0]

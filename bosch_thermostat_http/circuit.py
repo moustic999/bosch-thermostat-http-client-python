@@ -275,25 +275,19 @@ class Circuit(BasicCircuit):
     async def update(self):
         """Update info about Circuit asynchronously."""
         _LOGGER.debug("Updating circuit %s", self.name)
-        is_updated = False
         try:
             for key, item in self._data.items():
                 if item[TYPE] in (REGULAR, ACTIVE_PROGRAM):
                     result = await self._connector.get(item[URI])
-                    if self.process_results(result, key):
-                        is_updated = True
+                    self.process_results(result, key)
                 if item[TYPE] == ACTIVE_PROGRAM:
                     active_program = self.get_activeswitchprogram(result)
                     if active_program:
                         await self._schedule.update_schedule(active_program)
             if self._temp_setpoint:
                 result = await self._connector.get(self._data[self._temp_setpoint][URI])
-                if self.process_results(result, self._temp_setpoint):
-                    is_updated = True
+                self.process_results(result, self._temp_setpoint)
             self._state = True
         except DeviceException as err:
             self._state = False
             self._extra_message = f"Can't update data. Error: {err}"
-        if is_updated:
-            self._update_initialized = True
-        return is_updated

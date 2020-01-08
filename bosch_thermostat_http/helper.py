@@ -110,14 +110,19 @@ class BoschSingleEntity:
                 self._str.min,
                 self._str.max,
                 self._str.allowed_values,
-                self._str.units,
-                self._str.units,
+                self._str.units
             ]:
                 if res_key in result:
                     if res_key in data and result[res_key] == data[res_key]:
                         continue
                     data[res_key] = result[res_key]
+                    self._update_initialized = True
                     updated = True
+        if self._str.state in result:
+            data[self._str.state] = {}
+            for state in result[self._str.state]:
+                for key, item in state.items():
+                    data[self._str.state][key] = item
         return updated
 
     @property
@@ -169,18 +174,13 @@ class BoschSingleEntity:
 
     async def update(self):
         """Update info about Circuit asynchronously."""
-        is_updated = False
         try:
             for key, item in self._data.items():
                 if item[TYPE] == REGULAR:
                     result = await self._connector.get(item[URI])
-                    if self.process_results(result, key):
-                        is_updated = True
+                    self.process_results(result, key)
             self._state = True
         except DeviceException as err:
             _LOGGER.error(f"Can't update data for {self.name} with message: {err}")
-            self._extra_message = f"Can't update data. Error: {err}"
             self._state = False
-        if is_updated:
-            self._update_initialized = True
-        return is_updated
+            self._extra_message = f"Can't update data. Error: {err}"

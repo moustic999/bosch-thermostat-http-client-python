@@ -41,6 +41,10 @@ class Sensor(BoschSingleEntity):
         super().__init__(name, connector, attr_id, SENSOR, str_obj, path)
         self._data = {attr_id: {RESULT: {}, URI: path, TYPE: REGULAR}}
 
-    def get_all_values(self):
-        """Retrieve all properties with value, min, max etc."""
-        return self._data[self.attr_id].get(RESULT)
+    @property
+    def state(self):
+        """Retrieve state of the circuit."""
+        result = self._data[self.attr_id].get(RESULT)
+        if result:
+            return result.get(self._str.val, self._str.invalid)
+        return -1
