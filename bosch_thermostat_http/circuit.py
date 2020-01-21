@@ -19,7 +19,9 @@ from .const import (
     DEFAULT_MIN_TEMP,
     SETPOINT,
     MANUAL,
-    AUTO
+    AUTO,
+    CURRENT_SETPOINT,
+    CAN
 )
 from .helper import BoschSingleEntity
 from .exceptions import DeviceException
@@ -60,11 +62,17 @@ class BasicCircuit(BoschSingleEntity):
     def state(self):
         """Retrieve state of the circuit."""
         if self._state:
+            if self._bus_type == CAN:
+                if self.get_value(CURRENT_SETPOINT):
+                    return True
             return self.get_value(STATUS)
 
     async def initialize(self):
         """Check each uri if return json with values."""
-        await self.update_requested_key(STATUS)
+        if self._bus_type == CAN:
+            await self.update_requested_key(CURRENT_SETPOINT)
+        else:
+            await self.update_requested_key(STATUS)
 
 
 class Circuit(BasicCircuit):
