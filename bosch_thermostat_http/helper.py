@@ -100,9 +100,9 @@ class BoschSingleEntity:
         """Retrieve connector."""
         return self._connector
 
-    def process_results(self, result, key=None):
+    def process_results(self, result, key=None, return_data=False):
         """Convert multi-level json object to one level object."""
-        data = self._data[key][RESULT]
+        data = {} if return_data else self._data[key][RESULT]
         updated = False
         if result:
             for res_key in [
@@ -123,7 +123,7 @@ class BoschSingleEntity:
             for state in result[self._str.state]:
                 for key, item in state.items():
                     data[self._str.state][key] = item
-        return updated
+        return data if return_data else updated
 
     @property
     def state_message(self):

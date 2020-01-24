@@ -10,6 +10,7 @@
                 "dry": null,
                 "fan_only": null
             },
+            "switchprogram": "/{}/{}/switchPrograms/{}",
             "mode_to_setpoint": {
                 "manual": {
                     "setpoint": "setpoint1",
@@ -64,6 +65,7 @@
                 "heat_pump": "HCprogram",
                 "gas": null
             },
+            "switchprogram": "/{}/{}/switchPrograms/{}",
             "mode_to_setpoint": {
                 "HCprogram": {
                     "setpoint": "setpoint3",

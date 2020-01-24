@@ -130,6 +130,11 @@ class Gateway:
         if self._device:
             return self._device.get(NAME)
 
+    @property
+    def bus_type(self):
+        """Return BUS type detected by lib."""
+        return self._bus_type
+
     def get_items(self, data_type):
         """Get items on types like Sensors, Heating Circuits etc."""
         return self._data[data_type].get_items()

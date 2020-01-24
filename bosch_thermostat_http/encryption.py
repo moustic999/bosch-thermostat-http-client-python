@@ -77,4 +77,4 @@ class Encryption:
 
     def _pad(self, _s):
         """Pad of encryption."""
-        return _s + (self._bs - len(_s) % self._bs) * chr(0)
+        return _s + ((self._bs - len(_s) % self._bs) * chr(0))

@@ -64,7 +64,7 @@ async def sensors(ctx, ip: str, token: str, password: str, debug: int, sensor):
             sensors = gateway.initialize_sensors(list(sensor))
             for sensor_obj in sensors:
                 await sensor_obj.update()
-                print(sensor_obj.name, ":", sensor_obj.get_all_properties())
+                print(sensor_obj.name, ":", sensor_obj.get_property(sensor_obj.attr_id))
         else:
             _LOGGER.error("Couldn't connect to gateway!")
         await session.close()

@@ -21,7 +21,9 @@ from .const import (
     MANUAL,
     AUTO,
     CURRENT_SETPOINT,
-    CAN
+    CAN,
+    MAX_REF,
+    MIN_REF, HA_NAME, BOSCH_NAME
 )
 from .helper import BoschSingleEntity
 from .exceptions import DeviceException
@@ -39,6 +41,7 @@ class BasicCircuit(BoschSingleEntity):
         self._bus_type = bus_type
         super().__init__(name, connector, attr_id, _type, str_obj)
         self._main_uri = f"/{CIRCUIT_TYPES[_type]}/{self.name}"
+        self._operation_mode = {}
         for key, value in self._db[REFS].items():
             uri = f"{self._main_uri}/{value[ID]}"
             self._data[key] = {RESULT: {}, URI: uri, TYPE: value[TYPE]}
@@ -69,10 +72,7 @@ class BasicCircuit(BoschSingleEntity):
 
     async def initialize(self):
         """Check each uri if return json with values."""
-        if self._bus_type == CAN:
-            await self.update_requested_key(CURRENT_SETPOINT)
-        else:
-            await self.update_requested_key(STATUS)
+        await self.update_requested_key(STATUS)
 
 
 class Circuit(BasicCircuit):
@@ -82,7 +82,7 @@ class Circuit(BasicCircuit):
         """Initialize circuit with get, put and id from gateway."""
         super().__init__(connector, attr_id, db, str_obj, _type, bus_type)
         self._mode_to_setpoint = self._db.get(MODE_TO_SETPOINT)
-        self._schedule = Schedule(connector, _type, self.name, current_date, str_obj, bus_type)
+        self._schedule = Schedule(connector, _type, self.name, current_date, str_obj, bus_type, self._db)
         self._target_temp = 0
 
     @property
@@ -98,7 +98,7 @@ class Circuit(BasicCircuit):
     @property
     def current_mode(self):
         """Retrieve current mode of Circuit."""
-        return self.get_value(OPERATION_MODE)
+        return self._operation_mode.get(self._str.val, None)
 
     @property
     def _temp_setpoint(self):
@@ -108,7 +108,7 @@ class Circuit(BasicCircuit):
     @property
     def available_operation_modes(self):
         """Get Bosch operations modes."""
-        return self.get_property(OPERATION_MODE).get(self.strings.allowed_values, {})
+        return self._operation_mode.get(self.strings.allowed_values, {})
 
     @property
     def operation_mode_type(self):
@@ -142,11 +142,16 @@ class Circuit(BasicCircuit):
             self.available_operation_modes,
         )
 
+    def _find_ha_mode(self, ha_mode):
+        for v in self._hastates:
+            if v[HA_NAME] == ha_mode:
+                return v[BOSCH_NAME]
+
     async def set_ha_mode(self, ha_mode):
         """Helper to set operation mode."""
         old_setpoint = self._temp_setpoint
         old_mode = self.current_mode
-        new_mode = await self.set_operation_mode(self._hastates.get(ha_mode))
+        new_mode = await self.set_operation_mode(self._find_ha_mode(ha_mode))
         different_mode = new_mode != old_mode
         try:
             if (different_mode
@@ -162,7 +167,6 @@ class Circuit(BasicCircuit):
         if different_mode:
             return 1
         return 0
-
 
     @property
     def current_temp(self):
@@ -181,17 +185,18 @@ class Circuit(BasicCircuit):
     def ha_modes(self):
         """Retrieve HA modes."""
         return [
-            key
-            for key, value in self._hastates.items()
-            if value in self.available_operation_modes
+            v[HA_NAME]
+            for v in self._hastates
+            if any(x in self.available_operation_modes for x in v[BOSCH_NAME])
         ]
 
     @property
     def ha_mode(self):
         """Retrieve current mode in HA terminology."""
-        for _k, _v in self._hastates.items():
-            if _v == self.current_mode:
-                return _k
+        for v in self._hastates:
+            for x in v[BOSCH_NAME]:
+                if x == self.current_mode:
+                    return v[HA_NAME]
         return OFF
 
     def get_activeswitchprogram(self, result=None):
@@ -233,7 +238,7 @@ class Circuit(BasicCircuit):
             return DEFAULT_MIN_TEMP
         else:
             return self.schedule.get_min_temp_for_mode(
-                self.current_mode, self.operation_mode_type
+                self.current_mode, self.operation_mode_type, self.get_value(self._db[MIN_REF], False)
             )
 
     @property
@@ -243,7 +248,7 @@ class Circuit(BasicCircuit):
             return DEFAULT_MAX_TEMP
         else:
             return self.schedule.get_max_temp_for_mode(
-                self.current_mode, self.operation_mode_type
+                self.current_mode, self.operation_mode_type, self.get_value(self._db[MAX_REF], False)
             )
 
     async def set_temperature(self, temperature):
@@ -285,13 +290,19 @@ class Circuit(BasicCircuit):
         _LOGGER.debug("Updating circuit %s", self.name)
         try:
             for key, item in self._data.items():
-                if item[TYPE] in (REGULAR, ACTIVE_PROGRAM):
-                    result = await self._connector.get(item[URI])
-                    self.process_results(result, key)
+                is_operation_type = item[TYPE] == OPERATION_MODE
+                if is_operation_type or item[TYPE] in (REGULAR, ACTIVE_PROGRAM):
+                    try:
+                        result = await self._connector.get(item[URI])
+                        self.process_results(result, key)
+                    except DeviceException as err:
+                        continue
                 if item[TYPE] == ACTIVE_PROGRAM:
                     active_program = self.get_activeswitchprogram(result)
                     if active_program:
                         await self._schedule.update_schedule(active_program)
+                if is_operation_type and result:
+                    self._operation_mode = self.process_results(result, key, True)
             if self._temp_setpoint:
                 result = await self._connector.get(self._data[self._temp_setpoint][URI])
                 self.process_results(result, self._temp_setpoint)
@@ -299,3 +310,4 @@ class Circuit(BasicCircuit):
         except DeviceException as err:
             self._state = False
             self._extra_message = f"Can't update data. Error: {err}"
+

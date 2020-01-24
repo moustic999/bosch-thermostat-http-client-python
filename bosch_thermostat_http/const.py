@@ -103,12 +103,18 @@ MODE_TO_SETPOINT = "mode_to_setpoint"
 READ = "read"
 WRITE = "write"
 
+MAX_REF = "max_ref"
+MIN_REF = "min_ref"
+
+HA_NAME = "haname"
+BOSCH_NAME = "boschname"
+
 RC300 = "RC300"
 
 # SCHEDULE
 SETPOINT_PROP = "setpointProperty"
 SWITCH_POINTS = "switchPoints"
-SWITCHPROGRAM = "/{}/{}/switchPrograms/{}"
+SWITCHPROGRAM = "switchprogram"
 MIDNIGHT = 1440
 DAYS = {
     "Mo": "monday",
