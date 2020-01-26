@@ -23,7 +23,7 @@ from .const import (
     CURRENT_SETPOINT,
     CAN,
     MAX_REF,
-    MIN_REF, HA_NAME, BOSCH_NAME
+    MIN_REF, HA_NAME, BOSCH_NAME, MIN_VALUE, MAX_VALUE
 )
 from .helper import BoschSingleEntity
 from .exceptions import DeviceException
@@ -171,7 +171,7 @@ class Circuit(BasicCircuit):
     @property
     def current_temp(self):
         """Give current temperature of circuit."""
-        _LOGGER.debug("Current temp of %s is %s", self.name, self.get_property(CURRENT_TEMP))
+        _LOGGER.debug("Current temp of %s is %s", self.name.upper(), self.get_property(CURRENT_TEMP))
         temp = self.get_value(CURRENT_TEMP)
         if temp and temp > 0 and temp < 120:
             return temp
@@ -237,8 +237,9 @@ class Circuit(BasicCircuit):
         if self.operation_mode_type == OFF:
             return DEFAULT_MIN_TEMP
         else:
+            setpoint_min = self.get_property(self._temp_setpoint).get(MIN_VALUE, self.get_value(self._db[MIN_REF], False))
             return self.schedule.get_min_temp_for_mode(
-                self.current_mode, self.operation_mode_type, self.get_value(self._db[MIN_REF], False)
+                self.current_mode, self.operation_mode_type, setpoint_min
             )
 
     @property
@@ -247,8 +248,9 @@ class Circuit(BasicCircuit):
         if self.operation_mode_type == OFF:
             return DEFAULT_MAX_TEMP
         else:
+            setpoint_max = self.get_property(self._temp_setpoint).get(MAX_VALUE, self.get_value(self._db[MAX_REF], False))
             return self.schedule.get_max_temp_for_mode(
-                self.current_mode, self.operation_mode_type, self.get_value(self._db[MAX_REF], False)
+                self.current_mode, self.operation_mode_type, setpoint_max
             )
 
     async def set_temperature(self, temperature):
@@ -282,12 +284,13 @@ class Circuit(BasicCircuit):
                         self.current_mode,
                     )
                 return True
-        _LOGGER.debug("Setting temperature not allowed in this mode.")
+        _LOGGER.error("Setting temperature not allowed in this mode. Temperature is probably out of range MIN-MAX!")
         return False
 
     async def update(self):
         """Update info about Circuit asynchronously."""
         _LOGGER.debug("Updating circuit %s", self.name)
+        last_item = list(self._data.keys())[-1]
         try:
             for key, item in self._data.items():
                 is_operation_type = item[TYPE] == OPERATION_MODE
@@ -303,10 +306,11 @@ class Circuit(BasicCircuit):
                         await self._schedule.update_schedule(active_program)
                 if is_operation_type and result:
                     self._operation_mode = self.process_results(result, key, True)
+                if key == last_item:
+                    self._state = True
             if self._temp_setpoint:
                 result = await self._connector.get(self._data[self._temp_setpoint][URI])
                 self.process_results(result, self._temp_setpoint)
-            self._state = True
         except DeviceException as err:
             self._state = False
             self._extra_message = f"Can't update data. Error: {err}"

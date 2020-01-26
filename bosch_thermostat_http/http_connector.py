@@ -32,7 +32,7 @@ class HttpConnector:
         return self._encryption.key
 
     async def _request(self, method, path, **kwargs):
-        _LOGGER.debug("Sending request to %s", path)
+        _LOGGER.debug("Sending %s request to %s", method.__name__.upper(), path)
 
         async def get_response(method_name, res):
             if method_name == 'put':
@@ -64,7 +64,6 @@ class HttpConnector:
         except AsyncTimeout:
             raise DeviceException(f"Connection timed out for {path}.")
 
-    
     def _format_url(self, path):
         """Format URL to make requests to gateway."""
         return f"http://{self._host}{path}"

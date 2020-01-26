@@ -1,15 +1,47 @@
 {
     "01.10.03": {
         "heatingCircuits": {
-            "hastates": {
-                "off": "off",
-                "heat": "day",
-                "cool": null,
-                "heat_cool": "night",
-                "auto": "auto",
-                "dry": null,
-                "fan_only": null
-            },
+            "hastates": [
+                {
+                    "haname": "off",
+                    "boschname": [
+                        "off"
+                    ]
+                },
+                {
+                    "haname": "heat",
+                    "boschname": [
+                        "day"
+                    ]
+                },
+                {
+                    "haname": "heat_cool",
+                    "boschname": [
+                        "night"
+                    ]
+                },
+                {
+                    "haname": "auto",
+                    "boschname": [
+                        "auto"
+                    ]
+                },
+                {
+                    "haname": "cool",
+                    "boschname": []
+                },
+                {
+                    "haname": "dry",
+                    "boschname": []
+                },
+                {
+                    "haname": "fan_only",
+                    "boschname": []
+                }
+            ],
+            "min_ref": "setpoint2",
+            "max_ref": "setpoint1",
+            "switchprogram": "/heatingCircuits/{}/switchPrograms/{}",
             "mode_to_setpoint": {
                 "night": {
                     "setpoint": "setpoint2",
@@ -33,7 +65,7 @@
                 "operation_mode": {
                     "id": "operationMode",
                     "name": "Operation mode",
-                    "type": "regular"
+                    "type": "operation_mode"
                 },
                 "setpoint1": {
                     "id": "temperatureLevels/day",
@@ -58,16 +90,51 @@
             }
         },
         "dhwCircuits": {
-            "hastates": {
-                "off": "off",
-                "on": "on",
-                "eco": null,
-                "eletric": null,
-                "performance": "auto",
-                "high_demand": null,
-                "heat_pump": null,
-                "gas": null
-            },
+            "hastates": [
+                {
+                    "haname": "off",
+                    "boschname": [
+                        "off"
+                    ]
+                },
+                {
+                    "haname": "on",
+                    "boschname": [
+                        "on"
+                    ]
+                },
+                {
+                    "haname": "eco",
+                    "boschname": [
+                    ]
+                },
+                {
+                    "haname": "eletric",
+                    "boschname": []
+                },
+                {
+                    "haname": "performance",
+                    "boschname": [
+                        "auto"
+                    ]
+                },
+                {
+                    "haname": "heat_pump",
+                    "boschname": []
+                },
+                {
+                    "haname": "high_demand",
+                    "boschname": [
+                    ]
+                },
+                {
+                    "haname": "gas",
+                    "boschname": []
+                }
+            ],
+            "min_ref": "setpoint1",
+            "max_ref": "setpoint2",
+            "switchprogram": "/dhwCircuits/{}/switchPrograms/{}",
             "mode_to_setpoint": {
                 "on": {
                     "setpoint": "setpoint2",
@@ -91,7 +158,7 @@
                 "operation_mode": {
                     "id": "operationMode",
                     "name": "Operation mode",
-                    "type": "regular"
+                    "type": "operation_mode"
                 },
                 "setpoint1": {
                     "id": "temperatureLevels/off",

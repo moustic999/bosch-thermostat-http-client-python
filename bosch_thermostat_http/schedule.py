@@ -48,19 +48,17 @@ class Schedule:
 
     async def update_schedule(self, active_program):
         """Update schedule from Bosch gateway."""
-        print("running schedule")
         self._active_program = active_program
         self._active_program_uri = self._db[SWITCHPROGRAM].format(
             self._circuit_name, active_program
         )
-        print(self._active_program_uri)
         try:
             self._time = await self._time_retrieve()
             result = await self._connector.get(self._active_program_uri)
             await self._parse_schedule(
                 result.get(SWITCH_POINTS), result.get(SETPOINT_PROP)
             )
-        except DeviceException:
+        except DeviceException as err:
             pass
 
     async def update_schedule_test(self, result, time):
@@ -94,10 +92,8 @@ class Schedule:
         """Download temp for setpoint."""
         try:
             uri = f'{setpoint_property[ID]}/{setpoint}'
-            print("mam uri", uri)
             result = await self._connector.get(uri)
             if self._bus_type == CAN and result.get(VALUE, 0) == 1:
-                print("setting uri")
                 uri = f'/{self._circuit_type}/{self._circuit_name}/currentSetpoint'
                 result = await self._connector.get(uri)
         except DeviceException as err:
@@ -137,27 +133,26 @@ class Schedule:
             cache = self.get_temp_in_schedule()
         return cache.get(TEMP, 0)
 
-    def get_max_temp_for_mode(self, mode, mode_type, extra_max=False):
+    def get_max_temp_for_mode(self, mode, mode_type, extra_val=False):
         """Get max temp for mode in schedule."""
-        cache = {}
-        if mode_type == MANUAL:
-            return self._setpoints_temp.get(mode, {}).get(MAX, -1)
-        if self.time:
-            cache = self.get_temp_in_schedule()
-            if cache.get(VALUE, 0) > cache.get(MAX, 0) and extra_max:
-                return extra_max
-        return cache.get(MAX, 0)
+        return self.get_min_max_for_mode(MAX, mode, mode_type, extra_val)
 
-    def get_min_temp_for_mode(self, mode, mode_type, extra_max=False):
+    def get_min_temp_for_mode(self, mode, mode_type, extra_val=False):
         """Get min temp for mode in schedule."""
+        return self.get_min_max_for_mode(MIN, mode, mode_type, extra_val)
+
+    def get_min_max_for_mode(self, min_max, mode, mode_type, extra_val=False):
         cache = {}
+        extra_val = extra_val if extra_val else -1 if mode_type == MANUAL else 0
         if mode_type == MANUAL:
-            return self._setpoints_temp.get(mode, {}).get(MIN, -1)
+            return self._setpoints_temp.get(mode, {}).get(min_max, extra_val)
         if self.time:
             cache = self.get_temp_in_schedule()
-            if cache.get(VALUE, 0) < cache.get(MIN, 0) and extra_max:
-                return extra_max
-        return cache.get(MIN, 0)
+        if min_max == MAX and cache.get(VALUE, 0) > cache.get(min_max, 0):
+            return min_max
+        elif cache.get(VALUE, 0) < cache.get(MIN, 0):
+            return min_max
+        return cache.get(min_max, extra_val)
 
     def get_setpoint_for_mode(self, mode, mode_type):
         """Get setpoints for mode."""

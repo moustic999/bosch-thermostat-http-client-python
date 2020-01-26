@@ -1,16 +1,44 @@
 {
     "04.06.07": {
         "heatingCircuits": {
-            "hastates": {
-                "off": "off",
-                "heat": "manual",
-                "cool": null,
-                "heat_cool": null,
-                "auto": "auto",
-                "dry": null,
-                "fan_only": null
-            },
-            "switchprogram": "/{}/{}/switchPrograms/{}",
+            "hastates": [
+                {
+                    "haname": "off",
+                    "boschname": [
+                        "off"
+                    ]
+                },
+                {
+                    "haname": "heat",
+                    "boschname": [
+                        "manual"
+                    ]
+                },
+                {
+                    "haname": "heat_cool",
+                    "boschname": []
+                },
+                {
+                    "haname": "auto",
+                    "boschname": [
+                        "auto"
+                    ]
+                },
+                {
+                    "haname": "cool",
+                    "boschname": []
+                },
+                {
+                    "haname": "dry",
+                    "boschname": []
+                },
+                {
+                    "haname": "fan_only",
+                    "boschname": [
+                    ]
+                }
+            ],
+            "switchprogram": "/heatingCircuits/{}/switchPrograms/{}",
             "mode_to_setpoint": {
                 "manual": {
                     "setpoint": "setpoint1",
@@ -21,6 +49,8 @@
                     "type": "auto"
                 }
             },
+            "min_ref": "setpoint2",
+            "max_ref": "setpoint2",
             "refs": {
                 "current_temp": {
                     "id": "roomtemperature",
@@ -30,7 +60,7 @@
                 "operation_mode": {
                     "id": "operationMode",
                     "name": "Operation mode",
-                    "type": "regular"
+                    "type": "operation_mode"
                 },
                 "setpoint1": {
                     "id": "manualRoomSetpoint",
@@ -55,17 +85,51 @@
             }
         },
         "dhwCircuits": {
-            "hastates": {
-                "off": "Off",
-                "on": "on",
-                "eco": null,
-                "eletric": null,
-                "performance": "ownprogram",
-                "high_demand": "high",
-                "heat_pump": "HCprogram",
-                "gas": null
-            },
-            "switchprogram": "/{}/{}/switchPrograms/{}",
+            "hastates": [
+                {
+                    "haname": "off",
+                    "boschname": [
+                        "Off"
+                    ]
+                },
+                {
+                    "haname": "on",
+                    "boschname": [
+                        "on"
+                    ]
+                },
+                {
+                    "haname": "eco",
+                    "boschname": []
+                },
+                {
+                    "haname": "eletric",
+                    "boschname": []
+                },
+                {
+                    "haname": "performance",
+                    "boschname": [
+                        "ownprogram"
+                    ]
+                },
+                {
+                    "haname": "heat_pump",
+                    "boschname": ["HCprogram"]
+                },
+                {
+                    "haname": "high_demand",
+                    "boschname": [
+                        "high"
+                    ]
+                },
+                {
+                    "haname": "gas",
+                    "boschname": []
+                }
+            ],
+            "min_ref": "setpoint2",
+            "max_ref": "setpoint3",
+            "switchprogram": "/dhwCircuits/{}/switchPrograms/{}",
             "mode_to_setpoint": {
                 "HCprogram": {
                     "setpoint": "setpoint3",
@@ -93,7 +157,7 @@
                 "operation_mode": {
                     "id": "operationMode",
                     "name": "Operation mode",
-                    "type": "regular"
+                    "type": "operation_mode"
                 },
                 "setpoint1": {
                     "id": "currentSetpoint",

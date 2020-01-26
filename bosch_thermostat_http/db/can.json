@@ -17,8 +17,12 @@
                 {
                     "haname": "heat_cool",
                     "boschname": [
-                        "normal", "HP_OPTIMIZED"
+                        "normal", "Program2"
                     ]
+                },
+                {
+                    "haname": "auto",
+                    "boschname": ["HP_OPTIMIZED"]
                 },
                 {
                     "haname": "cool",
@@ -30,7 +34,7 @@
                 },
                 {
                     "haname": "fan_only",
-                    "boschname": ["Program2"]
+                    "boschname": []
                 }
             ],
             "switchprogram": "/heatingCircuits/{}/switchPrograms/{}",
