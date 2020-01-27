@@ -139,7 +139,8 @@ class Schedule:
 
     def get_min_temp_for_mode(self, mode, mode_type, extra_val=False):
         """Get min temp for mode in schedule."""
-        return self.get_min_max_for_mode(MIN, mode, mode_type, extra_val)
+        val = self.get_min_max_for_mode(MIN, mode, mode_type, extra_val)
+        return val
 
     def get_min_max_for_mode(self, min_max, mode, mode_type, extra_val=False):
         cache = {}
@@ -148,10 +149,9 @@ class Schedule:
             return self._setpoints_temp.get(mode, {}).get(min_max, extra_val)
         if self.time:
             cache = self.get_temp_in_schedule()
-        if min_max == MAX and cache.get(VALUE, 0) > cache.get(min_max, 0):
-            return min_max
-        elif cache.get(VALUE, 0) < cache.get(MIN, 0):
-            return min_max
+        if (min_max == MAX and cache.get(VALUE, 0) > cache.get(min_max, 0)
+                or cache.get(VALUE, 0) < cache.get(MIN, 0)):
+            return extra_val
         return cache.get(min_max, extra_val)
 
     def get_setpoint_for_mode(self, mode, mode_type):

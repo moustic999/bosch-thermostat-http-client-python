@@ -238,9 +238,10 @@ class Circuit(BasicCircuit):
             return DEFAULT_MIN_TEMP
         else:
             setpoint_min = self.get_property(self._temp_setpoint).get(MIN_VALUE, self.get_value(self._db[MIN_REF], False))
-            return self.schedule.get_min_temp_for_mode(
+            val = self.schedule.get_min_temp_for_mode(
                 self.current_mode, self.operation_mode_type, setpoint_min
             )
+            return val
 
     @property
     def max_temp(self):
