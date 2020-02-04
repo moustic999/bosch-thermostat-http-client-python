@@ -36,8 +36,8 @@ async def deep_into(url, _list, get):
         if "uri" in new_resp:
             new_resp["uri"] = remove_all_ip_occurs(resp["uri"])
         if "id" in new_resp and new_resp["id"] == "/gateway/uuid":
-            new_resp["value"] = -1
-            new_resp["allowedValues"] = -1
+            new_resp["value"] = "-1"
+            new_resp["allowedValues"] = ["-1"]
         if "setpointProperty" in new_resp and "uri" in new_resp["setpointProperty"]:
             new_resp["setpointProperty"]["uri"] = remove_all_ip_occurs(
                 new_resp["setpointProperty"]["uri"]

@@ -95,12 +95,14 @@
                 {
                     "haname": "on",
                     "boschname": [
-                        "on"
+                        "on", "low"
                     ]
                 },
                 {
                     "haname": "eco",
-                    "boschname": []
+                    "boschname": [
+                        "eco"
+                    ]
                 },
                 {
                     "haname": "eletric",
@@ -135,6 +137,10 @@
                     "setpoint": "setpoint3",
                     "type": "manual"
                 },
+                "low": {
+                    "setpoint": "setpoint4",
+                    "type": "manual"
+                },
                 "Off": {
                     "setpoint": null,
                     "type": "off"
@@ -145,6 +151,10 @@
                 },
                 "high": {
                     "setpoint": "setpoint3",
+                    "type": "manual"
+                },
+                "eco": {
+                    "setpoint": "setpoint5",
                     "type": "manual"
                 }
             },
@@ -172,6 +182,16 @@
                 "setpoint3": {
                     "id": "temperatureLevels/high",
                     "name": "DHW High level",
+                    "type": "setpoint"
+                },
+                "setpoint4": {
+                    "id": "temperatureLevels/low",
+                    "name": "DHW Low level",
+                    "type": "setpoint"
+                },
+                "setpoint5": {
+                    "id": "temperatureLevels/eco",
+                    "name": "DHW Eco level",
                     "type": "setpoint"
                 },
                 "status": {

@@ -22,7 +22,9 @@
                 },
                 {
                     "haname": "auto",
-                    "boschname": ["HP_OPTIMIZED"]
+                    "boschname": [
+                        "HP_OPTIMIZED", "automatic"
+                    ]
                 },
                 {
                     "haname": "cool",
