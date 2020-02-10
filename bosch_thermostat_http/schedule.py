@@ -9,13 +9,20 @@ from .const import (
     TIME,
     VALUE,
     TEMP,
-    AUTO,
     SETPOINT_PROP,
     SWITCH_POINTS,
     SWITCHPROGRAM,
     DAYS_INT,
-    CIRCUIT_TYPES, ID, MAX, MIN, MAX_VALUE, MIN_VALUE, MANUAL,
-    ON, CAN, URI, MODE_TO_SETPOINT, ACTIVE_PROGRAM
+    CIRCUIT_TYPES,
+    ID,
+    MAX,
+    MIN,
+    MAX_VALUE,
+    MIN_VALUE,
+    ON,
+    CAN,
+    URI,
+    ACTIVE_PROGRAM,
 )
 from .exceptions import DeviceException
 
@@ -30,7 +37,17 @@ def sort_switchpoints(dic):
 class Schedule:
     """Scheduler logic."""
 
-    def __init__(self, connector, circuit_type, circuit_name, current_time, str_obj, bus_type, db, op_mode):
+    def __init__(
+        self,
+        connector,
+        circuit_type,
+        circuit_name,
+        current_time,
+        str_obj,
+        bus_type,
+        db,
+        op_mode,
+    ):
         """Initialize schedule handling of Bosch gateway."""
         self._connector = connector
         self._active_program = None
@@ -47,7 +64,7 @@ class Schedule:
         self._db = db
         self._op_mode = op_mode
         self._schedule_found = False
-        
+
     async def update_schedule(self, active_program):
         """Update schedule from Bosch gateway."""
         self._active_program = active_program
@@ -63,7 +80,10 @@ class Schedule:
             self._schedule_found = True
         except DeviceException:
             self._schedule_found = False
-            _LOGGER.warning("URI for Active Program %s doesn't exists. Maybe we can figure out how to work anyway", active_program)
+            _LOGGER.warning(
+                "URI for Active Program %s doesn't exists. Maybe we can figure out how to work anyway",
+                active_program,
+            )
             pass
 
     async def update_schedule_test(self, result, time):
@@ -97,17 +117,19 @@ class Schedule:
     async def _get_setpoint_temp(self, setpoint_property, setpoint):
         """Download temp for setpoint."""
         try:
-            uri = f'{setpoint_property[ID]}/{setpoint}'
+            uri = f"{setpoint_property[ID]}/{setpoint}"
             result = await self._connector.get(uri)
             if self._bus_type == CAN and result.get(VALUE, 0) == 1:
-                uri = f'/{self._circuit_type}/{self._circuit_name}/currentSetpoint'
+                uri = f"/{self._circuit_type}/{self._circuit_name}/currentSetpoint"
                 result = await self._connector.get(uri)
         except DeviceException as err:
             _LOGGER.debug("Bug %s", err)
             if setpoint == ON and self._bus_type != CAN:
-                setpoint = 'high'
+                setpoint = "high"
                 try:
-                    result = await self._connector.get(f'{setpoint_property[ID]}/{setpoint}')
+                    result = await self._connector.get(
+                        f"{setpoint_property[ID]}/{setpoint}"
+                    )
                 except DeviceException:
                     pass
             pass
@@ -116,7 +138,7 @@ class Schedule:
             VALUE: result.get(VALUE, 0),
             MAX: result.get(MAX_VALUE, 0),
             MIN: result.get(MIN_VALUE, 0),
-            URI: uri
+            URI: uri,
         }
 
     async def _parse_schedule(self, switch_points, setpoint_property):
@@ -134,7 +156,9 @@ class Schedule:
         cache = {}
         # self._mode_to_setpoint.get(self._active_program, {}).get()
         if self._op_mode.is_manual:
-            return self._setpoints_temp.get(self._op_mode.current_mode, {}).get(VALUE, -1)
+            return self._setpoints_temp.get(self._op_mode.current_mode, {}).get(
+                VALUE, -1
+            )
         if not self._schedule_found:
             return ACTIVE_PROGRAM
         if self.time:
@@ -154,13 +178,18 @@ class Schedule:
         cache = {}
         extra_val = extra_val if extra_val else -1 if self._op_mode.is_manual else 0
         if self._op_mode.is_manual:
-            return self._setpoints_temp.get(self._op_mode.current_mode, {}).get(min_max, extra_val)
+            return self._setpoints_temp.get(self._op_mode.current_mode, {}).get(
+                min_max, extra_val
+            )
         if not self._schedule_found:
             return ACTIVE_PROGRAM
         if self.time:
             cache = self.get_temp_in_schedule()
-        if (min_max == MAX and cache.get(VALUE, 0) > cache.get(min_max, 0)
-                or cache.get(VALUE, 0) < cache.get(MIN, 0)):
+        if (
+            min_max == MAX
+            and cache.get(VALUE, 0) > cache.get(min_max, 0)
+            or cache.get(VALUE, 0) < cache.get(MIN, 0)
+        ):
             return extra_val
         return cache.get(min_max, extra_val)
 
@@ -168,7 +197,9 @@ class Schedule:
         """Get setpoints for mode."""
         cache = {}
         if self._op_mode.is_manual:
-            return self._setpoints_temp.get(self._op_mode.current_mode, {}).get(MODE, -1)
+            return self._setpoints_temp.get(self._op_mode.current_mode, {}).get(
+                MODE, -1
+            )
         if not self._schedule_found:
             return ACTIVE_PROGRAM
         if self.time:
@@ -195,12 +226,14 @@ class Schedule:
                 switch_points = self._switch_points.copy()
                 current_setpoint = {
                     DAYOFWEEK: day_of_week,
-                    SETPOINT: '',
-                    TIME: self._get_minutes_since_midnight(bosch_date)
+                    SETPOINT: "",
+                    TIME: self._get_minutes_since_midnight(bosch_date),
                 }
                 switch_points.append(current_setpoint)
                 switch_points.sort(key=sort_switchpoints)
-                _prev_setpoint = switch_points[switch_points.index(current_setpoint) - 1][SETPOINT]
+                _prev_setpoint = switch_points[
+                    switch_points.index(current_setpoint) - 1
+                ][SETPOINT]
                 return {
                     MODE: _prev_setpoint,
                     TEMP: self._setpoints_temp[_prev_setpoint][VALUE],
@@ -212,6 +245,9 @@ class Schedule:
 
     def _get_minutes_since_midnight(self, date):
         """Retrieve minutes since midnight."""
-        return int((
-            date - date.replace(hour=0, minute=0, second=0, microsecond=0)
-        ).total_seconds() / 60.0)
+        return int(
+            (
+                date - date.replace(hour=0, minute=0, second=0, microsecond=0)
+            ).total_seconds()
+            / 60.0
+        )

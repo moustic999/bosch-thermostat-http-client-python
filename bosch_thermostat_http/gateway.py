@@ -27,8 +27,8 @@ from .const import (
     SYSTEM_BUS,
     CAN,
     EMS,
-    CIRCUITS,
-    CIRCUIT_TYPES
+    CIRCUIT_TYPES,
+    TYPE,
 )
 from .encryption import Encryption
 from .exceptions import DeviceException
@@ -75,8 +75,9 @@ class Gateway:
         await self._update_info(initial_db.get(GATEWAY))
         self._firmware_version = self._data[GATEWAY].get(FIRMWARE_VERSION)
         self._device = await self.get_device_type(initial_db)
+
         if self._device and VALUE in self._device:
-            self._db = get_db_of_firmware(self._device[VALUE], self._firmware_version)
+            self._db = get_db_of_firmware(self._device[TYPE], self._firmware_version)
             if self._db:
                 initial_db.pop(MODELS, None)
                 self._db.update(initial_db)
@@ -263,4 +264,3 @@ class Gateway:
             _LOGGER.debug("Failed to check_connection: %s", err)
         uuid = self.get_info(UUID)
         return uuid
-

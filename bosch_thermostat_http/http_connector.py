@@ -6,11 +6,10 @@ from asyncio import TimeoutError as AsyncTimeout
 from aiohttp.client_exceptions import (
     ClientResponseError,
     ClientConnectorError,
-    ServerTimeoutError,
-    ClientError
+    ClientError,
 )
 
-from .const import HTTP_HEADER, KEEP_ALIVE, CONNECTION, APP_JSON
+from .const import HTTP_HEADER, APP_JSON
 from .exceptions import DeviceException, ResponseException
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,23 +34,22 @@ class HttpConnector:
         _LOGGER.debug("Sending %s request to %s", method.__name__.upper(), path)
 
         async def get_response(method_name, res):
-            if method_name == 'put':
+            if method_name == "put":
                 data = await res.text()
                 if not data and res.status == 204:
                     return True
                 return data
-            if method_name == 'get' and res.status == 200 and res.content_type == APP_JSON:
-                data = await res.json(
-                    loads=self._encryption.json_encrypt
-                )
+            if (
+                method_name == "get"
+                and res.status == 200
+                and res.content_type == APP_JSON
+            ):
+                data = await res.json(loads=self._encryption.json_encrypt)
                 return data
             raise ResponseException(res)
 
         try:
-            async with method(
-                self._format_url(path),
-                **kwargs
-            ) as res:
+            async with method(self._format_url(path), **kwargs) as res:
                 return await get_response(method.__name__, res)
         except ClientResponseError as err:
             raise DeviceException(f"URI {path} doesn not exist: {err}")
@@ -81,7 +79,7 @@ class HttpConnector:
                 headers=HTTP_HEADER,
                 timeout=self._request_timeout,
                 skip_auto_headers=["Accept-Encoding", "Accept"],
-                raise_for_status=True
+                raise_for_status=True,
             )
 
     async def put(self, path, value):

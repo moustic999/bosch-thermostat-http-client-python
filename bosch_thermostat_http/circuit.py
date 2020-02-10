@@ -9,7 +9,6 @@ from .const import (
     STATUS,
     TYPE,
     URI,
-    REGULAR,
     RESULT,
     OFF,
     CIRCUIT_TYPES,
@@ -23,7 +22,12 @@ from .const import (
     CURRENT_SETPOINT,
     CAN,
     MAX_REF,
-    MIN_REF, HA_NAME, BOSCH_NAME, MIN_VALUE, MAX_VALUE, VALUE
+    MIN_REF,
+    HA_NAME,
+    BOSCH_NAME,
+    MIN_VALUE,
+    MAX_VALUE,
+    VALUE,
 )
 from .helper import BoschSingleEntity
 from .exceptions import DeviceException
@@ -32,7 +36,7 @@ from .schedule import Schedule
 _LOGGER = logging.getLogger(__name__)
 
 
-class OperationModeHelper():
+class OperationModeHelper:
     def __init__(self, name, mode_to_setpoint, str_obj):
         self.name = name
         self._str = str_obj
@@ -94,7 +98,6 @@ class OperationModeHelper():
 
 
 class BasicCircuit(BoschSingleEntity):
-
     def __init__(self, connector, attr_id, db, str_obj, _type, bus_type):
         """Basic circuit init."""
         name = attr_id.split("/").pop()
@@ -144,8 +147,19 @@ class Circuit(BasicCircuit):
     def __init__(self, connector, attr_id, db, str_obj, _type, bus_type, current_date):
         """Initialize circuit with get, put and id from gateway."""
         super().__init__(connector, attr_id, db, str_obj, _type, bus_type)
-        self._op_mode = OperationModeHelper(self.name, self._db.get(MODE_TO_SETPOINT), str_obj)
-        self._schedule = Schedule(connector, _type, self.name, current_date, str_obj, bus_type, self._db, self._op_mode)
+        self._op_mode = OperationModeHelper(
+            self.name, self._db.get(MODE_TO_SETPOINT), str_obj
+        )
+        self._schedule = Schedule(
+            connector,
+            _type,
+            self.name,
+            current_date,
+            str_obj,
+            bus_type,
+            self._db,
+            self._op_mode,
+        )
         self._target_temp = 0
 
     @property
@@ -212,12 +226,16 @@ class Circuit(BasicCircuit):
         new_mode = await self.set_operation_mode(bosch_mode)
         different_mode = new_mode != old_mode
         try:
-            if (different_mode
-                    and old_setpoint != self._temp_setpoint
-                    and self._op_mode.is_manual):
+            if (
+                different_mode
+                and old_setpoint != self._temp_setpoint
+                and self._op_mode.is_manual
+            ):
                 temp = self.get_value(self._temp_setpoint, 0)
                 if temp == 0:
-                    result = await self._connector.get(self._data[self._temp_setpoint][URI])
+                    result = await self._connector.get(
+                        self._data[self._temp_setpoint][URI]
+                    )
                     self.process_results(result, self._temp_setpoint)
         except DeviceException as err:
             _LOGGER.debug(f"Can't update data for mode {new_mode}. Error: {err}")
@@ -229,7 +247,11 @@ class Circuit(BasicCircuit):
     @property
     def current_temp(self):
         """Give current temperature of circuit."""
-        _LOGGER.debug("Current temp of %s is %s", self.name.upper(), self.get_property(CURRENT_TEMP))
+        _LOGGER.debug(
+            "Current temp of %s is %s",
+            self.name.upper(),
+            self.get_property(CURRENT_TEMP),
+        )
         temp = self.get_value(CURRENT_TEMP)
         if temp and temp > 0 and temp < 120:
             return temp
@@ -290,7 +312,9 @@ class Circuit(BasicCircuit):
         return self._target_temp
 
     def get_value_from_active_setpoint(self, prop_name):
-        activeProgramSetpoint = self._op_mode.temp_setpoint(self.schedule.active_program)
+        activeProgramSetpoint = self._op_mode.temp_setpoint(
+            self.schedule.active_program
+        )
         activeSetpointValue = self.get_property(activeProgramSetpoint)
         default = 0
         if prop_name == MIN_VALUE:
@@ -305,7 +329,9 @@ class Circuit(BasicCircuit):
         if self._op_mode.is_off:
             return DEFAULT_MIN_TEMP
         else:
-            setpoint_min = self.get_property(self._temp_setpoint).get(MIN_VALUE, self.get_value(self._db[MIN_REF], False))
+            setpoint_min = self.get_property(self._temp_setpoint).get(
+                MIN_VALUE, self.get_value(self._db[MIN_REF], False)
+            )
             min_temp = self.schedule.get_min_temp_for_mode(setpoint_min)
             if min_temp == ACTIVE_PROGRAM:
                 min_temp = self.get_value_from_active_setpoint(MIN_VALUE)
@@ -317,7 +343,9 @@ class Circuit(BasicCircuit):
         if self._op_mode.is_off:
             return DEFAULT_MAX_TEMP
         else:
-            setpoint_max = self.get_property(self._temp_setpoint).get(MAX_VALUE, self.get_value(self._db[MAX_REF], False))
+            setpoint_max = self.get_property(self._temp_setpoint).get(
+                MAX_VALUE, self.get_value(self._db[MAX_REF], False)
+            )
             max_temp = self.schedule.get_max_temp_for_mode(setpoint_max)
             if max_temp == ACTIVE_PROGRAM:
                 max_temp = self.get_value_from_active_setpoint(MAX_VALUE)
@@ -329,10 +357,7 @@ class Circuit(BasicCircuit):
         if self._op_mode.is_off:
             _LOGGER.debug("Not setting temp. Mode is off")
             return False
-        if (
-            self.min_temp < temperature < self.max_temp
-            and target_temp != temperature
-        ):
+        if self.min_temp < temperature < self.max_temp and target_temp != temperature:
             if self._temp_setpoint:
                 target_uri = self._data[self._temp_setpoint][URI]
             elif self._op_mode.is_auto:
@@ -340,9 +365,7 @@ class Circuit(BasicCircuit):
             else:
                 _LOGGER.debug("Not setting temp. Don't know how")
                 return False
-            result = await self._connector.put(
-                target_uri, temperature
-            )
+            result = await self._connector.put(target_uri, temperature)
             _LOGGER.debug("Set temperature for %s with result %s", self.name, result)
             if result:
                 if self._temp_setpoint:
@@ -350,34 +373,29 @@ class Circuit(BasicCircuit):
                 else:
                     self.schedule.cache_temp_for_mode(temperature)
                 return True
-        _LOGGER.error("Setting temperature not allowed in this mode. Temperature is probably out of range MIN-MAX!")
+        _LOGGER.error(
+            "Setting temperature not allowed in this mode. Temperature is probably out of range MIN-MAX!"
+        )
         return False
 
     async def update(self):
         """Update info about Circuit asynchronously."""
         _LOGGER.debug("Updating circuit %s", self.name)
         last_item = list(self._data.keys())[-1]
-        try:
-            for key, item in self._data.items():
-                is_operation_type = item[TYPE] == OPERATION_MODE
-                try:
-                    result = await self._connector.get(item[URI])
-                    self.process_results(result, key)
-                except DeviceException:
-                    continue
-                if item[TYPE] == ACTIVE_PROGRAM:
-                    active_program = self.get_activeswitchprogram(result)
-                    if active_program:
-                        await self._schedule.update_schedule(active_program)
-                if not self._op_mode.is_set and is_operation_type and result:
-                    self._op_mode.init_op_mode(self.process_results(result, key, True), item[URI])
-                if key == last_item:
-                    self._state = True
-            # if self._temp_setpoint:
-            #     result = await self._connector.get(self._data[self._temp_setpoint][URI])
-            #     self.process_results(result, self._temp_setpoint)
-        #DELETE WHAT BELOW?
-        except DeviceException as err:
-            self._state = False
-            self._extra_message = f"Can't update data. Error: {err}"
-
+        for key, item in self._data.items():
+            is_operation_type = item[TYPE] == OPERATION_MODE
+            try:
+                result = await self._connector.get(item[URI])
+                self.process_results(result, key)
+            except DeviceException:
+                continue
+            if item[TYPE] == ACTIVE_PROGRAM:
+                active_program = self.get_activeswitchprogram(result)
+                if active_program:
+                    await self._schedule.update_schedule(active_program)
+            if not self._op_mode.is_set and is_operation_type and result:
+                self._op_mode.init_op_mode(
+                    self.process_results(result, key, True), item[URI]
+                )
+            if key == last_item:
+                self._state = True
