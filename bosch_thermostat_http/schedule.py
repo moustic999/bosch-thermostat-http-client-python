@@ -213,6 +213,8 @@ class Schedule:
         cache = {}
         if self._op_mode.is_manual:
             return self._setpoints_temp.get(self._op_mode.current_mode, {}).get(URI, -1)
+        if not self._schedule_found:
+            return ACTIVE_PROGRAM
         if self.time:
             cache = self.get_temp_in_schedule()
         return cache.get(URI)

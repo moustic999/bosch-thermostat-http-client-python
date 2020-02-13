@@ -311,11 +311,12 @@ class Circuit(BasicCircuit):
             self._target_temp = target_temp
         return self._target_temp
 
+    @property
+    def active_program_setpoint(self):
+        return self._op_mode.temp_setpoint(self.schedule.active_program)
+
     def get_value_from_active_setpoint(self, prop_name):
-        activeProgramSetpoint = self._op_mode.temp_setpoint(
-            self.schedule.active_program
-        )
-        activeSetpointValue = self.get_property(activeProgramSetpoint)
+        activeSetpointValue = self.get_property(self.active_program_setpoint)
         default = 0
         if prop_name == MIN_VALUE:
             default = DEFAULT_MIN_TEMP
@@ -354,15 +355,18 @@ class Circuit(BasicCircuit):
     async def set_temperature(self, temperature):
         """Set temperature of Circuit."""
         target_temp = self.target_temperature
+        active_program_not_in_schedule = False
         if self._op_mode.is_off:
-            _LOGGER.debug("Not setting temp. Mode is off")
             return False
         if self.min_temp < temperature < self.max_temp and target_temp != temperature:
             if self._temp_setpoint:
                 target_uri = self._data[self._temp_setpoint][URI]
             elif self._op_mode.is_auto:
                 target_uri = self.schedule.get_uri_setpoint_for_current_mode()
-            else:
+                if target_uri == ACTIVE_PROGRAM:
+                    active_program_not_in_schedule = True
+                    target_uri = self._data[self.active_program_setpoint][URI]
+            if not target_uri:
                 _LOGGER.debug("Not setting temp. Don't know how")
                 return False
             result = await self._connector.put(target_uri, temperature)
@@ -370,7 +374,7 @@ class Circuit(BasicCircuit):
             if result:
                 if self._temp_setpoint:
                     self._data[self._temp_setpoint][RESULT][self._str.val] = temperature
-                else:
+                elif not active_program_not_in_schedule:
                     self.schedule.cache_temp_for_mode(temperature)
                 return True
         _LOGGER.error(

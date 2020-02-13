@@ -32,7 +32,7 @@ class HttpConnector:
 
     async def _request(self, method, path, **kwargs):
         _LOGGER.debug("Sending %s request to %s", method.__name__.upper(), path)
-
+        
         async def get_response(method_name, res):
             if method_name == "put":
                 data = await res.text()
