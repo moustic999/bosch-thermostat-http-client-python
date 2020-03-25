@@ -24,15 +24,22 @@ async def main():
         gateway = bosch.Gateway(session,
                                 host=data[0],
                                 access_key=data[1])
-        await gateway.check_connection()
+        print(await gateway.check_connection())
         print(gateway.firmware)
         print(gateway.device_name)
-        await gateway.initialize_circuits(HC)
+        await gateway.initialize_circuits(DHW)
         
-        hcs = gateway.heating_circuits
-        hc = hcs[1]
-        time.sleep(1)
-        await hc.update()
+        dhws = gateway.dhw_circuits
+        dhw = dhws[0]
+        await dhw.update()
+        print("START1")
+        print(dhw.target_temperature)
+        print(dhw.current_mode)
+        print(dhw.ha_mode)
+        return
+        # hc = hcs[1]
+        # time.sleep(1)
+        # await hc.update()
         # print(hc.hvac_modes)
         # print(hc.hvac_mode)
         # print(hc.target_temperature)

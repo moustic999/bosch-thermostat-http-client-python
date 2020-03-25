@@ -1,29 +1,29 @@
 {
-    "01.10.03": {
+    "01.06.02": {
         "heatingCircuits": {
             "hastates": [
                 {
                     "haname": "off",
                     "boschname": [
-                        "off"
+                        "heating_off"
                     ]
                 },
                 {
                     "haname": "heat",
                     "boschname": [
-                        "day"
+                        "exception", "Program1"
                     ]
                 },
                 {
                     "haname": "heat_cool",
                     "boschname": [
-                        "night"
+                        "normal", "Program2"
                     ]
                 },
                 {
                     "haname": "auto",
                     "boschname": [
-                        "auto"
+                        "HP_OPTIMIZED", "automatic"
                     ]
                 },
                 {
@@ -39,53 +39,70 @@
                     "boschname": []
                 }
             ],
-            "min_ref": "setpoint2",
-            "max_ref": "setpoint1",
             "switchprogram": "/heatingCircuits/{}/switchPrograms/{}",
             "mode_to_setpoint": {
-                "night": {
-                    "setpoint": "setpoint2",
-                    "type": "manual"
-                },
-                "day": {
+                "exception": {
                     "setpoint": "setpoint1",
                     "type": "manual"
                 },
-                "auto":{
+                "normal": {
+                    "setpoint": "setpoint2",
+                    "type": "manual"
+                },
+                "automatic": {
+                    "setpoint": null,
+                    "type": "auto"
+                },
+                "HP_OPTIMIZED": {
+                    "setpoint": "setpoint2",
+                    "type": "manual"
+                },
+                "Program1": {
+                    "setpoint": null,
+                    "type": "auto"
+                },
+                "Program2": {
                     "setpoint": null,
                     "type": "auto"
                 }
             },
+            "min_ref": "current_temp",
+            "max_ref": "current_temp",
             "refs": {
                 "current_temp": {
-                    "id": "roomtemperature",
+                    "id": "temperatureLevels/normal",
                     "name": "Room temperature",
                     "type": "regular"
                 },
-                "operation_mode": {
+                "op1": {
                     "id": "operationMode",
                     "name": "Operation mode",
                     "type": "operation_mode"
                 },
+                "op2": {
+                    "id": "activeSwitchProgram",
+                    "name": "Operation mode",
+                    "type": "operation_mode"
+                },
                 "setpoint1": {
-                    "id": "temperatureLevels/day",
+                    "id": "temperatureLevels/exception",
                     "name": "Manual room setpoint",
                     "type": "setpoint"
                 },
                 "setpoint2": {
-                    "id": "temperatureLevels/night",
-                    "name": "Manual room setpoint",
+                    "id": "temperatureLevels/normal",
+                    "name": "Temporary room setpoint",
                     "type": "setpoint"
-                },
-                "activeProgram": {
-                    "id": "activeSwitchProgram",
-                    "name": "Active Switch Program",
-                    "type": "activeProgram"
                 },
                 "status": {
                     "id": "status",
                     "name": "Heating circuit status",
                     "type": "regular"
+                },
+                "activeProgram": {
+                    "id": "activeSwitchProgram",
+                    "name": "Active Switch Program",
+                    "type": "activeProgram"
                 }
             }
         },
@@ -93,20 +110,15 @@
             "hastates": [
                 {
                     "haname": "off",
-                    "boschname": [
-                        "off"
-                    ]
+                    "boschname": ["Always_Off"]
                 },
                 {
                     "haname": "on",
-                    "boschname": [
-                        "on"
-                    ]
+                    "boschname": ["Always_On"]
                 },
                 {
                     "haname": "eco",
-                    "boschname": [
-                    ]
+                    "boschname": ["eco"]
                 },
                 {
                     "haname": "eletric",
@@ -114,9 +126,7 @@
                 },
                 {
                     "haname": "performance",
-                    "boschname": [
-                        "auto"
-                    ]
+                    "boschname": ["Automatic", "supersaver"]
                 },
                 {
                     "haname": "heat_pump",
@@ -124,27 +134,38 @@
                 },
                 {
                     "haname": "high_demand",
-                    "boschname": [
-                    ]
+                    "boschname": ["comfort"]
                 },
                 {
                     "haname": "gas",
                     "boschname": []
                 }
             ],
-            "min_ref": "setpoint1",
-            "max_ref": "setpoint2",
-            "switchprogram": "/dhwCircuits/{}/switchPrograms/{}",
+            "min_ref": "current_temp",
+            "max_ref": "stop_value",
+            "switchprogram": "/dhwCircuits/{}/dhwTimePrograms/{}",
             "mode_to_setpoint": {
-                "on": {
-                    "setpoint": "setpoint2",
-                    "type": "manual"
+                "Automatic": {
+                    "setpoint": null,
+                    "type": "auto"
                 },
-                "off": {
+                "Always_Off": {
                     "setpoint": null,
                     "type": "off"
                 },
-                "auto": {
+                "Always_On": {
+                    "setpoint": "setpoint1",
+                    "type": "manual"
+                },
+                "comfort": {
+                    "setpoint": null,
+                    "type": "auto"
+                },
+                "eco": {
+                    "setpoint": null,
+                    "type": "auto"
+                },
+                "supersaver": {
                     "setpoint": null,
                     "type": "auto"
                 }
@@ -155,28 +176,33 @@
                     "name": "Room temperature",
                     "type": "regular"
                 },
-                "operation_mode": {
+                "stop_value": {
+                    "id": "actualTemp",
+                    "name": "Room temperature",
+                    "type": "regular"
+                },
+                "op1": {
                     "id": "operationMode",
                     "name": "Operation mode",
                     "type": "operation_mode"
                 },
-                "setpoint1": {
-                    "id": "temperatureLevels/off",
-                    "name": "DHW off level",
-                    "type": "setpoint"
+                "op2": {
+                    "id": "activatedTemperatureLevel",
+                    "name": "activeDhwTimeProgram mode",
+                    "type": "operation_mode"
                 },
-                "setpoint2": {
-                    "id": "temperatureLevels/on",
-                    "name": "DHW High level",
+                "setpoint1": {
+                    "id": "currentSetpoint",
+                    "name": "DHW on level",
                     "type": "setpoint"
                 },
                 "status": {
-                    "id": "status",
+                    "id": "extraDhw/status",
                     "name": "DHW status",
                     "type": "regular"
                 },
                 "activeProgram": {
-                    "id": "activeSwitchProgram",
+                    "id": "activeDhwTimeProgram",
                     "name": "Active Switch Program",
                     "type": "activeProgram"
                 }
@@ -184,50 +210,10 @@
         },
         "sensors": {
             "outdoor_t1": {
-                "id": "/system/sensors/temperatures/outdoor_t1",
+                "id": "/system/sensors/outdoorTemperatures/t1",
                 "name": "Outdoor temperature"
-            },
-            "hotWater_t2": {
-                "id": "/system/sensors/temperatures/hotWater_t2",
-                "name": "Hotwater temp"
-            },
-            "supply_t1_setpoint": {
-                "id": "/system/sensors/temperatures/supply_t1_setpoint",
-                "name": "Supply temp setpoint"
-            },
-            "supply_t1": {
-                "id": "/system/sensors/temperatures/supply_t1",
-                "name": "Actual supply temp"
-            },
-            "return": {
-                "id": "/system/sensors/temperatures/return",
-                "name": "Return temp"
-            },
-            "healthStatus": {
-                "id": "/system/healthStatus",
-                "name": "Health status"
-            },
-            "actualPower": {
-                "id": "/heatSources/actualPower",
-                "name": "Actual Power"
-            },
-            "actualModulation": {
-                "id": "/heatSources/actualModulation",
-                "name": "Actual modulation"
-            },
-            "CHpumpModulation": {
-                "id": "/heatSources/CHpumpModulation",
-                "name": "Actual heating pump modulation"
-            },
-            "totalSystem": {
-                "id": "/heatSources/workingTime/totalSystem",
-                "name": "Total system uptime mins"
-            },
-            "systemPressure": {
-                "id": "/heatSources/systemPressure",
-                "name": "System pressure"
             }
         },
-        "versionFirmware": "01.10.03"
+        "versionFirmware": "01.06.02"
     }
 }

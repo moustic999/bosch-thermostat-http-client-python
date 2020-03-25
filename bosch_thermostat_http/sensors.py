@@ -1,47 +1,36 @@
 """Sensors of Bosch thermostat."""
-from .const import GET, PATH, ID, NAME
+from .const import ID, NAME, RESULT, URI, TYPE, REGULAR, SENSOR
 from .helper import BoschSingleEntity, BoschEntities
-from .errors import ResponseError, Response404Error, SensorNoLongerAvailable
 
 
 class Sensors(BoschEntities):
     """Sensors object containing multiple Sensor objects."""
 
-    def __init__(self, requests):
+    def __init__(self, connector, sensors=None, sensors_db=None, str_obj=None):
         """
         Initialize sensors.
 
         :param dict requests: { GET: get function, SUBMIT: submit function}
         """
-        super().__init__(requests)
+        super().__init__(connector.get)
         self._items = {}
+        for sensor_id in sensors:
+            sensor = sensors_db.get(sensor_id)
+            if sensor and sensor_id not in self._items:
+                self._items[sensor_id] = Sensor(
+                    connector, sensor_id, sensor[NAME], sensor[ID], str_obj
+                )
 
     @property
     def sensors(self):
         """Get sensor list."""
         return self.get_items().values()
 
-    async def initialize(self, sensors=None, str_obj=None):
-        """
-        Asynchronously initialize all sensors.
-
-        :param sensors dict if declared then restore sensors from it.
-                            If not download data from device.
-        """
-        for sensor in sensors:
-            self.register_sensor(sensor[NAME], sensor[ID], str_obj)
-
-    def register_sensor(self, name, path, str_obj):
-        """Register sensor for the module."""
-        attr_id = path.split("/").pop()
-        if attr_id not in self._items:
-            self._items[attr_id] = Sensor(self._requests, attr_id, name, path, str_obj)
-
 
 class Sensor(BoschSingleEntity):
     """Single sensor object."""
 
-    def __init__(self, requests, attr_id, name, path, str_obj):
+    def __init__(self, connector, attr_id, name, path, str_obj):
         """
         Single sensor init.
 
@@ -49,22 +38,13 @@ class Sensor(BoschSingleEntity):
         :param str name: name of the sensors
         :param str path: path to retrieve data from sensor.
         """
-        self._requests = requests
-        super().__init__(name, attr_id, str_obj, path)
-        self._type = "sensor"
+        super().__init__(name, connector, attr_id, SENSOR, str_obj, path)
+        self._data = {attr_id: {RESULT: {}, URI: path, TYPE: REGULAR}}
 
     @property
-    def json_scheme(self):
-        """Get json scheme of sensor."""
-        return {NAME: self._main_data[NAME], ID: self._main_data[ID]}
-
-    async def update(self):
-        """Update sensor data."""
-        try:
-            result = await self._requests[GET](self._main_data[PATH])
-            self.process_results(result)
-            self._updated_initialized = True
-        except Response404Error:
-            raise SensorNoLongerAvailable("This sensor is no available.")
-        except ResponseError:
-            self._data = None
+    def state(self):
+        """Retrieve state of the circuit."""
+        result = self._data[self.attr_id].get(RESULT)
+        if result:
+            return result.get(self._str.val, self._str.invalid)
+        return -1

@@ -10,18 +10,20 @@ NAME = "name"
 PATH = "path"
 ID = "id"
 REFS = "refs"
+REFERENCES = "references"
 HA_STATES = "hastates"
 
 UUID = "uuid"
-PATHS = "paths"
+# PATHS = "paths"
 GATEWAY = "gateway"
 HC = "hc"
 DHW = "dhw"
+SC = "sc"
 SENSORS = "sensors"
+SENSOR = "sensor"
 DICT = "dict"
-MAIN_URI = "mainUri"
 MODELS = "models"
-PRESETS = "presets"
+# PRESETS = "presets"
 TEMP = "temp"
 DATE = "dateTime"
 
@@ -34,20 +36,15 @@ OFF = "off"
 ON = "on"
 MAX = "max"
 MIN = "min"
+MAX_VALUE = "maxValue"
+MIN_VALUE = "minValue"
 UNITS = "units"
 VALUE = "value"
 VALUES = "values"
 ALLOWED_VALUES = "allowedValues"
 STATE = "state"
-OWNPROGRAM = "ownprogram"
-HCPROGRAM = "hcprogram"
 CURRENT_TEMP = "current_temp"
-AUTO_SETPOINT = "auto_setpoint"
-MANUAL_SETPOINT = "manual_setpoint"
-AUTO_SETTEMP = "auto_set_temp"
-WATER_SETPOINT = "water_setpoint"
-WATER_OFF = "water_off"
-WATER_HIGH = "water_high"
+CURRENT_SETPOINT = "currentSetpoint"
 ACTIVE_PROGRAM = "activeProgram"
 DAYOFWEEK = "dayOfWeek"
 MODE = "mode"
@@ -57,38 +54,68 @@ SETPOINT = "setpoint"
 TIME = "time"
 OPEN = "open"
 SHORT = "short"
-
 INVALID = "invalid"
 
+CIRCUITS = "circuits"
 ROOT_PATHS = ["/dhwCircuits", "/gateway", "/heatingCircuits",
-              "/heatSources", "/notifications", "/system"]
+              "/heatSources", "/notifications", "/system", "/solarCircuits"]
 
 """ Section of gateway info consts. """
 
 FIRMWARE_VERSION = "versionFirmware"
-HARDWARE_VERSION = "versionHardware"
+TYPE = "type"
+URI = "uri"
+REGULAR = "regular"
+RESULT = "result"  # to not mismarch with value
 SYSTEM_BRAND = "brand"
 SYSTEM_TYPE = "systemType"
 SYSTEM_INFO = "systemInfo"
+SYSTEM_BUS = "systemBus"
+CAN = "CAN"
+EMS = "EMS"
+DEFAULT = "default"
+
+USER_AGENT = "User-agent"
+CONNECTION = "Connection"
+TELEHEATER = "TeleHeater"
+KEEP_ALIVE = "keep-alive"
+CONENT_TYPE = "Content-Type"
+APP_JSON = "application/json"
 
 HTTP_HEADER = {
-    'User-agent': 'TeleHeater',
-    'Connection': 'close'
+    USER_AGENT: TELEHEATER,
+    CONNECTION: KEEP_ALIVE,
+    CONENT_TYPE: APP_JSON
 }
 
 TIMEOUT = 10
 
 HEATING_CIRCUITS = "heatingCircuits"
 DHW_CIRCUITS = "dhwCircuits"
+SOLAR_CIRCUITS = "solarCircuits"
+CIRCUIT_TYPES = {
+    HC: HEATING_CIRCUITS,
+    DHW: DHW_CIRCUITS,
+    SC: SOLAR_CIRCUITS
+}
+
+MODE_TO_SETPOINT = "mode_to_setpoint"
+READ = "read"
+WRITE = "write"
+
+MAX_REF = "max_ref"
+MIN_REF = "min_ref"
+
+HA_NAME = "haname"
+BOSCH_NAME = "boschname"
 
 RC300 = "RC300"
 
-###SCHEDULE
+# SCHEDULE
 SETPOINT_PROP = "setpointProperty"
 SWITCH_POINTS = "switchPoints"
-SWITCHPROGRAM = "/heatingCircuits/{}/switchPrograms/{}"
+SWITCHPROGRAM = "switchprogram"
 MIDNIGHT = 1440
-DAYS_INT = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
 DAYS = {
     "Mo": "monday",
     "Tu": "tuesday",
@@ -98,3 +125,14 @@ DAYS = {
     "Sa": "saturday",
     "Su": "sunday",
 }
+DAYS_INT = [k for k in DAYS.keys()]
+DAYS_INDEXES = [k for k in DAYS.values()]
+DAYS_INV = [{v: k for k, v in DAYS.items()}]
+
+
+SENSORS_LIST = ["outdoor_t1", "hotWater_t2", "supply_t1_setpoint", "supply_t1",
+                "return", "healthStatus", "actualPower", "actualModulation",
+                "CHpumpModulation"]
+
+DEFAULT_MIN_TEMP = 0
+DEFAULT_MAX_TEMP = 100
