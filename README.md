@@ -1,4 +1,4 @@
-
+# !!! Development moved to `https://github.com/bosch-thermostat/bosch-thermostat-client-python`
 
 # bosch-thermostat-http-client-python
 Python3 asyncio package to talk to Bosch Thermostats via their gateway, especially for Buderus KM200/KM50 and Nefit IP modules used in Enviline heat pumps. These gateways support Http access in local network.
